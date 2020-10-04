@@ -9,4 +9,4 @@
 
 ## 20100402
 - 更新并优化了核心文件
-> 现在在CoreFiles目录使用指令**.\make.bat run** 就可以一键启动系统
+> 现在在CoreFiles目录使用指令 .\make.bat run 就可以一键启动系统
