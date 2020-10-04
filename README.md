@@ -18,3 +18,6 @@
 > 现在在CoreFiles目录使用指令 .\make.bat src_only 可以删除除源代码以外生成的文件。
 
 > 其余makefile还有asm img install clean等指令，具体使用方法有时间再说。
+
+## 20100501
+- 向IPL中的启动部分添加了启动失败重新尝试，尝试超过5次报错。
