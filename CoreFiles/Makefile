@@ -1,11 +1,11 @@
-# KalinoteOS惗惉斸?棟暥審
+# KalinoteOS生成批处理文件
 
-# 嘁?
+# 默认
 
 default :
 	../Tools/maketools/z_tools/make.exe img
 
-# 暥審惗惉
+# 文件生成规则
 
 ipl.bin : ipl.nas Makefile
 	../Tools/maketools/z_tools/nask.exe ipl.nas ipl.bin ipl.lst
@@ -14,7 +14,7 @@ kalinoteos.img : ipl.bin Makefile
 	../Tools/maketools/z_tools/edimg.exe   imgin:../Tools/maketools/z_tools/fdimg0at.tek \
 		wbinimg src:ipl.bin len:512 from:0 to:0   imgout:kalinoteos.img
 
-# 柦椷
+# 命令
 
 asm :
 	../Tools/maketools/z_tools/make.exe -r ipl.bin
