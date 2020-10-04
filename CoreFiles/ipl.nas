@@ -42,12 +42,23 @@ entry:
 		MOV		DH,0			; 磁头0
 		MOV		CL,2			; 扇区2
 		
+		MOV		SI,0			; 记录失败次数
+		
+retry:
+; 启动失败，尝试重新启动
 		MOV		AH,0x02			; 读盘
 		MOV		AL,1			; 1个扇区
 		MOV		BX,0
 		MOV		DL,0x00			; A驱动器
 		INT		0x13			; 调用磁盘BIOS
-		JC		error
+		JNC		fin				; 没有出错的话跳转到fin
+		ADD		SI,1			; SI加1
+		CMP		SI,5			; SI和5比较
+		JAE		error			; 超过5次重试，报错
+		MOV		AH,0x00
+		MOV		DL,0x00			; A驱动器
+		INT		0x13			; 重置驱动器
+		JMP		retry
 		
 ; 读取完成后停止
 		
