@@ -41,7 +41,8 @@ entry:
 		MOV		CH,0			; 柱面0
 		MOV		DH,0			; 磁头0
 		MOV		CL,2			; 扇区2
-		
+
+readloop:
 		MOV		SI,0			; 记录失败次数
 		
 retry:
@@ -51,7 +52,7 @@ retry:
 		MOV		BX,0
 		MOV		DL,0x00			; A驱动器
 		INT		0x13			; 调用磁盘BIOS
-		JNC		fin				; 没有出错的话跳转到fin
+		JNC		next			; 没有出错的话跳转到next
 		ADD		SI,1			; SI加1
 		CMP		SI,5			; SI和5比较
 		JAE		error			; 超过5次重试，报错
@@ -59,6 +60,22 @@ retry:
 		MOV		DL,0x00			; A驱动器
 		INT		0x13			; 重置驱动器
 		JMP		retry
+		
+next:
+		MOV		AX,ES			; 内存地址后移0x200
+		ADD		AX,0x0020
+		MOV		ES,AX
+		ADD		CL,1			; CL加1
+		CMP		CL,18			; CL和18比较
+		JBE		readloop		; 如果CL小于18，跳到readloop重复读取
+		MOV		CL,1
+		ADD		DH,1
+		CMP		DH,2
+		JB		readloop		; DH小于2跳转到readloop
+		MOV		DH,0
+		ADD		CH,1
+		CMP		CH,CYLS
+		JB		readloop		; CH小于CYLS跳转到readloop
 		
 ; 读取完成后停止
 		
