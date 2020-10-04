@@ -1,6 +1,6 @@
 # KalinoteOS
 一个可以运行多任务和图形界面的微型系统
-<br/>
+
 基于《30天自制操作系统》里的heboos优化。
 
 # 注意：所有源文件必须使用GB2312编码，push前请确认编码是否正确！
@@ -16,4 +16,5 @@
 ## 20100403
 - 更新并优化了IPL和makefile
 > 现在在CoreFiles目录使用指令 .\make.bat src_only 可以删除除源代码以外生成的文件。
+
 > 其余makefile还有asm img install clean等指令，具体使用方法有时间再说。
