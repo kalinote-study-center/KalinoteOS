@@ -33,21 +33,42 @@ entry:
 		MOV		SS,AX
 		MOV		SP,0x7c00
 		MOV		DS,AX
+		
+; 读取磁盘
+		
+		MOV		AX,0x0820
 		MOV		ES,AX
+		MOV		CH,0			; 柱面0
+		MOV		DH,0			; 磁头0
+		MOV		CL,2			; 扇区2
+		
+		MOV		AH,0x02			; 读盘
+		MOV		AL,1			; 1个扇区
+		MOV		BX,0
+		MOV		DL,0x00			; A驱动器
+		INT		0x13			; 调用磁盘BIOS
+		JC		error
+		
+; 读取完成后停止
+		
+fin:
+; 启动完成
+		HLT						; 停止CPU，等待指令
+		JMP		fin				; 无限循环
 
+error:
+; 启动错误，显示错误信息
 		MOV		SI,msg
+
 putloop:
 		MOV		AL,[SI]
 		ADD		SI,1			; SI加1
 		CMP		AL,0
 		JE		fin
-		MOV		AH,0x0e			; 指定一个文字
-		MOV		BX,15			; 指定字符颜色
+		MOV		AH,0x0e			; 显示一个文字
+		MOV		BX,15			; 指定一个颜色
 		INT		0x10			; 调用显卡
 		JMP		putloop
-fin:
-		HLT						; 停止CPU，等待指令
-		JMP		fin				; 无限循环
 
 msg:
 		DB		0x0a, 0x0a		; 换行两次
