@@ -1,5 +1,8 @@
-; KalinoteOS
+; Kalinote-ipl
 ; TAB=4
+; 只能读入10个柱面
+
+CYLS	EQU		10				; 读取10个柱面
 
 		ORG		0x7c00			; 程序起始装载地址
 
@@ -77,7 +80,10 @@ next:
 		CMP		CH,CYLS
 		JB		readloop		; CH小于CYLS跳转到readloop
 		
-; 读取完成后停止
+; 读取完成执行kalinote.sys
+		
+		MOV		[0x0ff0],CH		; 记录IPL读取位置
+		JMP		0xc200
 		
 fin:
 ; 启动完成
@@ -100,9 +106,9 @@ putloop:
 
 msg:
 		DB		0x0a, 0x0a		; 换行两次
-		DB		"KalinoteOS test message"
+		DB		"KalinoteOS load failed"
 		DB		0x0a			; 换行
-		DB		"this is a test msg"
+		DB		"maybe your device have some error"
 		DB		0
 
 		RESB	0x7dfe-$		; 填充0
