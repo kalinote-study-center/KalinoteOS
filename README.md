@@ -33,3 +33,7 @@
 
 ## 20100504
 - 更新了启动程序kalinote.nas，使其在启动时初始化显卡和键盘状态
+
+## 20100505
+- 更新了kalinote.nas，更名为asmhead.nas
+- 添加了bootpack.c，这个文件和asmhead.nas是一起的，但是asmhead.nas使用的汇编语言，bootpack.c使用的c语言
