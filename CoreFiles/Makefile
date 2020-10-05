@@ -1,8 +1,15 @@
 # KalinoteOS生成批处理文件
 
-TOOLPATH = ../Tools/maketools/z_tools/
+TOOLPATH = ../z_tools/
+INCPATH  = ../z_tools/haribote/
+
 MAKE     = $(TOOLPATH)make.exe -r
 NASK     = $(TOOLPATH)nask.exe
+CC1      = $(TOOLPATH)cc1.exe -I$(INCPATH) -Os -Wall -quiet
+GAS2NASK = $(TOOLPATH)gas2nask.exe -a
+OBJ2BIM  = $(TOOLPATH)obj2bim.exe
+BIM2KAL  = $(TOOLPATH)bim2kal.exe
+RULEFILE = $(TOOLPATH)haribote/haribote.rul
 EDIMG    = $(TOOLPATH)edimg.exe
 IMGTOL   = $(TOOLPATH)imgtol.com
 COPY     = copy
@@ -18,11 +25,31 @@ default :
 ipl10.bin : ipl10.nas Makefile
 	$(NASK) ipl10.nas ipl10.bin ipl10.lst
 
-kalinote.sys : kalinote.nas Makefile
-	$(NASK) kalinote.nas kalinote.sys kalinote.lst
+asmhead.bin : asmhead.nas Makefile
+	$(NASK) asmhead.nas asmhead.bin asmhead.lst
+
+bootpack.gas : bootpack.c Makefile
+	$(CC1) -o bootpack.gas bootpack.c
+
+bootpack.nas : bootpack.gas Makefile
+	$(GAS2NASK) bootpack.gas bootpack.nas
+
+bootpack.obj : bootpack.nas Makefile
+	$(NASK) bootpack.nas bootpack.obj bootpack.lst
+
+bootpack.bim : bootpack.obj Makefile
+	$(OBJ2BIM) @$(RULEFILE) out:bootpack.bim stack:3136k map:bootpack.map \
+		bootpack.obj
+# 3MB+64KB=3136KB
+
+bootpack.kal : bootpack.bim Makefile
+	$(BIM2KAL) bootpack.bim bootpack.kal 0
+
+kalinote.sys : asmhead.bin bootpack.kal Makefile
+	copy /B asmhead.bin+bootpack.kal kalinote.sys
 
 kalinote.img : ipl10.bin kalinote.sys Makefile
-	$(EDIMG)   imgin:../Tools/maketools/z_tools/fdimg0at.tek \
+	$(EDIMG)   imgin:../z_tools/fdimg0at.tek \
 		wbinimg src:ipl10.bin len:512 from:0 to:0 \
 		copy from:kalinote.sys to:@: \
 		imgout:kalinote.img
@@ -34,18 +61,23 @@ img :
 
 run :
 	$(MAKE) img
-	$(COPY) kalinote.img ..\Tools\maketools\z_tools\qemu\fdimage0.bin
-	$(MAKE) -C ../Tools/maketools/z_tools/qemu
+	$(COPY) kalinote.img ..\z_tools\qemu\fdimage0.bin
+	$(MAKE) -C ../z_tools/qemu
 
 install :
 	$(MAKE) img
 	$(IMGTOL) w a: kalinote.img
 
 clean :
-	-$(DEL) ipl10.bin
-	-$(DEL) ipl10.lst
+	-$(DEL) *.bin
+	-$(DEL) *.lst
+	-$(DEL) *.gas
+	-$(DEL) *.obj
+	-$(DEL) bootpack.nas
+	-$(DEL) bootpack.map
+	-$(DEL) bootpack.bim
+	-$(DEL) bootpack.kal
 	-$(DEL) kalinote.sys
-	-$(DEL) kalinote.lst
 
 src_only :
 	$(MAKE) clean
