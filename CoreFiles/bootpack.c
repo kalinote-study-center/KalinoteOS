@@ -32,15 +32,14 @@ void boxfill8(unsigned char *vram, int xsize, unsigned char c, int x0, int y0, i
 
 void KaliMain(void){
 	/*这里是主程序*/
-	char *p;
+	char *vram;
+	int xsize, ysize;
 	
 	init_palette();
-	
-	p = (char *) 0xa0000;	//指定地址
-	
-	boxfill8(p, 320, COL_BRED,  20,  20, 120, 120);
-	boxfill8(p, 320, COL_BGREEN,  70,  50, 170, 150);
-	boxfill8(p, 320, COL_BBLUE, 120,  80, 220, 180);
+	vram = (char *) 0xa0000;
+	xsize = 320;
+	ysize = 200;
+	boxfill8(vram,xsize,COL_LDBLUE,0,0,xsize,ysize);		//绘制一个纯色背景当桌面
 	
 	for(;;){
 		//停止CPU
