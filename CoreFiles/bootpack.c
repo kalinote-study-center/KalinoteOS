@@ -7,8 +7,7 @@ void KaliMain(void){
 	/*这里是主程序*/
 	int i;
 	for(i = 0xa0000; i <= 0xaffff; i++){
-		//向i地址循环写入15，15是白色，所以会是全屏白色
-		write_mem8(i, 15); /* MOV BYTE [i],15 */
+		write_mem8(i, i & 0x0f); 
 	}
 	
 	for(;;){
