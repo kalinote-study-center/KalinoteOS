@@ -1,8 +1,7 @@
 //naskfunc中的函数
-void io_hlt(void);		//hlt功能
+void io_hlt(void);							//hlt功能
 //void write_mem8(int addr, int data);		//写入内存
-void io_hlt(void);
-void io_cli(void);
+void io_cli(void);							//禁止中断
 void io_out8(int port, int data);
 int io_load_eflags(void);
 void io_store_eflags(int eflags);
@@ -11,19 +10,37 @@ void io_store_eflags(int eflags);
 void KaliMain(void);		//主函数
 void init_palette(void);	//初始化调色板函数
 void set_palette(int start, int end, unsigned char *rgb);		//设置调色板
+void boxfill8(unsigned char *vram, int xsize, unsigned char c, int x0, int y0, int x1, int y1);		//绘制方块
+
+// 15种颜色常数定义
+#define COL_BLACK		0
+#define COL_BRED		1
+#define COL_BGREEN		2
+#define COL_BYELLOW		3
+#define COL_BBLUE		4
+#define COL_BPURPLE		5
+#define COL_LBBLUE		6
+#define COL_WHITE		7
+#define COL_BGREY		8
+#define COL_DRED		9
+#define COL_DGREEN		10
+#define COL_DYELLOW		11
+#define COL_DBLUE		12
+#define COL_DPURPLE		13
+#define COL_LDBLUE		14
+#define COL_DGREY		15
 
 void KaliMain(void){
 	/*这里是主程序*/
-	int i;
 	char *p;
 	
 	init_palette();
 	
 	p = (char *) 0xa0000;	//指定地址
 	
-	for (i = 0; i <= 0xffff; i++) {
-		p[i] = i & 0x0f;
-	}
+	boxfill8(p, 320, COL_BRED,  20,  20, 120, 120);
+	boxfill8(p, 320, COL_BGREEN,  70,  50, 170, 150);
+	boxfill8(p, 320, COL_BBLUE, 120,  80, 220, 180);
 	
 	for(;;){
 		//停止CPU
@@ -68,6 +85,15 @@ void set_palette(int start, int end, unsigned char *rgb){
 		rgb += 3;
 	}
 	io_store_eflags(eflags);	/* 复原中断许可标志 */
+	return;
+}
+
+void boxfill8(unsigned char *vram, int xsize, unsigned char c, int x0, int y0, int x1, int y1){
+	int x, y;
+	for (y = y0; y <= y1; y++) {
+		for (x = x0; x <= x1; x++)
+			vram[y * xsize + x] = c;
+	}
 	return;
 }
 
