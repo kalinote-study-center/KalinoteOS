@@ -63,3 +63,6 @@
 ## 20100601
 - bootpack增加了用于显示色彩的调色板(init_palette和set_palette函数)
 - naskfunc.nas增加了多个io相关函数
+
+## 20100602
+- 修改了bootpack，尝试在启动时绘制RGB方块
