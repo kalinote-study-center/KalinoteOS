@@ -1,16 +1,17 @@
 //naskfunc中的函数
 void io_hlt(void);							//hlt功能
-//void write_mem8(int addr, int data);		//写入内存
+//void write_mem8(int addr, int data);		//写入内存(被指针取代)
 void io_cli(void);							//禁止中断
 void io_out8(int port, int data);
 int io_load_eflags(void);
 void io_store_eflags(int eflags);
 
 //此文件中的函数
-void KaliMain(void);		//主函数
-void init_palette(void);	//初始化调色板函数
-void set_palette(int start, int end, unsigned char *rgb);		//设置调色板
+void KaliMain(void);																				//主函数
+void init_palette(void);																			//初始化调色板函数
+void set_palette(int start, int end, unsigned char *rgb);											//设置调色板
 void boxfill8(unsigned char *vram, int xsize, unsigned char c, int x0, int y0, int x1, int y1);		//绘制方块
+void init_screen(char *vram, int x, int y);															//初始化屏幕
 
 // 15种颜色常数定义
 #define COL_BLACK		0
@@ -34,12 +35,18 @@ void KaliMain(void){
 	/*这里是主程序*/
 	char *vram;
 	int xsize, ysize;
+	short *bootinfo_scrnx, *bootinfo_scrny;
+	int *bootinfo_vram;
 	
 	init_palette();
-	vram = (char *) 0xa0000;
-	xsize = 320;
-	ysize = 200;
-	boxfill8(vram,xsize,COL_LDBLUE,0,0,xsize,ysize);		//绘制一个纯色背景当桌面
+	bootinfo_scrnx = (short *) 0x0ff4;
+	bootinfo_scrny = (short *) 0x0ff6;
+	bootinfo_vram = (int *) 0x0ff8;
+	xsize = *bootinfo_scrnx;
+	ysize = *bootinfo_scrny;
+	vram = (char *) *bootinfo_vram;
+	
+	init_screen(vram, xsize, ysize);		//初始化屏幕
 	
 	for(;;){
 		//停止CPU
@@ -73,6 +80,7 @@ void init_palette(void){
 }
 
 void set_palette(int start, int end, unsigned char *rgb){
+	/*调色板功能*/
 	int i, eflags;
 	eflags = io_load_eflags();	/* 记录中断许可标志的值 */
 	io_cli(); 					/* 将中断许可标志置为0，禁止中断 */
@@ -88,6 +96,7 @@ void set_palette(int start, int end, unsigned char *rgb){
 }
 
 void boxfill8(unsigned char *vram, int xsize, unsigned char c, int x0, int y0, int x1, int y1){
+	/*绘制方块*/
 	int x, y;
 	for (y = y0; y <= y1; y++) {
 		for (x = x0; x <= x1; x++)
@@ -96,6 +105,12 @@ void boxfill8(unsigned char *vram, int xsize, unsigned char c, int x0, int y0, i
 	return;
 }
 
+void init_screen(char *vram, int x, int y){
+	/*初始化屏幕*/
+	boxfill8( vram, x, COL_LDBLUE, 0, 0, x - 1, y - 1);		//绘制一个纯色背景当桌面
+}
+
 void HariMain(void){
+	/*系统启动入口*/
 	KaliMain();
 }
