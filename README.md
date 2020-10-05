@@ -59,3 +59,7 @@
 
 ## 20100511
 - 使用指针代替了write_mem8函数
+
+## 20100601
+- bootpack增加了用于显示色彩的调色板(init_palette和set_palette函数)
+- naskfunc.nas增加了多个io相关函数
