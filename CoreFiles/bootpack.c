@@ -31,22 +31,23 @@ void init_screen(char *vram, int x, int y);															//初始化屏幕
 #define COL_LDBLUE		14
 #define COL_DGREY		15
 
+struct BOOTINFO {
+	/*启动信息*/
+	char cyls, leds, vmode, reserve;
+	short scrnx, scrny;
+	char *vram;
+};
+
 void KaliMain(void){
 	/*这里是主程序*/
-	char *vram;
-	int xsize, ysize;
-	short *bootinfo_scrnx, *bootinfo_scrny;
-	int *bootinfo_vram;
+	struct BOOTINFO *binfo = (struct BOOTINFO *) 0x0ff0;
 	
 	init_palette();
-	bootinfo_scrnx = (short *) 0x0ff4;
-	bootinfo_scrny = (short *) 0x0ff6;
-	bootinfo_vram = (int *) 0x0ff8;
-	xsize = *bootinfo_scrnx;
-	ysize = *bootinfo_scrny;
-	vram = (char *) *bootinfo_vram;
-	
-	init_screen(vram, xsize, ysize);		//初始化屏幕
+	init_screen(binfo->vram, binfo->scrnx, binfo->scrny);		//初始化屏幕
+	/*
+	* 注：这里的 binfo->vram 等价于(*binfo).vram
+	* 其他的同理
+	*/
 	
 	for(;;){
 		//停止CPU
