@@ -1,3 +1,6 @@
+
+void io_hlt(void);
+
 void KaliMain(void)
 {
 	/*
@@ -5,6 +8,7 @@ void KaliMain(void)
 	*/
 	/*给一个无限循环*/
 fin:
+	io_hlt();
 	goto fin;
 }
 
