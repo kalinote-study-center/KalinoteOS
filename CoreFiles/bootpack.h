@@ -36,7 +36,7 @@ void putfonts8_asc(char *vram, int xsize, int x, int y, char c, unsigned char *s
 void init_mouse_cursor8(char *mouse, char bc);														//初始化鼠标指针
 void putblock8_8(char *vram, int vxsize, int pxsize,
 	int pysize, int px0, int py0, char *buf, int bxsize);											//鼠标背景色处理
-	
+
 // 15种颜色常数定义
 #define COL_BLACK		0
 #define COL_BRED		1
@@ -82,7 +82,7 @@ void set_gatedesc(struct GATE_DESCRIPTOR *gd, int offset, int selector, int ar);
 /* int.c */
 struct KEYBUF {
 	unsigned char data[32];
-	int next;
+	int next_r, next_w, len;
 };
 void init_pic(void);
 void inthandler21(int *esp);
