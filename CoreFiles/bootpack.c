@@ -13,6 +13,7 @@ void set_palette(int start, int end, unsigned char *rgb);											//设置调色板
 void boxfill8(unsigned char *vram, int xsize, unsigned char c, int x0, int y0, int x1, int y1);		//绘制方块
 void init_screen(char *vram, int x, int y);															//初始化屏幕
 void putfont8(char *vram, int xsize, int x, int y, char c, char *font);								//绘制字体
+void putfonts8_asc(char *vram, int xsize, int x, int y, char c, unsigned char *s);					//绘制字符串
 
 // 15种颜色常数定义
 #define COL_BLACK		0
@@ -41,21 +42,21 @@ struct BOOTINFO {
 
 void KaliMain(void){
 	/*这里是主程序*/
-	struct BOOTINFO *binfo = (struct BOOTINFO *) 0x0ff0;
-	extern char fonts[4096];
+	struct BOOTINFO *binfo = (struct BOOTINFO *) 0x0ff0;		//启动信息(BOOTINFO结构体)
 	
-	init_palette();
+	init_palette();												//初始化调色板
 	init_screen(binfo->vram, binfo->scrnx, binfo->scrny);		//初始化屏幕
 	/*
 	* 注：这里的 binfo->vram 等价于(*binfo).vram
 	* 其他的同理
 	*/
-	putfont8(binfo->vram, binfo->scrnx,  8, 8, COL_WHITE, fonts + 'A' * 16);
-	putfont8(binfo->vram, binfo->scrnx, 16, 8, COL_WHITE, fonts + 'B' * 16);
-	putfont8(binfo->vram, binfo->scrnx, 24, 8, COL_WHITE, fonts + 'C' * 16);
-	putfont8(binfo->vram, binfo->scrnx, 40, 8, COL_WHITE, fonts + '1' * 16);
-	putfont8(binfo->vram, binfo->scrnx, 48, 8, COL_WHITE, fonts + '2' * 16);
-	putfont8(binfo->vram, binfo->scrnx, 56, 8, COL_WHITE, fonts + '3' * 16);
+	
+	putfonts8_asc(binfo->vram, binfo->scrnx, 236, 181, COL_DRED, "KalinoteOS");
+	putfonts8_asc(binfo->vram, binfo->scrnx, 235, 180, COL_BRED, "KalinoteOS");
+	/*
+	* 只要先绘制一遍暗色字体，然后再绘制一遍亮色字体，然后两个字符串差1个像素，就可以整出立体感来
+	* 后面调整函数文件结构后可以加个函数来专门绘制立体字符串
+	*/
 	
 	for(;;){
 		//停止CPU
@@ -139,6 +140,16 @@ void putfont8(char *vram, int xsize, int x, int y, char c, char *font)
 	return;
 }
 
+void putfonts8_asc(char *vram, int xsize, int x, int y, char c, unsigned char *s)
+{
+	/*绘制字符串(ASCLL编码) - 此处原内容在第96页*/
+	extern char fonts[4096];
+	for (; *s != 0x00; s++) {
+		putfont8(vram, xsize, x, y, c, fonts + *s * 16);
+		x += 8;
+	}
+	return;
+}
 
 void HariMain(void){
 	/*系统启动入口*/
