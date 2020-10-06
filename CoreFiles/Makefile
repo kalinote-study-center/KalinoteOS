@@ -9,6 +9,8 @@ CC1      = $(TOOLPATH)cc1.exe -I$(INCPATH) -Os -Wall -quiet
 GAS2NASK = $(TOOLPATH)gas2nask.exe -a
 OBJ2BIM  = $(TOOLPATH)obj2bim.exe
 BIM2KAL  = $(TOOLPATH)bim2kal.exe
+MAKEFONT = $(TOOLPATH)makefont.exe
+BIN2OBJ  = $(TOOLPATH)bin2obj.exe
 RULEFILE = $(TOOLPATH)haribote/haribote.rul
 EDIMG    = $(TOOLPATH)edimg.exe
 IMGTOL   = $(TOOLPATH)imgtol.com
@@ -39,10 +41,16 @@ bootpack.obj : bootpack.nas Makefile
 
 naskfunc.obj : naskfunc.nas Makefile
 	$(NASK) naskfunc.nas naskfunc.obj naskfunc.lst
+	
+fonts.bin : fonts.txt Makefile
+	$(MAKEFONT) fonts.txt fonts.bin
 
-bootpack.bim : bootpack.obj naskfunc.obj Makefile
+fonts.obj : fonts.bin Makefile
+	$(BIN2OBJ) fonts.bin fonts.obj _fonts
+
+bootpack.bim : bootpack.obj naskfunc.obj fonts.obj Makefile
 	$(OBJ2BIM) @$(RULEFILE) out:bootpack.bim stack:3136k map:bootpack.map \
-		bootpack.obj naskfunc.obj
+		bootpack.obj naskfunc.obj fonts.obj
 # 3MB+64KB=3136KB
 
 bootpack.kal : bootpack.bim Makefile

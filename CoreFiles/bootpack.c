@@ -2,9 +2,9 @@
 void io_hlt(void);							//hlt功能
 //void write_mem8(int addr, int data);		//写入内存(被指针取代)
 void io_cli(void);							//禁止中断
-void io_out8(int port, int data);
-int io_load_eflags(void);
-void io_store_eflags(int eflags);
+void io_out8(int port, int data);			//传输数据用的
+int io_load_eflags(void);					//读取最初的eflags值
+void io_store_eflags(int eflags);			//将值存入eflags寄存器
 
 //此文件中的函数
 void KaliMain(void);																				//主函数
@@ -12,6 +12,7 @@ void init_palette(void);																			//初始化调色板函数
 void set_palette(int start, int end, unsigned char *rgb);											//设置调色板
 void boxfill8(unsigned char *vram, int xsize, unsigned char c, int x0, int y0, int x1, int y1);		//绘制方块
 void init_screen(char *vram, int x, int y);															//初始化屏幕
+void putfont8(char *vram, int xsize, int x, int y, char c, char *font);								//绘制字体
 
 // 15种颜色常数定义
 #define COL_BLACK		0
@@ -32,7 +33,7 @@ void init_screen(char *vram, int x, int y);															//初始化屏幕
 #define COL_DGREY		15
 
 struct BOOTINFO {
-	/*启动信息*/
+	/*启动信息 - 此处原内容在第89页*/
 	char cyls, leds, vmode, reserve;
 	short scrnx, scrny;
 	char *vram;
@@ -41,6 +42,7 @@ struct BOOTINFO {
 void KaliMain(void){
 	/*这里是主程序*/
 	struct BOOTINFO *binfo = (struct BOOTINFO *) 0x0ff0;
+	extern char fonts[4096];
 	
 	init_palette();
 	init_screen(binfo->vram, binfo->scrnx, binfo->scrny);		//初始化屏幕
@@ -48,6 +50,12 @@ void KaliMain(void){
 	* 注：这里的 binfo->vram 等价于(*binfo).vram
 	* 其他的同理
 	*/
+	putfont8(binfo->vram, binfo->scrnx,  8, 8, COL_WHITE, fonts + 'A' * 16);
+	putfont8(binfo->vram, binfo->scrnx, 16, 8, COL_WHITE, fonts + 'B' * 16);
+	putfont8(binfo->vram, binfo->scrnx, 24, 8, COL_WHITE, fonts + 'C' * 16);
+	putfont8(binfo->vram, binfo->scrnx, 40, 8, COL_WHITE, fonts + '1' * 16);
+	putfont8(binfo->vram, binfo->scrnx, 48, 8, COL_WHITE, fonts + '2' * 16);
+	putfont8(binfo->vram, binfo->scrnx, 56, 8, COL_WHITE, fonts + '3' * 16);
 	
 	for(;;){
 		//停止CPU
@@ -56,7 +64,7 @@ void KaliMain(void){
 }
 
 void init_palette(void){
-	/*调色板函数，预置15中基本颜色，可以自行添加*/
+	/*调色板函数，预置15中基本颜色，可以自行添加 - 此处原内容在第75页*/
 	static unsigned char table_rgb[16 * 3] = {
 		0x00, 0x00, 0x00,	/*  0:黑 */
 		0xff, 0x00, 0x00,	/*  1:亮红 */
@@ -81,7 +89,7 @@ void init_palette(void){
 }
 
 void set_palette(int start, int end, unsigned char *rgb){
-	/*调色板功能*/
+	/*调色板功能 - 此处原内容在第75页*/
 	int i, eflags;
 	eflags = io_load_eflags();	/* 记录中断许可标志的值 */
 	io_cli(); 					/* 将中断许可标志置为0，禁止中断 */
@@ -97,7 +105,7 @@ void set_palette(int start, int end, unsigned char *rgb){
 }
 
 void boxfill8(unsigned char *vram, int xsize, unsigned char c, int x0, int y0, int x1, int y1){
-	/*绘制方块*/
+	/*绘制方块 - 此处原内容在第84页*/
 	int x, y;
 	for (y = y0; y <= y1; y++) {
 		for (x = x0; x <= x1; x++)
@@ -110,6 +118,27 @@ void init_screen(char *vram, int x, int y){
 	/*初始化屏幕*/
 	boxfill8( vram, x, COL_LDBLUE, 0, 0, x - 1, y - 1);		//绘制一个纯色背景当桌面
 }
+
+void putfont8(char *vram, int xsize, int x, int y, char c, char *font)
+{
+	/*绘制字体 - 此处原内容在第93页*/
+	int i;
+	char *p, d /* data */;
+	for (i = 0; i < 16; i++) {
+		p = vram + (y + i) * xsize + x;
+		d = font[i];
+		if ((d & 0x80) != 0) { p[0] = c; }
+		if ((d & 0x40) != 0) { p[1] = c; }
+		if ((d & 0x20) != 0) { p[2] = c; }
+		if ((d & 0x10) != 0) { p[3] = c; }
+		if ((d & 0x08) != 0) { p[4] = c; }
+		if ((d & 0x04) != 0) { p[5] = c; }
+		if ((d & 0x02) != 0) { p[6] = c; }
+		if ((d & 0x01) != 0) { p[7] = c; }
+	}
+	return;
+}
+
 
 void HariMain(void){
 	/*系统启动入口*/
