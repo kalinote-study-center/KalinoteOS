@@ -1,4 +1,6 @@
-//naskfunc中的函数
+#include <stdio.h>
+
+//naskfunc中的函数(汇编编写)
 void io_hlt(void);							//hlt功能
 //void write_mem8(int addr, int data);		//写入内存(被指针取代)
 void io_cli(void);							//禁止中断
@@ -14,6 +16,9 @@ void boxfill8(unsigned char *vram, int xsize, unsigned char c, int x0, int y0, i
 void init_screen(char *vram, int x, int y);															//初始化屏幕
 void putfont8(char *vram, int xsize, int x, int y, char c, char *font);								//绘制字体
 void putfonts8_asc(char *vram, int xsize, int x, int y, char c, unsigned char *s);					//绘制字符串
+void init_mouse_cursor8(char *mouse, char bc);														//初始化鼠标指针
+void putblock8_8(char *vram, int vxsize, int pxsize,
+	int pysize, int px0, int py0, char *buf, int bxsize);											//鼠标背景色处理
 
 // 15种颜色常数定义
 #define COL_BLACK		0
@@ -43,6 +48,7 @@ struct BOOTINFO {
 void KaliMain(void){
 	/*这里是主程序*/
 	struct BOOTINFO *binfo = (struct BOOTINFO *) 0x0ff0;		//启动信息(BOOTINFO结构体)
+	char s[40], mcursor[256];
 	
 	init_palette();												//初始化调色板
 	init_screen(binfo->vram, binfo->scrnx, binfo->scrny);		//初始化屏幕
@@ -51,12 +57,26 @@ void KaliMain(void){
 	* 其他的同理
 	*/
 	
+	init_mouse_cursor8(mcursor, COL_LDBLUE);					//初始化鼠标指针
+	putblock8_8(binfo->vram, binfo->scrnx, 16, 16,
+		(binfo->scrnx - 16) / 2,
+		(binfo->scrny - 28 - 16) / 2,
+		mcursor, 16);											//绘制鼠标
+	/*
+	* 注：此时的鼠标背景只能是COL_LDBLUE的纯色，所以移动是会覆盖掉下面的内容
+	* 不过后面会解决这个问题
+	*/
+	
 	putfonts8_asc(binfo->vram, binfo->scrnx, 236, 181, COL_DRED, "KalinoteOS");
 	putfonts8_asc(binfo->vram, binfo->scrnx, 235, 180, COL_BRED, "KalinoteOS");
 	/*
 	* 只要先绘制一遍暗色字体，然后再绘制一遍亮色字体，然后两个字符串差1个像素，就可以整出立体感来
 	* 后面调整函数文件结构后可以加个函数来专门绘制立体字符串
 	*/
+	
+	//变量相关内容，原文在第98页
+	sprintf(s, "scrnx = %d", binfo->scrnx);
+	putfonts8_asc(binfo->vram, binfo->scrnx, 16, 64, COL_WHITE, s);
 	
 	for(;;){
 		//停止CPU
@@ -147,6 +167,56 @@ void putfonts8_asc(char *vram, int xsize, int x, int y, char c, unsigned char *s
 	for (; *s != 0x00; s++) {
 		putfont8(vram, xsize, x, y, c, fonts + *s * 16);
 		x += 8;
+	}
+	return;
+}
+
+void init_mouse_cursor8(char *mouse, char bc){
+	/* 准备鼠标指针(16x16) - 此处原内容在第99页*/
+	static char cursor[16][16] = {
+		"*...............",
+		"**..............",
+		"*O*.............",
+		"*OO*............",
+		"*OOO*...........",
+		"*OOOO*..........",
+		"*OOOOO*.........",
+		"*OOOOOO*........",
+		"*OOOOOOO*.......",
+		"*OOOO*****......",
+		"*OO*O*..........",
+		"*O*.*O*.........",
+		"**..*O*.........",
+		"*....*O*........",
+		".....*O*........",
+		"......*........."
+	};
+	int x, y;
+
+	for (y = 0; y < 16; y++) {
+		for (x = 0; x < 16; x++) {
+			if (cursor[y][x] == '*') {
+				mouse[y * 16 + x] = COL_BLACK;
+			}
+			if (cursor[y][x] == 'O') {
+				mouse[y * 16 + x] = COL_WHITE;
+			}
+			if (cursor[y][x] == '.') {
+				mouse[y * 16 + x] = bc;
+			}
+		}
+	}
+	return;
+}
+
+void putblock8_8(char *vram, int vxsize, int pxsize,
+	int pysize, int px0, int py0, char *buf, int bxsize){
+		/*鼠标背景色处理*/
+	int x, y;
+	for (y = 0; y < pysize; y++) {
+		for (x = 0; x < pxsize; x++) {
+			vram[(py0 + y) * vxsize + (px0 + x)] = buf[y * bxsize + x];
+		}
 	}
 	return;
 }
