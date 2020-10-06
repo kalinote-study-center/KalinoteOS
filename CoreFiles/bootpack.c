@@ -2,18 +2,19 @@
 #include <stdio.h>
 #include "bootpack.h"
 
-extern struct KEYBUF keybuf;
+extern struct FIFO8 keyfifo;
 
 void KaliMain(void){
 	/*这里是主程序*/
 	struct BOOTINFO *binfo = (struct BOOTINFO *) ADR_BOOTINFO;		//启动信息(BOOTINFO结构体)
-	char s[40], mcursor[256];
+	char s[40], mcursor[256], keybuf[32];
 	int mx, my, i;
 	
 	init_gdtidt();
 	init_pic();
 	io_sti(); /* IDT/PIC初始化结束，解除CPU的中断禁止 */
 	
+	fifo8_init(&keyfifo, 32, keybuf);							//初始化fifo缓冲区
 	io_out8(PIC0_IMR, 0xf9); /* 允许PIC1和键盘(11111001) */
 	io_out8(PIC1_IMR, 0xef); /* 允许鼠标(11101111) */
 	
@@ -49,21 +50,15 @@ void KaliMain(void){
 	for(;;){
 		//停止CPU
 		io_cli();
-		if (keybuf.len == 0) {
+		if (fifo8_status(&keyfifo) == 0) {
 			io_stihlt();
 		} else {
-			i = keybuf.data[keybuf.next_r];
-			keybuf.len--;
-			keybuf.next_r++;
-			if (keybuf.next_r == 32) {
-				keybuf.next_r = 0;
-			}
+			i = fifo8_get(&keyfifo);
 			io_sti();
 			sprintf(s, "%02X", i);
 			boxfill8(binfo->vram, binfo->scrnx, COL_LDBLUE, 0, 16, 15, 31);
 			putfonts8_asc(binfo->vram, binfo->scrnx, 0, 16, COL_WHITE, s);
 		}
-		
 	}
 }
 

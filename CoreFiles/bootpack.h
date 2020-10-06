@@ -85,9 +85,9 @@ struct KEYBUF {
 	int next_r, next_w, len;
 };
 void init_pic(void);
-void inthandler21(int *esp);
-void inthandler27(int *esp);
-void inthandler2c(int *esp);
+void inthandler21(int *esp);			//21中断
+void inthandler27(int *esp);			//27中断
+void inthandler2c(int *esp);			//2c中断
 #define PIC0_ICW1		0x0020
 #define PIC0_OCW2		0x0020
 #define PIC0_IMR		0x0021
@@ -100,3 +100,13 @@ void inthandler2c(int *esp);
 #define PIC1_ICW2		0x00a1
 #define PIC1_ICW3		0x00a1
 #define PIC1_ICW4		0x00a1
+
+/* fifo.c */
+struct FIFO8 {
+	unsigned char *buf;
+	int p, q, size, free, flags;
+};
+void fifo8_init(struct FIFO8 *fifo, int size, unsigned char *buf);								//初始化FIFO缓冲区
+int fifo8_put(struct FIFO8 *fifo, unsigned char data);											//向FIFO传数据并保存
+int fifo8_get(struct FIFO8 *fifo);																//从FIFO获得一个数据
+int fifo8_status(struct FIFO8 *fifo);															//查询缓冲区状态
