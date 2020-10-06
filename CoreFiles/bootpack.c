@@ -3,6 +3,8 @@
 #include "bootpack.h"
 
 extern struct FIFO8 keyfifo;
+void enable_mouse(void);			//激活鼠标
+void init_keyboard(void);			//初始化键盘控制电路
 
 void KaliMain(void){
 	/*这里是主程序*/
@@ -17,6 +19,8 @@ void KaliMain(void){
 	fifo8_init(&keyfifo, 32, keybuf);							//初始化fifo缓冲区
 	io_out8(PIC0_IMR, 0xf9); /* 允许PIC1和键盘(11111001) */
 	io_out8(PIC1_IMR, 0xef); /* 允许鼠标(11101111) */
+	
+	init_keyboard();		//初始化键盘
 	
 	init_palette();												//初始化调色板
 	init_screen(binfo->vram, binfo->scrnx, binfo->scrny);		//初始化屏幕
@@ -47,6 +51,8 @@ void KaliMain(void){
 	//sprintf(s, "scrnx = %d", binfo->scrnx);
 	//putfonts8_asc(binfo->vram, binfo->scrnx, 16, 64, COL_WHITE, s);
 	
+	enable_mouse();			//激活鼠标
+	
 	for(;;){
 		//停止CPU
 		io_cli();
@@ -61,6 +67,49 @@ void KaliMain(void){
 		}
 	}
 }
+
+
+#define PORT_KEYDAT				0x0060
+#define PORT_KEYSTA				0x0064
+#define PORT_KEYCMD				0x0064
+#define KEYSTA_SEND_NOTREADY	0x02
+#define KEYCMD_WRITE_MODE		0x60
+#define KBC_MODE				0x47
+
+void wait_KBC_sendready(void)
+{
+	/* 等待键盘控制电路准备完毕 - 此处原内容在第140页 */
+	for (;;) {
+		if ((io_in8(PORT_KEYSTA) & KEYSTA_SEND_NOTREADY) == 0) {
+			break;
+		}
+	}
+	return;
+}
+
+void init_keyboard(void)
+{
+	/* 初始化键盘控制电路 */
+	wait_KBC_sendready();
+	io_out8(PORT_KEYCMD, KEYCMD_WRITE_MODE);
+	wait_KBC_sendready();
+	io_out8(PORT_KEYDAT, KBC_MODE);
+	return;
+}
+
+#define KEYCMD_SENDTO_MOUSE		0xd4
+#define MOUSECMD_ENABLE			0xf4
+
+void enable_mouse(void)
+{
+	/* 激活鼠标 */
+	wait_KBC_sendready();
+	io_out8(PORT_KEYCMD, KEYCMD_SENDTO_MOUSE);
+	wait_KBC_sendready();
+	io_out8(PORT_KEYDAT, MOUSECMD_ENABLE);
+	return; /* うまくいくとACK(0xfa)が送信されてくる */
+}
+
 
 void HariMain(void){
 	/*系统启动入口*/
