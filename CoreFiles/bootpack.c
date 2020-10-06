@@ -2,15 +2,20 @@
 #include <stdio.h>
 #include "bootpack.h"
 
+extern struct KEYBUF keybuf;
+
 void KaliMain(void){
 	/*这里是主程序*/
-	struct BOOTINFO *binfo = (struct BOOTINFO *) 0x0ff0;		//启动信息(BOOTINFO结构体)
+	struct BOOTINFO *binfo = (struct BOOTINFO *) ADR_BOOTINFO;		//启动信息(BOOTINFO结构体)
 	char s[40], mcursor[256];
-	int mx, my;
+	int mx, my, i, j;
 	
 	init_gdtidt();
 	init_pic();
 	io_sti(); /* IDT/PIC初始化结束，解除CPU的中断禁止 */
+	
+	io_out8(PIC0_IMR, 0xf9); /* 允许PIC1和键盘(11111001) */
+	io_out8(PIC1_IMR, 0xef); /* 允许鼠标(11101111) */
 	
 	init_palette();												//初始化调色板
 	init_screen(binfo->vram, binfo->scrnx, binfo->scrny);		//初始化屏幕
@@ -18,7 +23,6 @@ void KaliMain(void){
 	* 注：这里的 binfo->vram 等价于(*binfo).vram
 	* 其他的同理
 	*/
-	
 	mx = (binfo->scrnx - 16) / 2; 								//鼠标指针位置，默认为屏幕中心
 	my = (binfo->scrny - 28 - 16) / 2;
 	init_mouse_cursor8(mcursor, COL_LDBLUE);					//初始化鼠标指针
@@ -39,15 +43,26 @@ void KaliMain(void){
 	*/
 	
 	//变量相关内容，原文在第98页
-	sprintf(s, "scrnx = %d", binfo->scrnx);
-	putfonts8_asc(binfo->vram, binfo->scrnx, 16, 64, COL_WHITE, s);
-	
-	io_out8(PIC0_IMR, 0xf9); /* 允许PIC1和键盘(11111001) */
-	io_out8(PIC1_IMR, 0xef); /* 允许鼠标(11101111) */
+	//sprintf(s, "scrnx = %d", binfo->scrnx);
+	//putfonts8_asc(binfo->vram, binfo->scrnx, 16, 64, COL_WHITE, s);
 	
 	for(;;){
 		//停止CPU
-		io_hlt();
+		io_cli();
+		if (keybuf.next == 0) {
+			io_stihlt();
+		} else {
+			i = keybuf.data[0];
+			keybuf.next--;
+			for (j = 0; j < keybuf.next; j++) {
+				keybuf.data[j] = keybuf.data[j + 1];
+			}
+			io_sti();
+			sprintf(s, "%02X", i);
+			boxfill8(binfo->vram, binfo->scrnx, COL_LDBLUE, 0, 16, 15, 31);
+			putfonts8_asc(binfo->vram, binfo->scrnx, 0, 16, COL_WHITE, s);
+		}
+		
 	}
 }
 

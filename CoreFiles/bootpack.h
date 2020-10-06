@@ -11,9 +11,12 @@ struct BOOTINFO {	/* 0x0ff0-0x0fff */
 #define ADR_BOOTINFO	0x00000ff0
 
 //naskfunc.nas中的函数(汇编编写)
-void io_hlt(void);							//hlt功能
+void io_hlt(void);							//暂停处理器
 //void write_mem8(int addr, int data);		//写入内存(被指针取代)
 void io_cli(void);							//禁止中断
+void io_sti(void);							//允许中断
+void io_stihlt(void);						//允许中断并暂停处理器
+int io_in8(int port);						//传输数据用的
 void io_out8(int port, int data);			//传输数据用的
 int io_load_eflags(void);					//读取最初的eflags值
 void io_store_eflags(int eflags);			//将值存入eflags寄存器
@@ -77,6 +80,10 @@ void set_gatedesc(struct GATE_DESCRIPTOR *gd, int offset, int selector, int ar);
 #define AR_INTGATE32	0x008e
 
 /* int.c */
+struct KEYBUF {
+	unsigned char data[32];
+	int next;
+};
 void init_pic(void);
 void inthandler21(int *esp);
 void inthandler27(int *esp);
@@ -93,4 +100,3 @@ void inthandler2c(int *esp);
 #define PIC1_ICW2		0x00a1
 #define PIC1_ICW3		0x00a1
 #define PIC1_ICW4		0x00a1
-#define PORT_KEYDAT		0x0060

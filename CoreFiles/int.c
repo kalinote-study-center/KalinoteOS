@@ -23,27 +23,28 @@ void init_pic(void){
 	return;
 }
 
+#define PORT_KEYDAT		0x0060
+
+struct KEYBUF keybuf;
+
 void inthandler21(int *esp){
 	/* PS/2键盘中断 */
 	/*
 	* 实际上现在基本上没什么人用PS/2键盘了
 	* 不过模拟器里面可以用
 	*/
-	struct BOOTINFO *binfo = (struct BOOTINFO *) ADR_BOOTINFO;
-	unsigned char data, s[4];
+	unsigned char data;
 	io_out8(PIC0_OCW2, 0x61);	/* 通知PIC：IRQ-01受理完毕 */
 	data = io_in8(PORT_KEYDAT);
-
-	sprintf(s, "%02X", data);
-	boxfill8(binfo->vram, binfo->scrnx, COL_LDBLUE, 0, 16, 15, 31);
-	putfonts8_asc(binfo->vram, binfo->scrnx, 0, 16, COL_WHITE, s);
-
+	if (keybuf.next < 32) {
+		keybuf.data[keybuf.next] = data;
+		keybuf.next++;
+	}
 	return;
 }
 
-void inthandler2c(int *esp)
-/* PS/2マウスからの割り込み */
-{
+void inthandler2c(int *esp){
+	/* PS/2鼠标中断(同键盘，现在没什么人用PS/2鼠标了) */
 	struct BOOTINFO *binfo = (struct BOOTINFO *) ADR_BOOTINFO;
 	boxfill8(binfo->vram, binfo->scrnx, COL_BLACK, 0, 0, 32 * 8 - 1, 15);
 	putfonts8_asc(binfo->vram, binfo->scrnx, 0, 0, COL_WHITE, "INT 2C (IRQ-12) : PS/2 mouse");
@@ -52,14 +53,14 @@ void inthandler2c(int *esp)
 	}
 }
 
-void inthandler27(int *esp)
-/* PIC0からの不完全割り込み対策 */
-/* Athlon64X2機などではチップセットの都合によりPICの初期化時にこの割り込みが1度だけおこる */
-/* この割り込み処理関数は、その割り込みに対して何もしないでやり過ごす */
-/* なぜ何もしなくていいの？
-	→  この割り込みはPIC初期化時の電気的なノイズによって発生したものなので、
-		まじめに何か処理してやる必要がない。									*/
-{
-	io_out8(PIC0_OCW2, 0x67); /* IRQ-07受付完了をPICに通知(7-1参照) */
+void inthandler27(int *esp){
+/* 来自PIC0的不完全中断对策 */
+/* 由于芯片组的原因，在PIC初始化时，Athlon 64X2机等会发生一次中断 */
+/*
+* 为什么什么都不做？
+* →该中断是由于PIC初始化时的电气噪声造成的
+* 不必认真处理什么。
+*/
+	io_out8(PIC0_OCW2, 0x67); /* 将IRQ-07受理完成通知PIC（参照7-1） */
 	return;
 }
