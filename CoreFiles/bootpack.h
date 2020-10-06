@@ -19,6 +19,9 @@ int io_load_eflags(void);					//读取最初的eflags值
 void io_store_eflags(int eflags);			//将值存入eflags寄存器
 void load_gdtr(int limit, int addr);		//加载GDTR寄存器
 void load_idtr(int limit, int addr);		//加载IDTR寄存器
+void asm_inthandler21(void);				//21中断，注册在0x21
+void asm_inthandler27(void);				//27中断，注册在0x27
+void asm_inthandler2c(void);				//2c中断，注册在0x2c
 
 //graphic.c
 void init_palette(void);																			//初始化调色板函数
@@ -71,9 +74,13 @@ void set_gatedesc(struct GATE_DESCRIPTOR *gd, int offset, int selector, int ar);
 #define LIMIT_BOTPAK	0x0007ffff
 #define AR_DATA32_RW	0x4092
 #define AR_CODE32_ER	0x409a
+#define AR_INTGATE32	0x008e
 
 /* int.c */
 void init_pic(void);
+void inthandler21(int *esp);
+void inthandler27(int *esp);
+void inthandler2c(int *esp);
 #define PIC0_ICW1		0x0020
 #define PIC0_OCW2		0x0020
 #define PIC0_IMR		0x0021

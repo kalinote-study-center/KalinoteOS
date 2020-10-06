@@ -9,6 +9,9 @@ void KaliMain(void){
 	int mx, my;
 	
 	init_gdtidt();
+	init_pic();
+	io_sti(); /* IDT/PIC初始化结束，解除CPU的中断禁止 */
+	
 	init_palette();												//初始化调色板
 	init_screen(binfo->vram, binfo->scrnx, binfo->scrny);		//初始化屏幕
 	/*
@@ -38,6 +41,9 @@ void KaliMain(void){
 	//变量相关内容，原文在第98页
 	sprintf(s, "scrnx = %d", binfo->scrnx);
 	putfonts8_asc(binfo->vram, binfo->scrnx, 16, 64, COL_WHITE, s);
+	
+	io_out8(PIC0_IMR, 0xf9); /* 允许PIC1和键盘(11111001) */
+	io_out8(PIC1_IMR, 0xef); /* 允许鼠标(11101111) */
 	
 	for(;;){
 		//停止CPU
