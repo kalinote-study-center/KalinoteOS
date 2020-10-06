@@ -2,21 +2,22 @@
 #include <stdio.h>
 #include "bootpack.h"
 
-extern struct FIFO8 keyfifo;
+extern struct FIFO8 keyfifo, mousefifo;
 void enable_mouse(void);			//激活鼠标
 void init_keyboard(void);			//初始化键盘控制电路
 
 void KaliMain(void){
 	/*这里是主程序*/
 	struct BOOTINFO *binfo = (struct BOOTINFO *) ADR_BOOTINFO;		//启动信息(BOOTINFO结构体)
-	char s[40], mcursor[256], keybuf[32];
+	char s[40], mcursor[256], keybuf[32], mousebuf[128];
 	int mx, my, i;
+	unsigned char mouse_dbuf[3], mouse_phase;
 	
 	init_gdtidt();
 	init_pic();
 	io_sti(); /* IDT/PIC初始化结束，解除CPU的中断禁止 */
-	
-	fifo8_init(&keyfifo, 32, keybuf);							//初始化fifo缓冲区
+	fifo8_init(&keyfifo, 32, keybuf);							//初始化键盘fifo缓冲区
+	fifo8_init(&mousefifo, 128, mousebuf);						//初始化鼠标fifo缓冲区
 	io_out8(PIC0_IMR, 0xf9); /* 允许PIC1和键盘(11111001) */
 	io_out8(PIC1_IMR, 0xef); /* 允许鼠标(11101111) */
 	
@@ -52,18 +53,46 @@ void KaliMain(void){
 	//putfonts8_asc(binfo->vram, binfo->scrnx, 16, 64, COL_WHITE, s);
 	
 	enable_mouse();			//激活鼠标
+	mouse_phase = 0;		//进入到等待鼠标的0xfa状态
 	
 	for(;;){
 		//停止CPU
 		io_cli();
-		if (fifo8_status(&keyfifo) == 0) {
+		if (fifo8_status(&keyfifo) + fifo8_status(&mousefifo) == 0) {
 			io_stihlt();
 		} else {
-			i = fifo8_get(&keyfifo);
-			io_sti();
-			sprintf(s, "%02X", i);
-			boxfill8(binfo->vram, binfo->scrnx, COL_LDBLUE, 0, 16, 15, 31);
-			putfonts8_asc(binfo->vram, binfo->scrnx, 0, 16, COL_WHITE, s);
+			if (fifo8_status(&keyfifo) != 0) {
+				i = fifo8_get(&keyfifo);
+				io_sti();
+				sprintf(s, "%02X", i);
+				boxfill8(binfo->vram, binfo->scrnx, COL_LDBLUE,  0, 16, 15, 31);
+				putfonts8_asc(binfo->vram, binfo->scrnx, 0, 16, COL_WHITE, s);
+			} else if (fifo8_status(&mousefifo) != 0) {
+				i = fifo8_get(&mousefifo);
+				io_sti();
+				if (mouse_phase == 0) {
+					/* 等待鼠标的0xfa状态 */
+					if (i == 0xfa) {
+						mouse_phase = 1;
+					}
+				} else if (mouse_phase == 1) {
+					/* 等待鼠标的第一字节 */
+					mouse_dbuf[0] = i;
+					mouse_phase = 2;
+				} else if (mouse_phase == 2) {
+					/* 等待鼠标的第二字节 */
+					mouse_dbuf[1] = i;
+					mouse_phase = 3;
+				} else if (mouse_phase == 3) {
+					/* 等待鼠标的第三字节 */
+					mouse_dbuf[2] = i;
+					mouse_phase = 1;
+					/* 三个字节收集完毕，显示出来 */
+					sprintf(s, "%02X %02X %02X", mouse_dbuf[0], mouse_dbuf[1], mouse_dbuf[2]);
+					boxfill8(binfo->vram, binfo->scrnx, COL_LDBLUE, 32, 16, 32 + 8 * 8 - 1, 31);
+					putfonts8_asc(binfo->vram, binfo->scrnx, 32, 16, COL_WHITE, s);
+				}
+			}
 		}
 	}
 }
