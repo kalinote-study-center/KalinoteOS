@@ -1,4 +1,5 @@
 # KalinoteOS生成批处理文件
+OBJS_BOOTPACK = bootpack.obj naskfunc.obj fonts.obj graphic.obj dsctbl.obj
 
 TOOLPATH = ../z_tools/
 INCPATH  = ../z_tools/haribote/
@@ -30,45 +31,15 @@ ipl10.bin : ipl10.nas Makefile
 asmhead.bin : asmhead.nas Makefile
 	$(NASK) asmhead.nas asmhead.bin asmhead.lst
 
-bootpack.gas : bootpack.c Makefile
-	$(CC1) -o bootpack.gas bootpack.c
-
-bootpack.nas : bootpack.gas Makefile
-	$(GAS2NASK) bootpack.gas bootpack.nas
-
-bootpack.obj : bootpack.nas Makefile
-	$(NASK) bootpack.nas bootpack.obj bootpack.lst
-
-naskfunc.obj : naskfunc.nas Makefile
-	$(NASK) naskfunc.nas naskfunc.obj naskfunc.lst
-	
 fonts.bin : fonts.txt Makefile
 	$(MAKEFONT) fonts.txt fonts.bin
 
 fonts.obj : fonts.bin Makefile
 	$(BIN2OBJ) fonts.bin fonts.obj _fonts
 
-graphic.gas : graphic.c Makefile
-	$(CC1) -o graphic.gas graphic.c
-
-graphic.nas : graphic.gas Makefile
-	$(GAS2NASK) graphic.gas graphic.nas
-
-graphic.obj : graphic.nas Makefile
-	$(NASK) graphic.nas graphic.obj graphic.lst
-
-dsctbl.gas : dsctbl.c Makefile
-	$(CC1) -o dsctbl.gas dsctbl.c
-
-dsctbl.nas : dsctbl.gas Makefile
-	$(GAS2NASK) dsctbl.gas dsctbl.nas
-
-dsctbl.obj : dsctbl.nas Makefile
-	$(NASK) dsctbl.nas dsctbl.obj dsctbl.lst
-
-bootpack.bim : bootpack.obj naskfunc.obj fonts.obj graphic.obj dsctbl.obj Makefile
+bootpack.bim : $(OBJS_BOOTPACK) Makefile
 	$(OBJ2BIM) @$(RULEFILE) out:bootpack.bim stack:3136k map:bootpack.map \
-		bootpack.obj naskfunc.obj fonts.obj graphic.obj dsctbl.obj
+		$(OBJS_BOOTPACK)
 # 3MB+64KB=3136KB
 
 bootpack.kal : bootpack.bim Makefile
@@ -82,6 +53,17 @@ kalinote.img : ipl10.bin kalinote.sys Makefile
 		wbinimg src:ipl10.bin len:512 from:0 to:0 \
 		copy from:kalinote.sys to:@: \
 		imgout:kalinote.img
+
+# 一般规则
+
+%.gas : %.c Makefile
+	$(CC1) -o $*.gas $*.c
+
+%.nas : %.gas Makefile
+	$(GAS2NASK) $*.gas $*.nas
+
+%.obj : %.nas Makefile
+	$(NASK) $*.nas $*.obj $*.lst
 
 # 命令
 
@@ -100,11 +82,7 @@ install :
 clean :
 	-$(DEL) *.bin
 	-$(DEL) *.lst
-	-$(DEL) *.gas
 	-$(DEL) *.obj
-	-$(DEL) bootpack.nas
-	-$(DEL) graphic.nas
-	-$(DEL) dsctbl.nas
 	-$(DEL) bootpack.map
 	-$(DEL) bootpack.bim
 	-$(DEL) bootpack.kal
