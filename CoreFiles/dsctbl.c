@@ -1,24 +1,6 @@
 /*此文件负责GDT,IDT等的处理*/
-struct SEGMENT_DESCRIPTOR {
-	short limit_low, base_low;
-	char base_mid, access_right;
-	char limit_high, base_high;
-};
 
-struct GATE_DESCRIPTOR {
-	short offset_low, selector;
-	char dw_count, access_right;
-	short offset_high;
-};
-
-//naskfunc中的函数
-void load_gdtr(int limit, int addr);		//加载GDTR寄存器
-void load_idtr(int limit, int addr);		//加载IDTR寄存器
-
-//此文件中的函数
-void init_gdtidt(void);																				//初始化GDT和IDT
-void set_segmdesc(struct SEGMENT_DESCRIPTOR *sd, unsigned int limit, int base, int ar);
-void set_gatedesc(struct GATE_DESCRIPTOR *gd, int offset, int selector, int ar);
+#include "bootpack.h"
 
 void init_gdtidt(void)
 {

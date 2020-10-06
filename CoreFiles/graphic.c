@@ -1,40 +1,6 @@
 /*此文件负责图形绘制*/
 
-//naskfunc中的函数(汇编编写)
-void io_hlt(void);							//hlt功能
-void io_cli(void);							//禁止中断
-void io_out8(int port, int data);			//传输数据用的
-int io_load_eflags(void);					//读取最初的eflags值
-void io_store_eflags(int eflags);			//将值存入eflags寄存器
-
-//此文件中的函数
-void init_palette(void);																			//初始化调色板函数
-void set_palette(int start, int end, unsigned char *rgb);											//设置调色板
-void boxfill8(unsigned char *vram, int xsize, unsigned char c, int x0, int y0, int x1, int y1);		//绘制方块
-void init_screen(char *vram, int x, int y);															//初始化屏幕
-void putfont8(char *vram, int xsize, int x, int y, char c, char *font);								//绘制字体
-void putfonts8_asc(char *vram, int xsize, int x, int y, char c, unsigned char *s);					//绘制字符串
-void init_mouse_cursor8(char *mouse, char bc);														//初始化鼠标指针
-void putblock8_8(char *vram, int vxsize, int pxsize,
-	int pysize, int px0, int py0, char *buf, int bxsize);											//鼠标背景色处理
-	
-// 15种颜色常数定义
-#define COL_BLACK		0
-#define COL_BRED		1
-#define COL_BGREEN		2
-#define COL_BYELLOW		3
-#define COL_BBLUE		4
-#define COL_BPURPLE		5
-#define COL_LBBLUE		6
-#define COL_WHITE		7
-#define COL_BGREY		8
-#define COL_DRED		9
-#define COL_DGREEN		10
-#define COL_DYELLOW		11
-#define COL_DBLUE		12
-#define COL_DPURPLE		13
-#define COL_LDBLUE		14
-#define COL_DGREY		15
+#include "bootpack.h"
 
 void init_palette(void){
 	/*调色板函数，预置15中基本颜色，可以自行添加 - 此处原内容在第75页*/
