@@ -77,7 +77,7 @@ void KaliMain(void){
 				i = fifo8_get(&mousefifo);
 				io_sti();
 				if (mouse_decode(&mdec, i) != 0) {
-					/* 3字节集齐，显示出来 */
+					/* 3字符集齐，显示出来 */
 					sprintf(s, "[lcr %4d %4d]", mdec.x, mdec.y);
 					if ((mdec.btn & 0x01) != 0) {
 						s[1] = 'L';
@@ -90,10 +90,29 @@ void KaliMain(void){
 					}
 					boxfill8(binfo->vram, binfo->scrnx, COL_LDBLUE, 32, 16, 32 + 15 * 8 - 1, 31);
 					putfonts8_asc(binfo->vram, binfo->scrnx, 32, 16, COL_WHITE, s);
+					/* 鼠标指针移动 */
+					boxfill8(binfo->vram, binfo->scrnx, COL_LDBLUE, mx, my, mx + 15, my + 15); /* 隐藏鼠标 */
+					mx += mdec.x;
+					my += mdec.y;
+					if (mx < 0) {
+						mx = 0;
+					}
+					if (my < 0) {
+						my = 0;
+					}
+					if (mx > binfo->scrnx - 16) {
+						mx = binfo->scrnx - 16;
+					}
+					if (my > binfo->scrny - 16) {
+						my = binfo->scrny - 16;
+					}
+					sprintf(s, "(%3d, %3d)", mx, my);
+					boxfill8(binfo->vram, binfo->scrnx, COL_LDBLUE, 0, 0, 79, 15); /* 隐藏坐标 */
+					putfonts8_asc(binfo->vram, binfo->scrnx, 0, 0, COL_WHITE, s); /* 显示坐标 */
+					putblock8_8(binfo->vram, binfo->scrnx, 16, 16, mx, my, mcursor, 16); /* 描画鼠标 */
 				}
 			}
 		}
-		
 	}
 }
 
