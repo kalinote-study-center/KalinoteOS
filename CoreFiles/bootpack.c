@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include "bootpack.h"
 
+void make_window(unsigned char *buf, int xsize, int ysize, char *title);			//生成一个窗口
+
 void KaliMain(void){
 	/*这里是主程序*/
 	struct BOOTINFO *binfo = (struct BOOTINFO *) ADR_BOOTINFO;		//启动信息(BOOTINFO结构体)
@@ -11,8 +13,8 @@ void KaliMain(void){
 	struct MOUSE_DEC mdec;
 	struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;
 	struct SHTCTL *shtctl;
-	struct SHEET *sht_back, *sht_mouse;
-	unsigned char *buf_back, buf_mouse[256];
+	struct SHEET *sht_back, *sht_mouse, *sht_win;
+	unsigned char *buf_back, buf_mouse[256], *buf_win;
 	
 	init_gdtidt();
 	init_pic();
@@ -32,22 +34,33 @@ void KaliMain(void){
 	init_palette();												//初始化调色板
 	shtctl = shtctl_init(memman, binfo->vram, binfo->scrnx, binfo->scrny);
 	sht_back  = sheet_alloc(shtctl);
-	sht_mouse = sheet_alloc(shtctl);
+	sht_mouse = sheet_alloc(shtctl);							//鼠标
+	sht_win   = sheet_alloc(shtctl);							//窗口
 	buf_back  = (unsigned char *) memman_alloc_4k(memman, binfo->scrnx * binfo->scrny);
+	buf_win   = (unsigned char *) memman_alloc_4k(memman, 160 * 68);
 	sheet_setbuf(sht_back, buf_back, binfo->scrnx, binfo->scrny, -1);	// 没有透明色
-	sheet_setbuf(sht_mouse, buf_mouse, 16, 16, 99);						// 透明色号99
+	sheet_setbuf(sht_mouse, buf_mouse, 16, 16, 99);						// 鼠标 透明色号99
+	sheet_setbuf(sht_win, buf_win, 160, 68, -1);						// 窗口
 	init_screen(buf_back, binfo->scrnx, binfo->scrny);		//初始化屏幕
 	/*
 	* 注：这里的 binfo->vram 等价于(*binfo).vram
 	* 其他的同理
 	*/
 	init_mouse_cursor8(buf_mouse, 99);							//背景色号99.
+	
+	/* 窗口 */
+	make_window(buf_win, 160, 68, "window");
+	putfonts8_asc(buf_win, 160, 24, 28, COL_WHITE, "Welcome to");
+	putfonts8_asc(buf_win, 160, 24, 44, COL_BRED, "  KlinoteOS!");
+	
 	sheet_slide(sht_back, 0, 0);
 	mx = (binfo->scrnx - 16) / 2; 								//鼠标指针位置，默认为屏幕中心
 	my = (binfo->scrny - 28 - 16) / 2;
 	sheet_slide(sht_mouse, mx, my);
+	sheet_slide(sht_win, 80, 72);
 	sheet_updown(sht_back,  0);
-	sheet_updown(sht_mouse, 1);
+	sheet_updown(sht_win,   1);			/* 背景的序号是0(最底层)，其次是窗口1(中间)，最后是鼠标(最顶层) */
+	sheet_updown(sht_mouse, 2);
 	sprintf(s, "(%d, %d)", mx, my);
 	putfonts8_asc(buf_back, binfo->scrnx, 0, 0, COL_WHITE, s);
 	/*
@@ -132,6 +145,55 @@ void KaliMain(void){
 		}
 	}
 }
+
+void make_window(unsigned char *buf, int xsize, int ysize, char *title){
+	static char closebtn[14][16] = {
+		"OOOOOOOOOOOOOOO@",
+		"OQQQQQQQQQQQQQ$@",
+		"OQQQQQQQQQQQQQ$@",
+		"OQQQ@@QQQQ@@QQ$@",
+		"OQQQQ@@QQ@@QQQ$@",
+		"OQQQQQ@@@@QQQQ$@",
+		"OQQQQQQ@@QQQQQ$@",
+		"OQQQQQ@@@@QQQQ$@",
+		"OQQQQ@@QQ@@QQQ$@",
+		"OQQQ@@QQQQ@@QQ$@",
+		"OQQQQQQQQQQQQQ$@",
+		"OQQQQQQQQQQQQQ$@",
+		"O$$$$$$$$$$$$$$@",
+		"@@@@@@@@@@@@@@@@"
+	};
+	int x, y;
+	char c;
+	boxfill8(buf, xsize, COL_BGREY, 0,         0,         xsize - 1, 0        );
+	boxfill8(buf, xsize, COL_WHITE, 1,         1,         xsize - 2, 1        );
+	boxfill8(buf, xsize, COL_BGREY, 0,         0,         0,         ysize - 1);
+	boxfill8(buf, xsize, COL_WHITE, 1,         1,         1,         ysize - 2);
+	boxfill8(buf, xsize, COL_DGREY, xsize - 2, 1,         xsize - 2, ysize - 2);
+	boxfill8(buf, xsize, COL_BLACK, xsize - 1, 0,         xsize - 1, ysize - 1);
+	boxfill8(buf, xsize, COL_BGREY, 2,         2,         xsize - 3, ysize - 3);
+	boxfill8(buf, xsize, COL_DBLUE, 3,         3,         xsize - 4, 20       );
+	boxfill8(buf, xsize, COL_DGREY, 1,         ysize - 2, xsize - 2, ysize - 2);
+	boxfill8(buf, xsize, COL_BLACK, 0,         ysize - 1, xsize - 1, ysize - 1);
+	putfonts8_asc(buf, xsize, 24, 4, COL_WHITE, title);
+	for (y = 0; y < 14; y++) {
+		for (x = 0; x < 16; x++) {
+			c = closebtn[y][x];
+			if (c == '@') {
+				c = COL_BLACK;
+			} else if (c == '$') {
+				c = COL_DGREY;
+			} else if (c == 'Q') {
+				c = COL_BGREY;
+			} else {
+				c = COL_WHITE;
+			}
+			buf[(5 + y) * xsize + (xsize - 21 + x)] = c;
+		}
+	}
+	return;
+}
+
 
 void HariMain(void){
 	/*系统启动入口*/
