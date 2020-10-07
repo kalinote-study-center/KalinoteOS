@@ -22,6 +22,8 @@ int io_load_eflags(void);					//读取最初的eflags值
 void io_store_eflags(int eflags);			//将值存入eflags寄存器
 void load_gdtr(int limit, int addr);		//加载GDTR寄存器
 void load_idtr(int limit, int addr);		//加载IDTR寄存器
+int load_cr0(void);							//加载CR0寄存器
+void store_cr0(int cr0);					//存入CR0寄存器
 void asm_inthandler21(void);				//21中断，注册在0x21
 void asm_inthandler27(void);				//27中断，注册在0x27
 void asm_inthandler2c(void);				//2c中断，注册在0x2c
