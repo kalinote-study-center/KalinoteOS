@@ -42,12 +42,12 @@ void KaliMain(void){
 	* 其他的同理
 	*/
 	init_mouse_cursor8(buf_mouse, 99);							//背景色号99.
-	sheet_slide(shtctl, sht_back, 0, 0);
+	sheet_slide(sht_back, 0, 0);
 	mx = (binfo->scrnx - 16) / 2; 								//鼠标指针位置，默认为屏幕中心
 	my = (binfo->scrny - 28 - 16) / 2;
-	sheet_slide(shtctl, sht_mouse, mx, my);
-	sheet_updown(shtctl, sht_back,  0);
-	sheet_updown(shtctl, sht_mouse, 1);
+	sheet_slide(sht_mouse, mx, my);
+	sheet_updown(sht_back,  0);
+	sheet_updown(sht_mouse, 1);
 	sprintf(s, "(%d, %d)", mx, my);
 	putfonts8_asc(buf_back, binfo->scrnx, 0, 0, COL_WHITE, s);
 	/*
@@ -69,7 +69,7 @@ void KaliMain(void){
 	sprintf(s, "memory %dMB   free : %dKB",
 			memtotal / (1024 * 1024), memman_total(memman) / 1024);
 	putfonts8_asc(buf_back, binfo->scrnx, 0, 32, COL_WHITE, s);			//显示内存
-	sheet_refresh(shtctl, sht_back, 0, 0, binfo->scrnx, 48);
+	sheet_refresh(sht_back, 0, 0, binfo->scrnx, 48);
 	
 	for(;;){
 		//停止CPU
@@ -84,7 +84,7 @@ void KaliMain(void){
 				sprintf(s, "%02X", i);
 				boxfill8(buf_back, binfo->scrnx, COL_LDBLUE,  0, 16, 15, 31);
 				putfonts8_asc(buf_back, binfo->scrnx, 0, 16, COL_WHITE, s);
-				sheet_refresh(shtctl, sht_back, 0, 16, 16, 32);
+				sheet_refresh(sht_back, 0, 16, 16, 32);
 			} else if (fifo8_status(&mousefifo) != 0) {
 				i = fifo8_get(&mousefifo);
 				io_sti();
@@ -105,7 +105,7 @@ void KaliMain(void){
 					}
 					boxfill8(buf_back, binfo->scrnx, COL_LDBLUE, 32, 16, 32 + 15 * 8 - 1, 31);
 					putfonts8_asc(buf_back, binfo->scrnx, 32, 16, COL_WHITE, s);
-					sheet_refresh(shtctl, sht_back, 32, 16, 32 + 15 * 8, 32);
+					sheet_refresh(sht_back, 32, 16, 32 + 15 * 8, 32);
 					/* 鼠标指针移动 */
 					mx += mdec.x;
 					my += mdec.y;
@@ -125,8 +125,8 @@ void KaliMain(void){
 					sprintf(s, "(%3d, %3d)", mx, my);
 					boxfill8(buf_back, binfo->scrnx, COL_LDBLUE, 0, 0, 79, 15); /* 隐藏坐标 */
 					putfonts8_asc(buf_back, binfo->scrnx, 0, 0, COL_WHITE, s); /* 显示坐标 */
-					sheet_refresh(shtctl, sht_back, 0, 0, 80, 16);
-					sheet_slide(shtctl, sht_mouse, mx, my); /* 包含sheet_refresh */
+					sheet_refresh(sht_back, 0, 0, 80, 16);
+					sheet_slide(sht_mouse, mx, my); /* 包含sheet_refresh */
 				}
 			}
 		}
