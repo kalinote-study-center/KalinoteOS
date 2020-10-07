@@ -63,11 +63,8 @@ void KaliMain(void){
 	sheet_updown(sht_mouse, 2);
 	sprintf(s, "(%d, %d)", mx, my);
 	putfonts8_asc(buf_back, binfo->scrnx, 0, 0, COL_WHITE, s);
-	/*
-	* 注：此时的鼠标背景只能是COL_LDBLUE的纯色，所以移动是会覆盖掉下面的内容
-	* 不过后面会解决这个问题
-	*/
 	
+	/* logo */
 	putfonts8_asc(buf_back, binfo->scrnx, 236, 181, COL_DRED, "KalinoteOS");
 	putfonts8_asc(buf_back, binfo->scrnx, 235, 180, COL_BRED, "KalinoteOS");
 	/*
