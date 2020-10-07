@@ -1,6 +1,6 @@
 # KalinoteOS生成批处理文件
 OBJS_BOOTPACK = bootpack.obj naskfunc.obj fonts.obj graphic.obj dsctbl.obj \
-		int.obj fifo.obj keyboard.obj mouse.obj
+		int.obj fifo.obj keyboard.obj mouse.obj memory.obj
 
 TOOLPATH = ../z_tools/
 INCPATH  = ../z_tools/haribote/
@@ -57,7 +57,7 @@ kalinote.img : ipl10.bin kalinote.sys Makefile
 
 # 一般规则
 
-%.gas : %.c Makefile
+%.gas : %.c bootpack.h Makefile
 	$(CC1) -o $*.gas $*.c
 
 %.nas : %.gas Makefile

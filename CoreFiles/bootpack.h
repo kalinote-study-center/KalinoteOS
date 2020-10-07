@@ -86,9 +86,7 @@ void set_gatedesc(struct GATE_DESCRIPTOR *gd, int offset, int selector, int ar);
 
 /* int.c */
 void init_pic(void);
-void inthandler21(int *esp);			//21中断
 void inthandler27(int *esp);			//27中断
-void inthandler2c(int *esp);			//2c中断
 #define PIC0_ICW1		0x0020
 #define PIC0_OCW2		0x0020
 #define PIC0_IMR		0x0021
@@ -124,8 +122,26 @@ int mouse_decode(struct MOUSE_DEC *mdec, unsigned char dat);
 
 /* keyboard.c */
 void inthandler21(int *esp);																		//键盘监听中断
-void wait_KBC_sendready(void);
+void wait_KBC_sendready(void);																		//等待键盘控制电路准备完毕
 void init_keyboard(void);																			//初始化键盘控制电路
 extern struct FIFO8 keyfifo;
 #define PORT_KEYDAT		0x0060
 #define PORT_KEYCMD		0x0064
+
+/* memory.c */
+#define MEMMAN_FREES		4090	/* 大约32KB */
+#define MEMMAN_ADDR			0x003c0000
+struct FREEINFO {	/* 可用信息 */
+	unsigned int addr, size;
+};
+struct MEMMAN {		/* 内存管理 */
+	int frees, maxfrees, lostsize, losts;
+	struct FREEINFO free[MEMMAN_FREES];
+};
+unsigned int memtest(unsigned int start, unsigned int end);											//测试CPU类型
+void memman_init(struct MEMMAN *man);																//初始化内存管理程序
+unsigned int memman_total(struct MEMMAN *man);														//获取剩余内存大小
+unsigned int memman_alloc(struct MEMMAN *man, unsigned int size);									//分配内存
+int memman_free(struct MEMMAN *man, unsigned int addr, unsigned int size);							//释放内存
+unsigned int memman_alloc_4k(struct MEMMAN *man, unsigned int size);								//4K大空间分配内存
+int memman_free_4k(struct MEMMAN *man, unsigned int addr, unsigned int size);						//4K大空间释放内存
