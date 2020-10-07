@@ -27,6 +27,9 @@ void store_cr0(int cr0);					//存入CR0寄存器
 void asm_inthandler21(void);				//21中断，注册在0x21
 void asm_inthandler27(void);				//27中断，注册在0x27
 void asm_inthandler2c(void);				//2c中断，注册在0x2c
+unsigned int memtest_sub(
+	unsigned int start,
+	unsigned int end);						//读取内存
 
 //graphic.c
 void init_palette(void);																			//初始化调色板函数
