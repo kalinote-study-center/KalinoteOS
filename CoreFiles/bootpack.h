@@ -102,7 +102,25 @@ struct FIFO8 {
 	unsigned char *buf;
 	int p, q, size, free, flags;
 };
-void fifo8_init(struct FIFO8 *fifo, int size, unsigned char *buf);								//初始化FIFO缓冲区
-int fifo8_put(struct FIFO8 *fifo, unsigned char data);											//向FIFO传数据并保存
-int fifo8_get(struct FIFO8 *fifo);																//从FIFO获得一个数据
-int fifo8_status(struct FIFO8 *fifo);															//查询缓冲区状态
+void fifo8_init(struct FIFO8 *fifo, int size, unsigned char *buf);									//初始化FIFO缓冲区
+int fifo8_put(struct FIFO8 *fifo, unsigned char data);												//向FIFO传数据并保存
+int fifo8_get(struct FIFO8 *fifo);																	//从FIFO获得一个数据
+int fifo8_status(struct FIFO8 *fifo);																//查询缓冲区状态
+
+/* mouse.c */
+struct MOUSE_DEC {
+	unsigned char buf[3], phase;
+	int x, y, btn;
+};
+extern struct FIFO8 mousefifo;
+void inthandler2c(int *esp);																		//鼠标监听中断
+void enable_mouse(struct MOUSE_DEC *mdec);															//激活鼠标
+int mouse_decode(struct MOUSE_DEC *mdec, unsigned char dat);
+
+/* keyboard.c */
+void inthandler21(int *esp);																		//键盘监听中断
+void wait_KBC_sendready(void);
+void init_keyboard(void);																			//初始化键盘控制电路
+extern struct FIFO8 keyfifo;
+#define PORT_KEYDAT		0x0060
+#define PORT_KEYCMD		0x0064
