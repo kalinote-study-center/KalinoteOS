@@ -145,3 +145,23 @@ unsigned int memman_alloc(struct MEMMAN *man, unsigned int size);									//分配
 int memman_free(struct MEMMAN *man, unsigned int addr, unsigned int size);							//释放内存
 unsigned int memman_alloc_4k(struct MEMMAN *man, unsigned int size);								//4K大空间分配内存
 int memman_free_4k(struct MEMMAN *man, unsigned int addr, unsigned int size);						//4K大空间释放内存
+
+/* sheet.c */
+#define MAX_SHEETS		256
+struct SHEET {
+	unsigned char *buf;
+	int bxsize, bysize, vx0, vy0, col_inv, height, flags;
+};
+struct SHTCTL {
+	unsigned char *vram;
+	int xsize, ysize, top;
+	struct SHEET *sheets[MAX_SHEETS];
+	struct SHEET sheets0[MAX_SHEETS];
+};
+struct SHTCTL *shtctl_init(struct MEMMAN *memman, unsigned char *vram, int xsize, int ysize);		//初始化层
+struct SHEET *sheet_alloc(struct SHTCTL *ctl);														//获得未使用的新图层
+void sheet_setbuf(struct SHEET *sht, unsigned char *buf, int xsize, int ysize, int col_inv);		//设置缓冲区大小
+void sheet_updown(struct SHTCTL *ctl, struct SHEET *sht, int height);								//调整sheet高度
+void sheet_refresh(struct SHTCTL *ctl);																//刷新图层
+void sheet_slide(struct SHTCTL *ctl, struct SHEET *sht, int vx0, int vy0);							//移动图层
+void sheet_free(struct SHTCTL *ctl, struct SHEET *sht);												//释放已使用的图层内存

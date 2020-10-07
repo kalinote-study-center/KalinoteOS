@@ -5,11 +5,14 @@
 void KaliMain(void){
 	/*这里是主程序*/
 	struct BOOTINFO *binfo = (struct BOOTINFO *) ADR_BOOTINFO;		//启动信息(BOOTINFO结构体)
-	char s[40], mcursor[256], keybuf[32], mousebuf[128];
+	char s[40], keybuf[32], mousebuf[128];
 	int mx, my, i;
 	unsigned int memtotal;
 	struct MOUSE_DEC mdec;
 	struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;
+	struct SHTCTL *shtctl;
+	struct SHEET *sht_back, *sht_mouse;
+	unsigned char *buf_back, buf_mouse[256];
 	
 	init_gdtidt();
 	init_pic();
@@ -27,25 +30,33 @@ void KaliMain(void){
 	memman_free(memman, 0x00400000, memtotal - 0x00400000);
 
 	init_palette();												//初始化调色板
-	init_screen(binfo->vram, binfo->scrnx, binfo->scrny);		//初始化屏幕
+	shtctl = shtctl_init(memman, binfo->vram, binfo->scrnx, binfo->scrny);
+	sht_back  = sheet_alloc(shtctl);
+	sht_mouse = sheet_alloc(shtctl);
+	buf_back  = (unsigned char *) memman_alloc_4k(memman, binfo->scrnx * binfo->scrny);
+	sheet_setbuf(sht_back, buf_back, binfo->scrnx, binfo->scrny, -1);	// 没有透明色
+	sheet_setbuf(sht_mouse, buf_mouse, 16, 16, 99);						// 透明色号99
+	init_screen(buf_back, binfo->scrnx, binfo->scrny);		//初始化屏幕
 	/*
 	* 注：这里的 binfo->vram 等价于(*binfo).vram
 	* 其他的同理
 	*/
+	init_mouse_cursor8(buf_mouse, 99);							//背景色号99.
+	sheet_slide(shtctl, sht_back, 0, 0);
 	mx = (binfo->scrnx - 16) / 2; 								//鼠标指针位置，默认为屏幕中心
 	my = (binfo->scrny - 28 - 16) / 2;
-	init_mouse_cursor8(mcursor, COL_LDBLUE);					//初始化鼠标指针
-	putblock8_8(binfo->vram, binfo->scrnx, 16, 16,
-		mx, my, mcursor, 16);									//绘制鼠标
+	sheet_slide(shtctl, sht_mouse, mx, my);
+	sheet_updown(shtctl, sht_back,  0);
+	sheet_updown(shtctl, sht_mouse, 1);
 	sprintf(s, "(%d, %d)", mx, my);
-	putfonts8_asc(binfo->vram, binfo->scrnx, 0, 0, COL_WHITE, s);
+	putfonts8_asc(buf_back, binfo->scrnx, 0, 0, COL_WHITE, s);
 	/*
 	* 注：此时的鼠标背景只能是COL_LDBLUE的纯色，所以移动是会覆盖掉下面的内容
 	* 不过后面会解决这个问题
 	*/
 	
-	putfonts8_asc(binfo->vram, binfo->scrnx, 236, 181, COL_DRED, "KalinoteOS");
-	putfonts8_asc(binfo->vram, binfo->scrnx, 235, 180, COL_BRED, "KalinoteOS");
+	putfonts8_asc(buf_back, binfo->scrnx, 236, 181, COL_DRED, "KalinoteOS");
+	putfonts8_asc(buf_back, binfo->scrnx, 235, 180, COL_BRED, "KalinoteOS");
 	/*
 	* 只要先绘制一遍暗色字体，然后再绘制一遍亮色字体，然后两个字符串差1个像素，就可以整出立体感来
 	* 后面调整函数文件结构后可以加个函数来专门绘制立体字符串
@@ -53,15 +64,17 @@ void KaliMain(void){
 	
 	//变量相关内容，原文在第98页
 	//sprintf(s, "scrnx = %d", binfo->scrnx);
-	//putfonts8_asc(binfo->vram, binfo->scrnx, 16, 64, COL_WHITE, s);
+	//putfonts8_asc(buf_back, binfo->scrnx, 16, 64, COL_WHITE, s);
 
 	sprintf(s, "memory %dMB   free : %dKB",
 			memtotal / (1024 * 1024), memman_total(memman) / 1024);
-	putfonts8_asc(binfo->vram, binfo->scrnx, 0, 32, COL_WHITE, s);			//显示内存
+	putfonts8_asc(buf_back, binfo->scrnx, 0, 32, COL_WHITE, s);			//显示内存
+	sheet_refresh(shtctl);
 	
 	for(;;){
 		//停止CPU
 		io_cli();
+		
 		if (fifo8_status(&keyfifo) + fifo8_status(&mousefifo) == 0) {
 			io_stihlt();
 		} else {
@@ -69,8 +82,9 @@ void KaliMain(void){
 				i = fifo8_get(&keyfifo);
 				io_sti();
 				sprintf(s, "%02X", i);
-				boxfill8(binfo->vram, binfo->scrnx, COL_LDBLUE,  0, 16, 15, 31);
-				putfonts8_asc(binfo->vram, binfo->scrnx, 0, 16, COL_WHITE, s);
+				boxfill8(buf_back, binfo->scrnx, COL_LDBLUE,  0, 16, 15, 31);
+				putfonts8_asc(buf_back, binfo->scrnx, 0, 16, COL_WHITE, s);
+				sheet_refresh(shtctl);
 			} else if (fifo8_status(&mousefifo) != 0) {
 				i = fifo8_get(&mousefifo);
 				io_sti();
@@ -86,10 +100,9 @@ void KaliMain(void){
 					if ((mdec.btn & 0x04) != 0) {
 						s[2] = 'C';
 					}
-					boxfill8(binfo->vram, binfo->scrnx, COL_LDBLUE, 32, 16, 32 + 15 * 8 - 1, 31);
-					putfonts8_asc(binfo->vram, binfo->scrnx, 32, 16, COL_WHITE, s);
+					boxfill8(buf_back, binfo->scrnx, COL_LDBLUE, 32, 16, 32 + 15 * 8 - 1, 31);
+					putfonts8_asc(buf_back, binfo->scrnx, 32, 16, COL_WHITE, s);
 					/* 鼠标指针移动 */
-					boxfill8(binfo->vram, binfo->scrnx, COL_LDBLUE, mx, my, mx + 15, my + 15); /* 隐藏鼠标 */
 					mx += mdec.x;
 					my += mdec.y;
 					if (mx < 0) {
@@ -105,9 +118,9 @@ void KaliMain(void){
 						my = binfo->scrny - 16;
 					}
 					sprintf(s, "(%3d, %3d)", mx, my);
-					boxfill8(binfo->vram, binfo->scrnx, COL_LDBLUE, 0, 0, 79, 15); /* 隐藏坐标 */
-					putfonts8_asc(binfo->vram, binfo->scrnx, 0, 0, COL_WHITE, s); /* 显示坐标 */
-					putblock8_8(binfo->vram, binfo->scrnx, 16, 16, mx, my, mcursor, 16); /* 描画鼠标 */
+					boxfill8(buf_back, binfo->scrnx, COL_LDBLUE, 0, 0, 79, 15); /* 隐藏坐标 */
+					putfonts8_asc(buf_back, binfo->scrnx, 0, 0, COL_WHITE, s); /* 显示坐标 */
+					sheet_slide(shtctl, sht_mouse, mx, my); /* 包含sheet_refresh */
 				}
 			}
 		}
