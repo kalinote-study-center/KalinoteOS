@@ -162,6 +162,6 @@ struct SHTCTL *shtctl_init(struct MEMMAN *memman, unsigned char *vram, int xsize
 struct SHEET *sheet_alloc(struct SHTCTL *ctl);														//获得未使用的新图层
 void sheet_setbuf(struct SHEET *sht, unsigned char *buf, int xsize, int ysize, int col_inv);		//设置缓冲区大小
 void sheet_updown(struct SHTCTL *ctl, struct SHEET *sht, int height);								//调整sheet高度
-void sheet_refresh(struct SHTCTL *ctl);																//刷新图层
+void sheet_refresh(struct SHTCTL *ctl, struct SHEET *sht, int bx0, int by0, int bx1, int by1);		//刷新图层(区域)
 void sheet_slide(struct SHTCTL *ctl, struct SHEET *sht, int vx0, int vy0);							//移动图层
 void sheet_free(struct SHTCTL *ctl, struct SHEET *sht);												//释放已使用的图层内存

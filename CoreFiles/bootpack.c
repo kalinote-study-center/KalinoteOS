@@ -69,7 +69,7 @@ void KaliMain(void){
 	sprintf(s, "memory %dMB   free : %dKB",
 			memtotal / (1024 * 1024), memman_total(memman) / 1024);
 	putfonts8_asc(buf_back, binfo->scrnx, 0, 32, COL_WHITE, s);			//显示内存
-	sheet_refresh(shtctl);
+	sheet_refresh(shtctl, sht_back, 0, 0, binfo->scrnx, 48);
 	
 	for(;;){
 		//停止CPU
@@ -84,7 +84,7 @@ void KaliMain(void){
 				sprintf(s, "%02X", i);
 				boxfill8(buf_back, binfo->scrnx, COL_LDBLUE,  0, 16, 15, 31);
 				putfonts8_asc(buf_back, binfo->scrnx, 0, 16, COL_WHITE, s);
-				sheet_refresh(shtctl);
+				sheet_refresh(shtctl, sht_back, 0, 16, 16, 32);
 			} else if (fifo8_status(&mousefifo) != 0) {
 				i = fifo8_get(&mousefifo);
 				io_sti();
@@ -92,16 +92,20 @@ void KaliMain(void){
 					/* 3字符集齐，显示出来 */
 					sprintf(s, "[lcr %4d %4d]", mdec.x, mdec.y);
 					if ((mdec.btn & 0x01) != 0) {
+						//鼠标左键
 						s[1] = 'L';
 					}
 					if ((mdec.btn & 0x02) != 0) {
+						//鼠标右键
 						s[3] = 'R';
 					}
 					if ((mdec.btn & 0x04) != 0) {
+						//鼠标中键
 						s[2] = 'C';
 					}
 					boxfill8(buf_back, binfo->scrnx, COL_LDBLUE, 32, 16, 32 + 15 * 8 - 1, 31);
 					putfonts8_asc(buf_back, binfo->scrnx, 32, 16, COL_WHITE, s);
+					sheet_refresh(shtctl, sht_back, 32, 16, 32 + 15 * 8, 32);
 					/* 鼠标指针移动 */
 					mx += mdec.x;
 					my += mdec.y;
@@ -120,6 +124,7 @@ void KaliMain(void){
 					sprintf(s, "(%3d, %3d)", mx, my);
 					boxfill8(buf_back, binfo->scrnx, COL_LDBLUE, 0, 0, 79, 15); /* 隐藏坐标 */
 					putfonts8_asc(buf_back, binfo->scrnx, 0, 0, COL_WHITE, s); /* 显示坐标 */
+					sheet_refresh(shtctl, sht_back, 0, 0, 80, 16);
 					sheet_slide(shtctl, sht_mouse, mx, my); /* 包含sheet_refresh */
 				}
 			}
