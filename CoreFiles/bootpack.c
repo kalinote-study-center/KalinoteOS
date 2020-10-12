@@ -5,6 +5,8 @@
 void make_window(unsigned char *buf, int xsize, int ysize, char *title);			//生成一个窗口
 
 void KaliMain(void){
+	/* 系统入口 */
+	
 	/*这里是主程序*/
 	struct BOOTINFO *binfo = (struct BOOTINFO *) ADR_BOOTINFO;		//启动信息(BOOTINFO结构体)
 	char s[40], keybuf[32], mousebuf[128];
@@ -205,10 +207,4 @@ void make_window(unsigned char *buf, int xsize, int ysize, char *title){
 		}
 	}
 	return;
-}
-
-
-void HariMain(void){
-	/*系统启动入口*/
-	KaliMain();
 }

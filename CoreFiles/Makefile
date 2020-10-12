@@ -3,7 +3,7 @@ OBJS_BOOTPACK = bootpack.obj naskfunc.obj fonts.obj graphic.obj dsctbl.obj \
 		int.obj fifo.obj keyboard.obj mouse.obj memory.obj sheet.obj
 
 TOOLPATH = ../z_tools/
-INCPATH  = ../z_tools/haribote/
+INCPATH  = ../z_tools/kalinote/
 
 MAKE     = $(TOOLPATH)make.exe -r
 NASK     = $(TOOLPATH)nask.exe
@@ -13,7 +13,7 @@ OBJ2BIM  = $(TOOLPATH)obj2bim.exe
 BIM2KAL  = $(TOOLPATH)bim2kal.exe
 MAKEFONT = $(TOOLPATH)makefont.exe
 BIN2OBJ  = $(TOOLPATH)bin2obj.exe
-RULEFILE = $(TOOLPATH)haribote/haribote.rul
+RULEFILE = $(TOOLPATH)kalinote/kalinote.rul
 EDIMG    = $(TOOLPATH)edimg.exe
 IMGTOL   = $(TOOLPATH)imgtol.com
 COPY     = copy
