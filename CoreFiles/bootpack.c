@@ -2,7 +2,8 @@
 #include <stdio.h>
 #include "bootpack.h"
 
-void make_window(unsigned char *buf, int xsize, int ysize, char *title);			//生成一个窗口
+void make_window(unsigned char *buf, int xsize, int ysize, char *title);					//生成一个窗口
+void putfonts8_asc_sht(struct SHEET *sht, int x, int y, int c, int b, char *s, int l);		//先涂背景色，在写字符串
 
 void KaliMain(void){
 	/* 系统入口 */
@@ -81,23 +82,16 @@ void KaliMain(void){
 	sheet_updown(sht_win,   1);			/* 背景的序号是0(最底层)，其次是窗口1(中间)，最后是鼠标(最顶层) */
 	sheet_updown(sht_mouse, 2);
 	sprintf(s, "(%d, %d)", mx, my);
-	putfonts8_asc(buf_back, binfo->scrnx, 0, 0, COL_WHITE, s);
-	
-	//变量相关内容，原文在第98页
-	//sprintf(s, "scrnx = %d", binfo->scrnx);
-	//putfonts8_asc(buf_back, binfo->scrnx, 16, 64, COL_WHITE, s);
+	putfonts8_asc_sht(sht_back, 0, 0, COL_WHITE, COL_LDBLUE, s, 10);
 
 	sprintf(s, "memory %dMB   free : %dKB",
 			memtotal / (1024 * 1024), memman_total(memman) / 1024);
-	putfonts8_asc(buf_back, binfo->scrnx, 0, 32, COL_WHITE, s);			//显示内存
-	sheet_refresh(sht_back, 0, 0, binfo->scrnx, 48);
+	putfonts8_asc_sht(sht_back, 0, 32, COL_WHITE, COL_LDBLUE, s, 40);
 	
 	for(;;){
 		//计数器
 		sprintf(s, "%010d", timerctl.count);
-		boxfill8(buf_win, 160, COL_BGREY, 40, 28, 119, 43);
-		putfonts8_asc(buf_win, 160, 40, 28, COL_BLACK, s);
-		sheet_refresh(sht_win, 40, 28, 120, 44);
+		putfonts8_asc_sht(sht_win, 40, 28, COL_BLACK, COL_BGREY, s, 10);
 		
 		//停止CPU
 		io_cli();
@@ -109,9 +103,7 @@ void KaliMain(void){
 				i = fifo8_get(&keyfifo);
 				io_sti();
 				sprintf(s, "%02X", i);
-				boxfill8(buf_back, binfo->scrnx, COL_LDBLUE,  0, 16, 15, 31);
-				putfonts8_asc(buf_back, binfo->scrnx, 0, 16, COL_WHITE, s);
-				sheet_refresh(sht_back, 0, 16, 16, 32);
+				putfonts8_asc_sht(sht_back, 0, 16, COL_WHITE, COL_LDBLUE, s, 2);
 			} else if (fifo8_status(&mousefifo) != 0) {
 				i = fifo8_get(&mousefifo);
 				io_sti();
@@ -130,9 +122,7 @@ void KaliMain(void){
 						//鼠标中键
 						s[2] = 'C';
 					}
-					boxfill8(buf_back, binfo->scrnx, COL_LDBLUE, 32, 16, 32 + 15 * 8 - 1, 31);
-					putfonts8_asc(buf_back, binfo->scrnx, 32, 16, COL_WHITE, s);
-					sheet_refresh(sht_back, 32, 16, 32 + 15 * 8, 32);
+					putfonts8_asc_sht(sht_back, 32, 16, COL_WHITE, COL_LDBLUE, s, 15);
 					/* 鼠标指针移动 */
 					mx += mdec.x;
 					my += mdec.y;
@@ -150,21 +140,17 @@ void KaliMain(void){
 						my = binfo->scrny - 1;
 					}
 					sprintf(s, "(%3d, %3d)", mx, my);
-					boxfill8(buf_back, binfo->scrnx, COL_LDBLUE, 0, 0, 79, 15); /* 隐藏坐标 */
-					putfonts8_asc(buf_back, binfo->scrnx, 0, 0, COL_WHITE, s); /* 显示坐标 */
-					sheet_refresh(sht_back, 0, 0, 80, 16);
+					putfonts8_asc_sht(sht_back, 0, 0, COL_WHITE, COL_LDBLUE, s, 10);
 					sheet_slide(sht_mouse, mx, my); /* 包含sheet_refresh */
 				}
 			} else if (fifo8_status(&timerfifo) != 0) {
 				i = fifo8_get(&timerfifo); /* 首先读入(为了设置起始点) */
 				io_sti();
-				putfonts8_asc(buf_back, binfo->scrnx, 0, 64, COL_WHITE, "10[sec]");
-				sheet_refresh(sht_back, 0, 64, 56, 80);
+				putfonts8_asc_sht(sht_back, 0, 64, COL_WHITE, COL_LDBLUE, "10[sec]", 7);
 			} else if (fifo8_status(&timerfifo2) != 0) {
 				i = fifo8_get(&timerfifo2); /* 首先读入(为了设置起始点) */
 				io_sti();
-				putfonts8_asc(buf_back, binfo->scrnx, 0, 80, COL_WHITE, "3[sec]");
-				sheet_refresh(sht_back, 0, 80, 48, 96);
+				putfonts8_asc_sht(sht_back, 0, 80, COL_WHITE, COL_LDBLUE, "3[sec]", 6);
 			} else if (fifo8_status(&timerfifo3) != 0) {
 				i = fifo8_get(&timerfifo3);
 				io_sti();
@@ -227,5 +213,13 @@ void make_window(unsigned char *buf, int xsize, int ysize, char *title){
 			buf[(5 + y) * xsize + (xsize - 21 + x)] = c;
 		}
 	}
+	return;
+}
+
+void putfonts8_asc_sht(struct SHEET *sht, int x, int y, int c, int b, char *s, int l)
+{
+	boxfill8(sht->buf, sht->bxsize, b, x, y, x + l * 8 - 1, y + 15);
+	putfonts8_asc(sht->buf, sht->bxsize, x, y, c, s);
+	sheet_refresh(sht, x, y, x + l * 8, y + 16);
 	return;
 }
