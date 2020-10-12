@@ -23,7 +23,8 @@ void KaliMain(void){
 	io_sti(); /* IDT/PIC初始化结束，解除CPU的中断禁止 */
 	fifo8_init(&keyfifo, 32, keybuf);							//初始化键盘fifo缓冲区
 	fifo8_init(&mousefifo, 128, mousebuf);						//初始化鼠标fifo缓冲区
-	io_out8(PIC0_IMR, 0xf9); /* 允许PIC1和键盘(11111001) */
+	init_pic();													//初始化定时器
+	io_out8(PIC0_IMR, 0xf8); /* 允许PIT、PIC1和键盘(11111000) */
 	io_out8(PIC1_IMR, 0xef); /* 允许鼠标(11101111) */
 
 	init_keyboard();				//初始化键盘
