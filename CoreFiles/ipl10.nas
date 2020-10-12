@@ -44,7 +44,7 @@ entry:
 		MOV		CH,0			; 柱面0
 		MOV		DH,0			; 磁头0
 		MOV		CL,2			; 扇区2
-
+		
 readloop:
 		MOV		SI,0			; 记录失败次数
 		

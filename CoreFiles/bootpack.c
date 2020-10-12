@@ -9,7 +9,9 @@ void KaliMain(void){
 	
 	/*这里是主程序*/
 	struct BOOTINFO *binfo = (struct BOOTINFO *) ADR_BOOTINFO;		//启动信息(BOOTINFO结构体)
-	char s[40], keybuf[32], mousebuf[128];
+	struct FIFO8 timerfifo, timerfifo2, timerfifo3;
+	char s[40], keybuf[32], mousebuf[128], timerbuf[8], timerbuf2[8], timerbuf3[8];
+	struct TIMER *timer, *timer2, *timer3;
 	int mx, my, i;
 	unsigned int memtotal;
 	struct MOUSE_DEC mdec;
@@ -26,6 +28,19 @@ void KaliMain(void){
 	init_pit();													//初始化定时器
 	io_out8(PIC0_IMR, 0xf8); /* 允许PIT、PIC1和键盘(11111000) */
 	io_out8(PIC1_IMR, 0xef); /* 允许鼠标(11101111) */
+
+	fifo8_init(&timerfifo, 8, timerbuf);
+	timer = timer_alloc();
+	timer_init(timer, &timerfifo, 1);
+	timer_settime(timer, 1000);
+	fifo8_init(&timerfifo2, 8, timerbuf2);
+	timer2 = timer_alloc();
+	timer_init(timer2, &timerfifo2, 1);
+	timer_settime(timer2, 300);
+	fifo8_init(&timerfifo3, 8, timerbuf3);
+	timer3 = timer_alloc();
+	timer_init(timer3, &timerfifo3, 1);
+	timer_settime(timer3, 50);
 
 	init_keyboard();				//初始化键盘
 	enable_mouse(&mdec);			//激活鼠标
@@ -86,7 +101,8 @@ void KaliMain(void){
 		
 		//停止CPU
 		io_cli();
-		if (fifo8_status(&keyfifo) + fifo8_status(&mousefifo) == 0) {
+		if (fifo8_status(&keyfifo) + fifo8_status(&mousefifo) + fifo8_status(&timerfifo)
+				+ fifo8_status(&timerfifo2) + fifo8_status(&timerfifo3) == 0) {
 			io_sti();
 		} else {
 			if (fifo8_status(&keyfifo) != 0) {
@@ -139,6 +155,28 @@ void KaliMain(void){
 					sheet_refresh(sht_back, 0, 0, 80, 16);
 					sheet_slide(sht_mouse, mx, my); /* 包含sheet_refresh */
 				}
+			} else if (fifo8_status(&timerfifo) != 0) {
+				i = fifo8_get(&timerfifo); /* 首先读入(为了设置起始点) */
+				io_sti();
+				putfonts8_asc(buf_back, binfo->scrnx, 0, 64, COL_WHITE, "10[sec]");
+				sheet_refresh(sht_back, 0, 64, 56, 80);
+			} else if (fifo8_status(&timerfifo2) != 0) {
+				i = fifo8_get(&timerfifo2); /* 首先读入(为了设置起始点) */
+				io_sti();
+				putfonts8_asc(buf_back, binfo->scrnx, 0, 80, COL_WHITE, "3[sec]");
+				sheet_refresh(sht_back, 0, 80, 48, 96);
+			} else if (fifo8_status(&timerfifo3) != 0) {
+				i = fifo8_get(&timerfifo3);
+				io_sti();
+				if (i != 0) {
+					timer_init(timer3, &timerfifo3, 0); /* 置0 */
+					boxfill8(buf_back, binfo->scrnx, COL_WHITE, 8, 96, 15, 111);
+				} else {
+					timer_init(timer3, &timerfifo3, 1); /* 置1 */
+					boxfill8(buf_back, binfo->scrnx, COL_LDBLUE, 8, 96, 15, 111);
+				}
+				timer_settime(timer3, 50);
+				sheet_refresh(sht_back, 8, 96, 16, 112);
 			}
 		}
 	}
