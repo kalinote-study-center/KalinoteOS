@@ -22,16 +22,16 @@
 
 [SECTION .text]					; 目标文件中写了这些之后在写程序
 
-_io_hlt:						; void io_hlt(void);
-		HLT
-		RET
-
 ; 这个函数使用指针替换了
 ;_write_mem8:					; void write_mem8(int addr, int data);
 ; 		MOV		ECX,[ESP+4]		; [ESP+4]中存放地址
 ;		MOV		AL,[ESP+8]		; [ESP+8]中存放数据
 ;		MOV		[ECX],AL
 ;		RET
+
+_io_hlt:						; void io_hlt(void);
+		HLT
+		RET
 		
 _io_cli:						; void io_cli(void);
 		CLI
@@ -128,7 +128,7 @@ _asm_inthandler20:
 		POP		DS
 		POP		ES
 		IRETD
-
+		
 _asm_inthandler21:
 		PUSH	ES
 		PUSH	DS
@@ -184,6 +184,7 @@ _memtest_sub:							; unsigned int memtest_sub(unsigned int start, unsigned int 
 		MOV		ESI,0xaa55aa55			; pat0 = 0xaa55aa55;
 		MOV		EDI,0x55aa55aa			; pat1 = 0x55aa55aa;
 		MOV		EAX,[ESP+12+4]			; i = start;
+		
 mts_loop:
 		MOV		EBX,EAX
 		ADD		EBX,0xffc				; p = i + 0xffc;
@@ -203,6 +204,7 @@ mts_loop:
 		POP		ESI
 		POP		EDI
 		RET
+		
 mts_fin:
 		MOV		[EBX],EDX				; *p = old;
 		POP		EBX

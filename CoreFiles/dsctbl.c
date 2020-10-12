@@ -4,25 +4,25 @@
 
 void init_gdtidt(void)
 {
-	/*初始化GDT和IDT - 此处原内容在第页105*/
-	struct SEGMENT_DESCRIPTOR *gdt = (struct SEGMENT_DESCRIPTOR *) 0x00270000;		//GDT的地址位于0x270000~0x27ffff
-	struct GATE_DESCRIPTOR    *idt = (struct GATE_DESCRIPTOR    *) 0x0026f800;		//IDT的地址位于0x26f800~0x26ffff
+	/*初始化GDT和IDT*/
+	struct SEGMENT_DESCRIPTOR *gdt = (struct SEGMENT_DESCRIPTOR *) ADR_GDT;		//GDT的地址位于0x270000~0x27ffff
+	struct GATE_DESCRIPTOR    *idt = (struct GATE_DESCRIPTOR    *) ADR_IDT;		//IDT的地址位于0x26f800~0x26ffff
 	int i;
 
 	/* GDT初始化 */
-	for (i = 0; i < 8192; i++) {
+	for (i = 0; i <= LIMIT_GDT / 8; i++) {
 		set_segmdesc(gdt + i, 0, 0, 0);
 	}
-	set_segmdesc(gdt + 1, 0xffffffff, 0x00000000, 0x4092);
-	set_segmdesc(gdt + 2, 0x0007ffff, 0x00280000, 0x409a);
-	load_gdtr(0xffff, 0x00270000);
+	set_segmdesc(gdt + 1, 0xffffffff,   0x00000000, AR_DATA32_RW);
+	set_segmdesc(gdt + 2, LIMIT_BOTPAK, ADR_BOTPAK, AR_CODE32_ER);
+	load_gdtr(LIMIT_GDT, ADR_GDT);
 
 	/* IDT初始化 */
-	for (i = 0; i < 256; i++) {
+	for (i = 0; i <= LIMIT_IDT / 8; i++) {
 		set_gatedesc(idt + i, 0, 0, 0);
 	}
-	load_idtr(0x7ff, 0x0026f800);
-
+	load_idtr(LIMIT_IDT, ADR_IDT);
+	
 	/* IDT的设定 */
 	set_gatedesc(idt + 0x20, (int) asm_inthandler20, 2 * 8, AR_INTGATE32);
 	set_gatedesc(idt + 0x21, (int) asm_inthandler21, 2 * 8, AR_INTGATE32);
@@ -34,7 +34,6 @@ void init_gdtidt(void)
 
 void set_segmdesc(struct SEGMENT_DESCRIPTOR *sd, unsigned int limit, int base, int ar)
 {
-	
 	if (limit > 0xfffff) {
 		ar |= 0x8000; /* G_bit = 1 */
 		limit /= 0x1000;

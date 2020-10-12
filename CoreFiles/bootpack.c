@@ -11,19 +11,19 @@ void KaliMain(void){
 	struct BOOTINFO *binfo = (struct BOOTINFO *) ADR_BOOTINFO;		//启动信息(BOOTINFO结构体)
 	char s[40], keybuf[32], mousebuf[128];
 	int mx, my, i;
-	unsigned int memtotal, count = 0;
+	unsigned int memtotal;
 	struct MOUSE_DEC mdec;
 	struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;
 	struct SHTCTL *shtctl;
-	struct SHEET *sht_back, *sht_mouse, *sht_win_info, *sht_win_counter;
-	unsigned char *buf_back, buf_mouse[256], *buf_win_info, *buf_win_counter;
+	struct SHEET *sht_back, *sht_mouse, *sht_win;
+	unsigned char *buf_back, buf_mouse[256], *buf_win;
 	
 	init_gdtidt();
 	init_pic();
 	io_sti(); /* IDT/PIC初始化结束，解除CPU的中断禁止 */
 	fifo8_init(&keyfifo, 32, keybuf);							//初始化键盘fifo缓冲区
 	fifo8_init(&mousefifo, 128, mousebuf);						//初始化鼠标fifo缓冲区
-	init_pic();													//初始化定时器
+	init_pit();													//初始化定时器
 	io_out8(PIC0_IMR, 0xf8); /* 允许PIT、PIC1和键盘(11111000) */
 	io_out8(PIC1_IMR, 0xef); /* 允许鼠标(11101111) */
 
@@ -38,50 +38,33 @@ void KaliMain(void){
 	shtctl = shtctl_init(memman, binfo->vram, binfo->scrnx, binfo->scrny);
 	sht_back  = sheet_alloc(shtctl);
 	sht_mouse = sheet_alloc(shtctl);							//鼠标
-	sht_win_info = sheet_alloc(shtctl);							//info窗口
-	sht_win_counter = sheet_alloc(shtctl);						//counter窗口
+	sht_win = sheet_alloc(shtctl);						//counter窗口
 	
 	/* 分配内存 */
 	buf_back  = (unsigned char *) memman_alloc_4k(memman, binfo->scrnx * binfo->scrny);
-	buf_win_info   = (unsigned char *) memman_alloc_4k(memman, 160 * 68);
-	buf_win_counter = (unsigned char *) memman_alloc_4k(memman, 160 * 52);
+	buf_win = (unsigned char *) memman_alloc_4k(memman, 160 * 52);
 	
 	sheet_setbuf(sht_back, buf_back, binfo->scrnx, binfo->scrny, -1);	// 没有透明色
 	sheet_setbuf(sht_mouse, buf_mouse, 16, 16, 99);						// 鼠标 透明色号99
-	sheet_setbuf(sht_win_info, buf_win_info, 160, 68, -1);				// info窗口
-	sheet_setbuf(sht_win_counter, buf_win_counter, 160, 52, -1);			// counter窗口
-	init_screen(buf_back, binfo->scrnx, binfo->scrny);					//初始化屏幕
+	sheet_setbuf(sht_win, buf_win, 160, 52, -1);						// counter窗口
+	init_screen(buf_back, binfo->scrnx, binfo->scrny);					// 初始化屏幕
 	/*
 	* 注：这里的 binfo->vram 等价于(*binfo).vram
 	* 其他的同理
 	*/
 	init_mouse_cursor8(buf_mouse, 99);							//背景色号99.
 
-	/* info窗口 */
-	make_window(buf_win_info, 160, 68, "info");
-	putfonts8_asc(buf_win_info, 160, 24, 28, COL_WHITE, "Welcome to use");
-	putfonts8_asc(buf_win_info, 160, 55, 45, COL_DRED, "  KlinoteOS!");
-	putfonts8_asc(buf_win_info, 160, 54, 44, COL_BRED, "  KlinoteOS!");
-	/*
-	* 只要先绘制一遍暗色字体，然后再绘制一遍亮色字体，然后两个字符串差1个像素，就可以整出立体感来
-	* 后面调整函数文件结构后可以加个函数来专门绘制立体字符串
-	*/
-	
 	/* counter窗口 */
-	make_window(buf_win_counter, 160, 52, "counter");
-	
-	
+	make_window(buf_win, 160, 52, "counter");
 	sheet_slide(sht_back, 0, 0);
 	mx = (binfo->scrnx - 16) / 2; 								//鼠标指针位置，默认为屏幕中心
 	my = (binfo->scrny - 28 - 16) / 2;
 	sheet_slide(sht_mouse, mx, my);
-	sheet_slide(sht_win_info, 150, 120);		//调整info窗口位置
-	sheet_slide(sht_win_counter, 75, 70);		//调整counter窗口位置
+	sheet_slide(sht_win, 75, 70);		//调整counter窗口位置
 	
 	sheet_updown(sht_back,  0);
-	sheet_updown(sht_win_info,   1);			/* 背景的序号是0(最底层)，其次是窗口1(中间)，最后是鼠标(最顶层) */
-	sheet_updown(sht_win_counter,   2);			/* 背景的序号是0(最底层)，其次是窗口1(中间)，最后是鼠标(最顶层) */
-	sheet_updown(sht_mouse, 3);
+	sheet_updown(sht_win,   1);			/* 背景的序号是0(最底层)，其次是窗口1(中间)，最后是鼠标(最顶层) */
+	sheet_updown(sht_mouse, 2);
 	sprintf(s, "(%d, %d)", mx, my);
 	putfonts8_asc(buf_back, binfo->scrnx, 0, 0, COL_WHITE, s);
 	
@@ -96,16 +79,15 @@ void KaliMain(void){
 	
 	for(;;){
 		//计数器
-		count++;
-		sprintf(s, "%010d", count);
-		boxfill8(buf_win_counter, 160, COL_BGREY, 40, 28, 119, 43);
-		putfonts8_asc(buf_win_counter, 160, 40, 28, COL_WHITE, s);
-		sheet_refresh(sht_win_counter, 40, 28, 120, 44);
+		sprintf(s, "%010d", timerctl.count);
+		boxfill8(buf_win, 160, COL_BGREY, 40, 28, 119, 43);
+		putfonts8_asc(buf_win, 160, 40, 28, COL_BLACK, s);
+		sheet_refresh(sht_win, 40, 28, 120, 44);
 		
 		//停止CPU
 		io_cli();
 		if (fifo8_status(&keyfifo) + fifo8_status(&mousefifo) == 0) {
-			io_stihlt();
+			io_sti();
 		} else {
 			if (fifo8_status(&keyfifo) != 0) {
 				i = fifo8_get(&keyfifo);

@@ -72,7 +72,7 @@ struct GATE_DESCRIPTOR {
 	char dw_count, access_right;
 	short offset_high;
 };
-void init_gdtidt(void);																				//初始化GDT和IDT
+void init_gdtidt(void);
 void set_segmdesc(struct SEGMENT_DESCRIPTOR *sd, unsigned int limit, int base, int ar);
 void set_gatedesc(struct GATE_DESCRIPTOR *gd, int offset, int selector, int ar);
 #define ADR_IDT			0x0026f800
@@ -87,7 +87,7 @@ void set_gatedesc(struct GATE_DESCRIPTOR *gd, int offset, int selector, int ar);
 
 /* int.c */
 void init_pic(void);
-void inthandler27(int *esp);			//27中断
+void inthandler27(int *esp);					//27号中断
 #define PIC0_ICW1		0x0020
 #define PIC0_OCW2		0x0020
 #define PIC0_IMR		0x0021
@@ -169,5 +169,9 @@ void sheet_slide(struct SHEET *sht, int vx0, int vy0);												//移动图层
 void sheet_free(struct SHEET *sht);																	//释放已使用的图层内存
 
 /* timer.c */
+struct TIMERCTL {
+	unsigned int count;
+};
+extern struct TIMERCTL timerctl;
 void init_pit(void);
-void inthandler20(int *esp);
+void inthandler20(int *esp);;
