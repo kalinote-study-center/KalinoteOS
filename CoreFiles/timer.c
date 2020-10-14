@@ -25,8 +25,7 @@ void init_pit(void){
 	return;
 }
 
-struct TIMER *timer_alloc(void)
-{
+struct TIMER *timer_alloc(void){
 	int i;
 	for (i = 0; i < MAX_TIMER; i++) {
 		if (timerctl.timers0[i].flags == 0) {
@@ -37,21 +36,18 @@ struct TIMER *timer_alloc(void)
 	return 0; /* 没找到 */
 }
 
-void timer_free(struct TIMER *timer)
-{
+void timer_free(struct TIMER *timer){
 	timer->flags = 0; /* 未使用 */
 	return;
 }
 
-void timer_init(struct TIMER *timer, struct FIFO8 *fifo, unsigned char data)
-{
+void timer_init(struct TIMER *timer, struct FIFO32 *fifo, int data){
 	timer->fifo = fifo;
 	timer->data = data;
 	return;
 }
 
-void timer_settime(struct TIMER *timer, unsigned int timeout)
-{
+void timer_settime(struct TIMER *timer, unsigned int timeout){
 	int e, i, j;
 	timer->timeout = timeout + timerctl.count;
 	timer->flags = TIMER_FLAGS_USING;
@@ -75,8 +71,7 @@ void timer_settime(struct TIMER *timer, unsigned int timeout)
 	return;
 }
 
-void inthandler20(int *esp)
-{
+void inthandler20(int *esp){
 	int i, j;
 	io_out8(PIC0_OCW2, 0x60);	/* 把IRQ-00信号接收完了的信息通知给中断(PIC) */
 	timerctl.count++;			//定时器计数
@@ -91,7 +86,7 @@ void inthandler20(int *esp)
 		}
 		/* 超时 */
 		timerctl.timers[i]->flags = TIMER_FLAGS_ALLOC;
-		fifo8_put(timerctl.timers[i]->fifo, timerctl.timers[i]->data);
+		fifo32_put(timerctl.timers[i]->fifo, timerctl.timers[i]->data);
 	}
 	/* 正好有i个定时器超时了。其余的进行位移 */
 	timerctl.using -= i;

@@ -2,7 +2,8 @@
 
 #include "bootpack.h"
 
-struct FIFO8 keyfifo;
+struct FIFO32 *keyfifo;
+int keydata0;
 
 void inthandler21(int *esp){
 	/* PS/2键盘中断 */
@@ -10,10 +11,10 @@ void inthandler21(int *esp){
 	* 实际上现在基本上没什么人用PS/2键盘了
 	* 不过模拟器里面可以用
 	*/
-	unsigned char data;
+	int data;
 	io_out8(PIC0_OCW2, 0x61);	/* 通知PIC：IRQ-01受理完毕 */
 	data = io_in8(PORT_KEYDAT);
-	fifo8_put(&keyfifo, data);
+	fifo32_put(keyfifo, data + keydata0);
 	return;
 }
 
@@ -32,8 +33,11 @@ void wait_KBC_sendready(void){
 	return;
 }
 
-void init_keyboard(void){
-	/* 初始化键盘控制电路 */
+void init_keyboard(struct FIFO32 *fifo, int data0){
+	/* 将FIFO缓冲区的信息保存到全局变量里 */
+	keyfifo = fifo;
+	keydata0 = data0;
+	/* 键盘控制器的初始化 */
 	wait_KBC_sendready();
 	io_out8(PORT_KEYCMD, KEYCMD_WRITE_MODE);
 	wait_KBC_sendready();

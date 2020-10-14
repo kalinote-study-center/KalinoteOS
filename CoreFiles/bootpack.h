@@ -102,30 +102,28 @@ void inthandler27(int *esp);					//27号中断
 #define PIC1_ICW4		0x00a1
 
 /* fifo.c */
-struct FIFO8 {
-	unsigned char *buf;
+struct FIFO32 {
+	int *buf;
 	int p, q, size, free, flags;
 };
-void fifo8_init(struct FIFO8 *fifo, int size, unsigned char *buf);									//初始化FIFO缓冲区
-int fifo8_put(struct FIFO8 *fifo, unsigned char data);												//向FIFO传数据并保存
-int fifo8_get(struct FIFO8 *fifo);																	//从FIFO获得一个数据
-int fifo8_status(struct FIFO8 *fifo);																//查询缓冲区状态
+void fifo32_init(struct FIFO32 *fifo, int size, int *buf);											//初始化FIFO缓冲区
+int fifo32_put(struct FIFO32 *fifo, int data);														//向FIFO传数据并保存
+int fifo32_get(struct FIFO32 *fifo);																//从FIFO获得一个数据
+int fifo32_status(struct FIFO32 *fifo);																//查询缓冲区状态
 
 /* mouse.c */
 struct MOUSE_DEC {
 	unsigned char buf[3], phase;
 	int x, y, btn;
 };
-extern struct FIFO8 mousefifo;
 void inthandler2c(int *esp);																		//鼠标监听中断
-void enable_mouse(struct MOUSE_DEC *mdec);															//激活鼠标
-int mouse_decode(struct MOUSE_DEC *mdec, unsigned char dat);
+void enable_mouse(struct FIFO32 *fifo, int data0, struct MOUSE_DEC *mdec);							//激活鼠标
+int mouse_decode(struct MOUSE_DEC *mdec, unsigned char dat);										//获取鼠标的三个字节信息，并解码
 
 /* keyboard.c */
 void inthandler21(int *esp);																		//键盘监听中断
 void wait_KBC_sendready(void);																		//等待键盘控制电路准备完毕
-void init_keyboard(void);																			//初始化键盘控制电路
-extern struct FIFO8 keyfifo;
+void init_keyboard(struct FIFO32 *fifo, int data0);													//初始化键盘控制电路
 #define PORT_KEYDAT		0x0060
 #define PORT_KEYCMD		0x0064
 
@@ -172,8 +170,8 @@ void sheet_free(struct SHEET *sht);																	//释放已使用的图层内存
 #define MAX_TIMER		500
 struct TIMER {
 	unsigned int timeout, flags;
-	struct FIFO8 *fifo;
-	unsigned char data;
+	struct FIFO32 *fifo;
+	int data;
 };
 struct TIMERCTL {
 	unsigned int count, next, using;
@@ -184,6 +182,7 @@ extern struct TIMERCTL timerctl;
 void init_pit(void);
 struct TIMER *timer_alloc(void);
 void timer_free(struct TIMER *timer);
-void timer_init(struct TIMER *timer, struct FIFO8 *fifo, unsigned char data);
+void timer_init(struct TIMER *timer, struct FIFO32 *fifo, int data);
 void timer_settime(struct TIMER *timer, unsigned int timeout);
 void inthandler20(int *esp);
+

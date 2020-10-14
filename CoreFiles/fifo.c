@@ -4,7 +4,7 @@
 
 #define FLAGS_OVERRUN		0x0001
 
-void fifo8_init(struct FIFO8 *fifo, int size, unsigned char *buf){
+void fifo32_init(struct FIFO32 *fifo, int size, int *buf){
 	/* 初始化FIFO缓冲区 */
 	fifo->size = size;
 	fifo->buf = buf;
@@ -15,7 +15,7 @@ void fifo8_init(struct FIFO8 *fifo, int size, unsigned char *buf){
 	return;
 }
 
-int fifo8_put(struct FIFO8 *fifo, unsigned char data){
+int fifo32_put(struct FIFO32 *fifo, int data){
 	/* 向FIFO传数据并保存 */
 	if (fifo->free == 0) {
 		/* 无空余，溢出 */
@@ -31,7 +31,7 @@ int fifo8_put(struct FIFO8 *fifo, unsigned char data){
 	return 0;
 }
 
-int fifo8_get(struct FIFO8 *fifo){
+int fifo32_get(struct FIFO32 *fifo){
 	/* 从FIFO获得一个数据 */
 	int data;
 	if (fifo->free == fifo->size) {
@@ -47,7 +47,7 @@ int fifo8_get(struct FIFO8 *fifo){
 	return data;
 }
 
-int fifo8_status(struct FIFO8 *fifo){
+int fifo32_status(struct FIFO32 *fifo){
 	/* 返回积攒的数据数量 */
 	return fifo->size - fifo->free;
 }
