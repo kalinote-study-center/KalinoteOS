@@ -1,9 +1,20 @@
 ; kalinote-os
 ; TAB=4
 
+[INSTRSET "i486p"]
+
+VBEMODE	EQU		0x105			; 1024x768x8bit色彩
 BOTPAK	EQU		0x00280000		; bootpack安装位置
 DSKCAC	EQU		0x00100000		; 磁盘缓存位置
 DSKCAC0	EQU		0x00008000		; 磁盘缓存位置（实时模式）
+
+; 色彩代码：
+;	0x100 :  640 x  400 x 8bit
+;	0x101 :  640 x  480 x 8bit
+;	0x103 :  800 x  600 x 8bit
+;	0x105 : 1024 x  768 x 8bit
+;	0x107 : 1280 x 1024 x 8bit(qemu无法使用)
+;	更多色彩模式代码去VESA查
 
 ; BOOT_INFO
 CYLS	EQU		0x0ff0			; 设定启动区
@@ -14,23 +25,65 @@ SCRNY	EQU		0x0ff6			; 分辨率Y
 VRAM	EQU		0x0ff8			; 图像缓冲区开始地址
 
 		ORG		0xc200			; 程序被装载到内存0xc200的位置
-		
-; 设定画面模式
-		
-		MOV		AL,0x13			; VGA显卡,320x200x8位彩色
+
+; 确认VBE是否存在
+		MOV		AX,0x9000
+		MOV		ES,AX
+		MOV		DI,0
+		MOV		AX,0x4f00
+		INT		0x10
+		CMP		AX,0x004f
+		JNE		scrn320
+
+; 检查VBE版本
+		MOV		AX,[ES:DI+4]
+		CMP		AX,0x0200
+		JB		scrn320			; if (AX < 0x0200) goto scrn320
+
+; 取得画面模式信息
+		MOV		CX,VBEMODE
+		MOV		AX,0x4f01
+		INT		0x10
+		CMP		AX,0x004f
+		JNE		scrn320
+
+; 画面模式信息确认
+		CMP		BYTE [ES:DI+0x19],8
+		JNE		scrn320
+		CMP		BYTE [ES:DI+0x1b],4
+		JNE		scrn320
+		MOV		AX,[ES:DI+0x00]
+		AND		AX,0x0080
+		JZ		scrn320			; 模式属性的bit7是0，所以放弃
+
+; 画面模式的切换
+		MOV		BX,VBEMODE+0x4000
+		MOV		AX,0x4f02
+		INT		0x10
+		MOV		BYTE [VMODE],8	; 记录画面模式
+		MOV		AX,[ES:DI+0x12]
+		MOV		[SCRNX],AX
+		MOV		AX,[ES:DI+0x14]
+		MOV		[SCRNY],AX
+		MOV		EAX,[ES:DI+0x28]
+		MOV		[VRAM],EAX
+		JMP		keystatus
+
+scrn320:
+		MOV		AL,0x13			; VGA图形、320x200x8bit色彩
 		MOV		AH,0x00
 		INT		0x10
 		MOV		BYTE [VMODE],8	; 记录画面模式
 		MOV		WORD [SCRNX],320
 		MOV		WORD [SCRNY],200
 		MOV		DWORD [VRAM],0x000a0000
-		
-; 用BIOS取得键盘上各种LED的状态
 
+; 用BIOS取得键盘上各种LED的状态
+keystatus:
 		MOV		AH,0x02
 		INT		0x16 			; keyboard BIOS
 		MOV		[LEDS],AL
-		
+
 ；防止PIC接受任何中断
 ；在AT兼容机的规格中，如果要初始化PIC
 ；如果不在CLI之前做的话，偶尔会死机
@@ -42,7 +95,7 @@ VRAM	EQU		0x0ff8			; 图像缓冲区开始地址
 		OUT		0xa1,AL
 
 		CLI						; 甚至CPU级别也禁止
-		
+
 ; 为了能够从CPU访问1MB以上的存储器，设定A20GATE
 
 		CALL	waitkbdout
@@ -52,10 +105,8 @@ VRAM	EQU		0x0ff8			; 图像缓冲区开始地址
 		MOV		AL,0xdf			; enable A20
 		OUT		0x60,AL
 		CALL	waitkbdout
-		
-; 转向保护模式
 
-[INSTRSET "i486p"]
+; 转向保护模式
 
 		LGDT	[GDTR0]			; 设定暂定GDT
 		MOV		EAX,CR0
