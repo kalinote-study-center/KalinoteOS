@@ -2,25 +2,33 @@
 #include <stdio.h>
 #include "bootpack.h"
 
-void make_window(unsigned char *buf, int xsize, int ysize, char *title);					//生成一个窗口
-void putfonts8_asc_sht(struct SHEET *sht, int x, int y, int c, int b, char *s, int l);		//先涂背景色，在写字符串
+void make_window(unsigned char *buf, int xsize, int ysize, char *title);					// 生成一个窗口
+void putfonts8_asc_sht(struct SHEET *sht, int x, int y, int c, int b, char *s, int l);		// 先涂背景色，在写字符串
 
 void KaliMain(void){
 	/* 系统入口 */
 	
 	/*这里是主程序*/
-	struct BOOTINFO *binfo = (struct BOOTINFO *) ADR_BOOTINFO;		//启动信息(BOOTINFO结构体)
+	struct BOOTINFO *binfo = (struct BOOTINFO *) ADR_BOOTINFO;		// 启动信息(BOOTINFO结构体)
 	struct FIFO32 fifo;
 	char s[40];
 	int fifobuf[128];
 	struct TIMER *timer, *timer2, *timer3;
-	int mx, my, i, count = 0;
+	int mx, my, i;
 	unsigned int memtotal;
 	struct MOUSE_DEC mdec;
 	struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;
 	struct SHTCTL *shtctl;
 	struct SHEET *sht_back, *sht_mouse, *sht_win;
 	unsigned char *buf_back, buf_mouse[256], *buf_win;
+	static char keytable[0x54] = {
+		0,   0,   '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '^', 0,   0,
+		'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', '@', '[', 0,   0,   'A', 'S',
+		'D', 'F', 'G', 'H', 'J', 'K', 'L', ';', ':', 0,   0,   ']', 'Z', 'X', 'C', 'V',
+		'B', 'N', 'M', ',', '.', '/', 0,   '*', 0,   ' ', 0,   0,   0,   0,   0,   0,
+		0,   0,   0,   0,   0,   0,   0,   '7', '8', '9', '-', '4', '5', '6', '+', '1',
+		'2', '3', '0', '.'
+	};
 	
 	init_gdtidt();												// 初始化GDT和IDT
 	init_pic();													// 初始化中断控制器
@@ -47,11 +55,11 @@ void KaliMain(void){
 	memman_free(memman, 0x00001000, 0x0009e000); /* 0x00001000 - 0x0009efff */
 	memman_free(memman, 0x00400000, memtotal - 0x00400000);
 
-	init_palette();														//初始化调色板
+	init_palette();														// 初始化调色板
 	shtctl = shtctl_init(memman, binfo->vram, binfo->scrnx, binfo->scrny);
 	sht_back  = sheet_alloc(shtctl);
-	sht_mouse = sheet_alloc(shtctl);									//鼠标
-	sht_win = sheet_alloc(shtctl);										//counter窗口
+	sht_mouse = sheet_alloc(shtctl);									// 鼠标
+	sht_win = sheet_alloc(shtctl);										// 窗口
 	
 	/* 分配内存 */
 	buf_back  = (unsigned char *) memman_alloc_4k(memman, binfo->scrnx * binfo->scrny);
@@ -59,24 +67,24 @@ void KaliMain(void){
 	
 	sheet_setbuf(sht_back, buf_back, binfo->scrnx, binfo->scrny, -1);	// 没有透明色
 	sheet_setbuf(sht_mouse, buf_mouse, 16, 16, 99);						// 鼠标 透明色号99
-	sheet_setbuf(sht_win, buf_win, 160, 52, -1);						// counter窗口
+	sheet_setbuf(sht_win, buf_win, 160, 52, -1);						// 窗口
 	init_screen(buf_back, binfo->scrnx, binfo->scrny);					// 初始化屏幕
 	/*
 	* 注：这里的 binfo->vram 等价于(*binfo).vram
 	* 其他的同理
 	*/
-	init_mouse_cursor8(buf_mouse, 99);							//背景色号99.
+	init_mouse_cursor8(buf_mouse, 99);							// 背景色号99.
 
-	/* counter窗口 */
-	make_window(buf_win, 160, 52, "counter");
+	/* 窗口 */
+	make_window(buf_win, 160, 52, "window");
 	sheet_slide(sht_back, 0, 0);
-	mx = (binfo->scrnx - 16) / 2; 								//鼠标指针位置，默认为屏幕中心
+	mx = (binfo->scrnx - 16) / 2; 								// 鼠标指针位置，默认为屏幕中心
 	my = (binfo->scrny - 28 - 16) / 2;
 	sheet_slide(sht_mouse, mx, my);
-	sheet_slide(sht_win, 75, 70);		//调整counter窗口位置
+	sheet_slide(sht_win, 75, 70);								// 调整窗口位置
 	
 	sheet_updown(sht_back,  0);
-	sheet_updown(sht_win,   1);			/* 背景的序号是0(最底层)，其次是窗口1(中间)，最后是鼠标(最顶层) */
+	sheet_updown(sht_win,   1);									// 背景的序号是0(最底层)，其次是窗口1(中间)，最后是鼠标(最顶层)
 	sheet_updown(sht_mouse, 2);
 	sprintf(s, "(%d, %d)", mx, my);
 	putfonts8_asc_sht(sht_back, 0, 0, COL_WHITE, COL_LDBLUE, s, 10);
@@ -86,19 +94,23 @@ void KaliMain(void){
 	putfonts8_asc_sht(sht_back, 0, 32, COL_WHITE, COL_LDBLUE, s, 40);
 	
 	for(;;){
-		//计数器
-		count++;
-		
 		//停止CPU
 		io_cli();
 		if (fifo32_status(&fifo) == 0) {
-			io_sti();
+			io_stihlt();
 		} else {
 			i = fifo32_get(&fifo);
 			io_sti();
 			if (256 <= i && i <= 511) { /* 键盘数据 */
-				sprintf(s, "%02X", i);
+				sprintf(s, "%02X", i - 256);
 				putfonts8_asc_sht(sht_back, 0, 16, COL_WHITE, COL_LDBLUE, s, 2);
+				if (i < 256 + 0x54) {
+					if (keytable[i - 256] != 0) {
+						s[0] = keytable[i - 256];
+						s[1] = 0;
+						putfonts8_asc_sht(sht_win, 40, 28, COL_BLACK, COL_BGREY, s, 1);
+					}
+				}
 			} else if (512 <= i && i <= 767) { /* 鼠标数据 */
 				if (mouse_decode(&mdec, i - 512) != 0) {
 					/* 3字符集齐，显示出来 */
@@ -138,11 +150,8 @@ void KaliMain(void){
 				}
 			} else if (i == 10) { /* 10秒定时器 */
 				putfonts8_asc_sht(sht_back, 0, 64, COL_WHITE, COL_LDBLUE, "10[sec]", 7);
-				sprintf(s, "%010d", count);
-				putfonts8_asc_sht(sht_win, 40, 28, COL_BLACK, COL_BGREY, s, 10);
 			} else if (i == 3) { /* 3秒定时器 */
 				putfonts8_asc_sht(sht_back, 0, 80, COL_WHITE, COL_LDBLUE, "3[sec]", 6);
-				count = 0; /* 开始测试 */
 			} else if (i == 1) { /* 光标定时器 */
 				timer_init(timer3, &fifo, 0); /* 置0 */
 				boxfill8(buf_back, binfo->scrnx, COL_WHITE, 8, 96, 15, 111);
