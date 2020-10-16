@@ -29,17 +29,17 @@ void KaliMain(void){
 		'B', 'N', 'M', ',', '.', '/', 0,   '*', 0,   ' ', 0,   0,   0,   0,   0,   0,
 		0,   0,   0,   0,   0,   0,   0,   '7', '8', '9', '-', '4', '5', '6', '+', '1',
 		'2', '3', '0', '.'
-	};
+	};																//字符对应编码
 	
-	init_gdtidt();												// 初始化GDT和IDT
-	init_pic();													// 初始化中断控制器
-	io_sti(); 													// IDT/PIC初始化结束，解除CPU的中断禁止
-	fifo32_init(&fifo, 128, fifobuf);							// 初始化FIFO缓冲区
-	init_pit();													// 初始化定时器
-	init_keyboard(&fifo, 256);									// 初始化键盘FIFO缓冲区
-	enable_mouse(&fifo, 512, &mdec);							// 初始化鼠标FIFO缓冲区
-	io_out8(PIC0_IMR, 0xf8); 									// 允许PIT、PIC1和键盘(11111000)
-	io_out8(PIC1_IMR, 0xef); 									// 允许鼠标(11101111)
+	init_gdtidt();													// 初始化GDT和IDT
+	init_pic();														// 初始化中断控制器
+	io_sti(); 														// IDT/PIC初始化结束，解除CPU的中断禁止
+	fifo32_init(&fifo, 128, fifobuf);								// 初始化FIFO缓冲区
+	init_pit();														// 初始化定时器
+	init_keyboard(&fifo, 256);										// 初始化键盘FIFO缓冲区
+	enable_mouse(&fifo, 512, &mdec);								// 初始化鼠标FIFO缓冲区
+	io_out8(PIC0_IMR, 0xf8); 										// 允许PIT、PIC1和键盘(11111000)
+	io_out8(PIC1_IMR, 0xef); 										// 允许鼠标(11101111)
 	
 	timer = timer_alloc();
 	timer_init(timer, &fifo, 10);
@@ -161,6 +161,10 @@ void KaliMain(void){
 					sprintf(s, "(%3d, %3d)", mx, my);
 					putfonts8_asc_sht(sht_back, 0, 0, COL_WHITE, COL_LDBLUE, s, 10);
 					sheet_slide(sht_mouse, mx, my); /* 包含sheet_refresh */
+					if ((mdec.btn & 0x01) != 0) {
+						/* 按下左键，移动sht_win */
+						sheet_slide(sht_win, mx - 80, my - 8);
+					}
 				}
 			} else if (i == 10) { /* 10秒定时器 */
 				putfonts8_asc_sht(sht_back, 0, 64, COL_WHITE, COL_LDBLUE, "10[sec]", 7);

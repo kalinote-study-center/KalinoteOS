@@ -70,10 +70,12 @@ kalinote.img : ipl10.bin kalinote.sys Makefile
 
 img :
 	$(MAKE) kalinote.img
+	$(COPY) kalinote.img D:\VMFile\kalinote.img
 
 run :
 	$(MAKE) img
 	$(COPY) kalinote.img ..\z_tools\qemu\fdimage0.bin
+	$(COPY) kalinote.img D:\VMFile\kalinote.img
 	$(MAKE) -C ../z_tools/qemu
 
 install :
