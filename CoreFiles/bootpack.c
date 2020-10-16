@@ -22,7 +22,7 @@ void KaliMain(void){
 	struct FIFO32 fifo;
 	char s[40];
 	int fifobuf[128];
-	struct TIMER *timer, *timer2, *timer3;
+	struct TIMER *timer, *timer2, *timer3, *timer_ts;
 	int mx, my, i, cursor_x, cursor_c, task_b_esp;
 	unsigned int memtotal;
 	struct MOUSE_DEC mdec;
@@ -60,6 +60,9 @@ void KaliMain(void){
 	timer3 = timer_alloc();
 	timer_init(timer3, &fifo, 1);
 	timer_settime(timer3, 50);
+	timer_ts = timer_alloc();
+	timer_init(timer_ts, &fifo, 2);
+	timer_settime(timer_ts, 2);
 	
 	memtotal = memtest(0x00400000, 0xbfffffff);
 	memman_init(memman);
@@ -140,7 +143,10 @@ void KaliMain(void){
 		} else {
 			i = fifo32_get(&fifo);
 			io_sti();
-			if (256 <= i && i <= 511) { /* 键盘数据 */
+			if (i == 2) {
+				farjmp(0, 4 * 8);
+				timer_settime(timer_ts, 2);
+			} else if (256 <= i && i <= 511) { /* 键盘数据 */
 				sprintf(s, "%02X", i - 256);
 				putfonts8_asc_sht(sht_back, 0, 16, COL_WHITE, COL_LDBLUE, s, 2);
 				if (i < 0x54 + 256) {
@@ -203,7 +209,6 @@ void KaliMain(void){
 				}
 			} else if (i == 10) { /* 10秒定时器 */
 				putfonts8_asc_sht(sht_back, 0, 64, COL_WHITE, COL_LDBLUE, "10[sec]", 7);
-				taskswitch4();	//切换任务
 			} else if (i == 3) { /* 3秒定时器 */
 				putfonts8_asc_sht(sht_back, 0, 80, COL_WHITE, COL_LDBLUE, "3[sec]", 6);
 			} else if (i <= 1) { /* 光标定时器 */
@@ -291,7 +296,29 @@ void make_textbox8(struct SHEET *sht, int x0, int y0, int sx, int sy, int c){
 	return;
 }
 
-void task_b_main(void)
-{
-	for (;;) { io_hlt(); }
+void task_b_main(void){
+	struct FIFO32 fifo;
+	struct TIMER *timer_ts;
+	int i, fifobuf[128];
+
+	fifo32_init(&fifo, 128, fifobuf);
+	timer_ts = timer_alloc();
+	timer_init(timer_ts, &fifo, 1);
+	timer_settime(timer_ts, 2);
+
+	for (;;) {
+		io_cli();
+		if (fifo32_status(&fifo) == 0) {
+			io_sti();
+			io_hlt();
+		} else {
+			i = fifo32_get(&fifo);
+			io_sti();
+			if (i == 1) { /* 超时时间为5秒 */
+				//切换任务
+				farjmp(0, 3 * 8);
+				timer_settime(timer_ts, 2);
+			}
+		}
+	}
 }

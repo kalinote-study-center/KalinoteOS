@@ -1,4 +1,4 @@
-//asmhead.nas
+//asmhead.nas(bootpack.c的前面部分)
 struct BOOTINFO {	/* 0x0ff0-0x0fff */
 	/*启动信息 - 此处原内容在第89页*/
 	char cyls;	/*启动区读取硬盘位置*/
@@ -32,9 +32,9 @@ void asm_inthandler2c(void);				//2c号中断，注册在0x2c
 unsigned int memtest_sub(
 	unsigned int start,
 	unsigned int end);						//读取内存
-void taskswitch4(void);						//切换任务
+void farjmp(int eip, int cs);				//切换任务
 
-//graphic.c
+//graphic.c(画面显示)
 void init_palette(void);																			//初始化调色板函数
 void set_palette(int start, int end, unsigned char *rgb);											//设置调色板
 void boxfill8(unsigned char *vram, int xsize, unsigned char c, int x0, int y0, int x1, int y1);		//绘制方块
@@ -44,7 +44,6 @@ void putfonts8_asc(char *vram, int xsize, int x, int y, char c, unsigned char *s
 void init_mouse_cursor8(char *mouse, char bc);														//初始化鼠标指针
 void putblock8_8(char *vram, int vxsize, int pxsize,
 	int pysize, int px0, int py0, char *buf, int bxsize);											//鼠标背景色处理
-
 // 15种颜色常数定义
 #define COL_BLACK		0
 #define COL_BRED		1
@@ -63,7 +62,7 @@ void putblock8_8(char *vram, int vxsize, int pxsize,
 #define COL_LDBLUE		14
 #define COL_DGREY		15
 
-//dsctlb.c
+//dsctlb.c(画面渲染)
 struct SEGMENT_DESCRIPTOR {
 	short limit_low, base_low;
 	char base_mid, access_right;
@@ -88,7 +87,7 @@ void set_gatedesc(struct GATE_DESCRIPTOR *gd, int offset, int selector, int ar);
 #define AR_TSS32		0x0089
 #define AR_INTGATE32	0x008e
 
-/* int.c */
+//int.c(中断控制)
 void init_pic(void);
 void inthandler27(int *esp);					//27号中断
 #define PIC0_ICW1		0x0020
@@ -104,7 +103,7 @@ void inthandler27(int *esp);					//27号中断
 #define PIC1_ICW3		0x00a1
 #define PIC1_ICW4		0x00a1
 
-/* fifo.c */
+//fifo.c(FIFO缓冲区)
 struct FIFO32 {
 	int *buf;
 	int p, q, size, free, flags;
@@ -114,7 +113,7 @@ int fifo32_put(struct FIFO32 *fifo, int data);														//向FIFO传数据并保存
 int fifo32_get(struct FIFO32 *fifo);																//从FIFO获得一个数据
 int fifo32_status(struct FIFO32 *fifo);																//查询缓冲区状态
 
-/* mouse.c */
+//mouse.c(鼠标控制)
 struct MOUSE_DEC {
 	unsigned char buf[3], phase;
 	int x, y, btn;
@@ -123,14 +122,14 @@ void inthandler2c(int *esp);																		//鼠标监听中断
 void enable_mouse(struct FIFO32 *fifo, int data0, struct MOUSE_DEC *mdec);							//激活鼠标
 int mouse_decode(struct MOUSE_DEC *mdec, unsigned char dat);										//获取鼠标的三个字节信息，并解码
 
-/* keyboard.c */
+//keyboard.c(键盘控制)
 void inthandler21(int *esp);																		//键盘监听中断
 void wait_KBC_sendready(void);																		//等待键盘控制电路准备完毕
 void init_keyboard(struct FIFO32 *fifo, int data0);													//初始化键盘控制电路
 #define PORT_KEYDAT		0x0060
 #define PORT_KEYCMD		0x0064
 
-/* memory.c */
+//memory.c(内存管理)
 #define MEMMAN_FREES		4090	/* 大约32KB */
 #define MEMMAN_ADDR			0x003c0000
 struct FREEINFO {	/* 可用信息 */
@@ -148,7 +147,7 @@ int memman_free(struct MEMMAN *man, unsigned int addr, unsigned int size);						
 unsigned int memman_alloc_4k(struct MEMMAN *man, unsigned int size);								//4K大空间分配内存
 int memman_free_4k(struct MEMMAN *man, unsigned int addr, unsigned int size);						//4K大空间释放内存
 
-/* sheet.c */
+//sheet.c(画面图层处理)
 #define MAX_SHEETS		256
 struct SHEET {
 	unsigned char *buf;
@@ -169,7 +168,7 @@ void sheet_refresh(struct SHEET *sht, int bx0, int by0, int bx1, int by1);						
 void sheet_slide(struct SHEET *sht, int vx0, int vy0);												//移动图层
 void sheet_free(struct SHEET *sht);																	//释放已使用的图层内存
 
-/* timer.c */
+//timer.c(定时器)
 #define MAX_TIMER		500
 struct TIMER {
 	struct TIMER *next;
@@ -189,4 +188,3 @@ void timer_free(struct TIMER *timer);
 void timer_init(struct TIMER *timer, struct FIFO32 *fifo, int data);
 void timer_settime(struct TIMER *timer, unsigned int timeout);
 void inthandler20(int *esp);
-
