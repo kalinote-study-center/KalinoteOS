@@ -4,6 +4,7 @@
 
 void make_window(unsigned char *buf, int xsize, int ysize, char *title);					// 生成一个窗口
 void putfonts8_asc_sht(struct SHEET *sht, int x, int y, int c, int b, char *s, int l);		// 先涂背景色，在写字符串
+void make_textbox8(struct SHEET *sht, int x0, int y0, int sx, int sy, int c);				// 生成编辑框
 
 void KaliMain(void){
 	/* 系统入口 */
@@ -14,7 +15,7 @@ void KaliMain(void){
 	char s[40];
 	int fifobuf[128];
 	struct TIMER *timer, *timer2, *timer3;
-	int mx, my, i;
+	int mx, my, i, cursor_x, cursor_c;
 	unsigned int memtotal;
 	struct MOUSE_DEC mdec;
 	struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;
@@ -76,7 +77,10 @@ void KaliMain(void){
 	init_mouse_cursor8(buf_mouse, 99);							// 背景色号99.
 
 	/* 窗口 */
-	make_window(buf_win, 160, 52, "window");
+	make_window(buf_win, 160, 52, "window");					// 窗口
+	make_textbox8(sht_win, 8, 28, 144, 16, COL_WHITE);			// 输入框
+	cursor_x = 8;
+	cursor_c = COL_WHITE;
 	sheet_slide(sht_back, 0, 0);
 	mx = (binfo->scrnx - 16) / 2; 								// 鼠标指针位置，默认为屏幕中心
 	my = (binfo->scrny - 28 - 16) / 2;
@@ -104,13 +108,23 @@ void KaliMain(void){
 			if (256 <= i && i <= 511) { /* 键盘数据 */
 				sprintf(s, "%02X", i - 256);
 				putfonts8_asc_sht(sht_back, 0, 16, COL_WHITE, COL_LDBLUE, s, 2);
-				if (i < 256 + 0x54) {
-					if (keytable[i - 256] != 0) {
+				if (i < 0x54 + 256) {
+					if (keytable[i - 256] != 0 && cursor_x < 144) { /* 一般字符 */
+						/* 每显示一个字符，光标就向前移动一次 */
 						s[0] = keytable[i - 256];
 						s[1] = 0;
-						putfonts8_asc_sht(sht_win, 40, 28, COL_BLACK, COL_BGREY, s, 1);
+						putfonts8_asc_sht(sht_win, cursor_x, 28, COL_BLACK, COL_WHITE, s, 1);
+						cursor_x += 8;
 					}
 				}
+				if (i == 256 + 0x0e && cursor_x > 8) { /* backspace */
+					/* 用空格键把光标消去后，后移一次光标 */
+					putfonts8_asc_sht(sht_win, cursor_x, 28, COL_BLACK, COL_WHITE, " ", 1);
+					cursor_x -= 8;
+				}
+				/* 光标再次显示 */
+				boxfill8(sht_win->buf, sht_win->bxsize, cursor_c, cursor_x, 28, cursor_x + 7, 43);
+				sheet_refresh(sht_win, cursor_x, 28, cursor_x + 8, 44);
 			} else if (512 <= i && i <= 767) { /* 鼠标数据 */
 				if (mouse_decode(&mdec, i - 512) != 0) {
 					/* 3字符集齐，显示出来 */
@@ -152,16 +166,17 @@ void KaliMain(void){
 				putfonts8_asc_sht(sht_back, 0, 64, COL_WHITE, COL_LDBLUE, "10[sec]", 7);
 			} else if (i == 3) { /* 3秒定时器 */
 				putfonts8_asc_sht(sht_back, 0, 80, COL_WHITE, COL_LDBLUE, "3[sec]", 6);
-			} else if (i == 1) { /* 光标定时器 */
-				timer_init(timer3, &fifo, 0); /* 置0 */
-				boxfill8(buf_back, binfo->scrnx, COL_WHITE, 8, 96, 15, 111);
+			} else if (i <= 1) { /* 光标定时器 */
+				if (i != 0) {
+					timer_init(timer3, &fifo, 0); /* 置0 */
+					cursor_c = COL_BLACK;
+				} else {
+					timer_init(timer3, &fifo, 1); /* 置1 */
+					cursor_c = COL_WHITE;
+				}
 				timer_settime(timer3, 50);
-				sheet_refresh(sht_back, 8, 96, 16, 112);
-			} else if (i == 0) { /* 光标定时器 */
-				timer_init(timer3, &fifo, 1); /* 置1 */
-				boxfill8(buf_back, binfo->scrnx, COL_LDBLUE, 8, 96, 15, 111);
-				timer_settime(timer3, 50);
-				sheet_refresh(sht_back, 8, 96, 16, 112);
+				boxfill8(sht_win->buf, sht_win->bxsize, cursor_c, cursor_x, 28, cursor_x + 7, 43);
+				sheet_refresh(sht_win, cursor_x, 28, cursor_x + 8, 44);
 			}
 		}
 	}
@@ -215,10 +230,23 @@ void make_window(unsigned char *buf, int xsize, int ysize, char *title){
 	return;
 }
 
-void putfonts8_asc_sht(struct SHEET *sht, int x, int y, int c, int b, char *s, int l)
-{
+void putfonts8_asc_sht(struct SHEET *sht, int x, int y, int c, int b, char *s, int l){
 	boxfill8(sht->buf, sht->bxsize, b, x, y, x + l * 8 - 1, y + 15);
 	putfonts8_asc(sht->buf, sht->bxsize, x, y, c, s);
 	sheet_refresh(sht, x, y, x + l * 8, y + 16);
+	return;
+}
+
+void make_textbox8(struct SHEET *sht, int x0, int y0, int sx, int sy, int c){
+	int x1 = x0 + sx, y1 = y0 + sy;
+	boxfill8(sht->buf, sht->bxsize, COL_DGREY, x0 - 2, y0 - 3, x1 + 1, y0 - 3);
+	boxfill8(sht->buf, sht->bxsize, COL_DGREY, x0 - 3, y0 - 3, x0 - 3, y1 + 1);
+	boxfill8(sht->buf, sht->bxsize, COL_WHITE, x0 - 3, y1 + 2, x1 + 1, y1 + 2);
+	boxfill8(sht->buf, sht->bxsize, COL_WHITE, x1 + 2, y0 - 3, x1 + 2, y1 + 2);
+	boxfill8(sht->buf, sht->bxsize, COL_BLACK, x0 - 1, y0 - 2, x1 + 0, y0 - 2);
+	boxfill8(sht->buf, sht->bxsize, COL_BLACK, x0 - 2, y0 - 2, x0 - 2, y1 + 0);
+	boxfill8(sht->buf, sht->bxsize, COL_BGREY, x0 - 2, y1 + 1, x1 + 0, y1 + 1);
+	boxfill8(sht->buf, sht->bxsize, COL_BGREY, x1 + 1, y0 - 2, x1 + 1, y1 + 1);
+	boxfill8(sht->buf, sht->bxsize, c,           x0 - 1, y0 - 1, x1 + 0, y1 + 0);
 	return;
 }
