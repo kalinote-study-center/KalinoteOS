@@ -24,6 +24,7 @@ void load_gdtr(int limit, int addr);		//加载GDTR寄存器
 void load_idtr(int limit, int addr);		//加载IDTR寄存器
 int load_cr0(void);							//加载CR0寄存器
 void store_cr0(int cr0);					//存入CR0寄存器
+void load_tr(int tr);						//加载TR寄存器
 void asm_inthandler20(void);				//20号中断,用于timer
 void asm_inthandler21(void);				//21号中断，注册在0x21
 void asm_inthandler27(void);				//27号中断，注册在0x27
@@ -31,6 +32,7 @@ void asm_inthandler2c(void);				//2c号中断，注册在0x2c
 unsigned int memtest_sub(
 	unsigned int start,
 	unsigned int end);						//读取内存
+void taskswitch4(void);						//切换任务
 
 //graphic.c
 void init_palette(void);																			//初始化调色板函数
@@ -83,6 +85,7 @@ void set_gatedesc(struct GATE_DESCRIPTOR *gd, int offset, int selector, int ar);
 #define LIMIT_BOTPAK	0x0007ffff
 #define AR_DATA32_RW	0x4092
 #define AR_CODE32_ER	0x409a
+#define AR_TSS32		0x0089
 #define AR_INTGATE32	0x008e
 
 /* int.c */
