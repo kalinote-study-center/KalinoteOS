@@ -5,7 +5,7 @@
 void make_window(unsigned char *buf, int xsize, int ysize, char *title);					// 生成一个窗口
 void putfonts8_asc_sht(struct SHEET *sht, int x, int y, int c, int b, char *s, int l);		// 先涂背景色，在写字符串
 void make_textbox8(struct SHEET *sht, int x0, int y0, int sx, int sy, int c);				// 生成编辑框
-void task_b_main(void);																		// 任务B(无限循环)
+void task_b_main(struct SHEET *sht_back);													// 任务B(计数)
 
 struct TSS32 {
 	int backlink, esp0, ss0, esp1, ss1, esp2, ss2, cr3;
@@ -117,7 +117,7 @@ void KaliMain(void){
 	set_segmdesc(gdt + 3, 103, (int) &tss_a, AR_TSS32);
 	set_segmdesc(gdt + 4, 103, (int) &tss_b, AR_TSS32);
 	load_tr(3 * 8);
-	task_b_esp = memman_alloc_4k(memman, 64 * 1024) + 64 * 1024;
+	task_b_esp = memman_alloc_4k(memman, 64 * 1024) + 64 * 1024 - 8;
 	tss_b.eip = (int) &task_b_main;
 	tss_b.eflags = 0x00000202; /* IF = 1; */
 	tss_b.eax = 0;
@@ -134,7 +134,7 @@ void KaliMain(void){
 	tss_b.ds = 1 * 8;
 	tss_b.fs = 1 * 8;
 	tss_b.gs = 1 * 8;
-	*((int *) 0x0fec) = (int) sht_back;
+	*((int *) (task_b_esp + 4)) = (int) sht_back;
 	
 	for(;;){
 		//停止CPU
@@ -297,23 +297,22 @@ void make_textbox8(struct SHEET *sht, int x0, int y0, int sx, int sy, int c){
 	return;
 }
 
-void task_b_main(void){
+void task_b_main(struct SHEET *sht_back){
 	struct FIFO32 fifo;
-	struct TIMER *timer_ts;
+	struct TIMER *timer_ts, *timer_put;
 	int i, fifobuf[128], count = 0;
-	char s[11];
-	struct SHEET *sht_back;
+	char s[12];
 
 	fifo32_init(&fifo, 128, fifobuf);
 	timer_ts = timer_alloc();
-	timer_init(timer_ts, &fifo, 1);
+	timer_init(timer_ts, &fifo, 2);
 	timer_settime(timer_ts, 2);
-	sht_back = (struct SHEET *) *((int *) 0x0fec);
+	timer_put = timer_alloc();
+	timer_init(timer_put, &fifo, 1);
+	timer_settime(timer_put, 1);
 
 	for (;;) {
 		count++;
-		sprintf(s, "%10d", count);
-		putfonts8_asc_sht(sht_back, 0, 144, COL_WHITE, COL_DBLUE, s, 10);
 		io_cli();
 		if (fifo32_status(&fifo) == 0) {
 			io_sti();
@@ -321,6 +320,10 @@ void task_b_main(void){
 			i = fifo32_get(&fifo);
 			io_sti();
 			if (i == 1) { /* 任务切换 */
+				sprintf(s, "%11d", count);
+				putfonts8_asc_sht(sht_back, 0, 144, COL_WHITE, COL_DBLUE, s, 11);
+				timer_settime(timer_put, 1);
+			} else if (i == 2) {
 				farjmp(0, 3 * 8);
 				timer_settime(timer_ts, 2);
 			}

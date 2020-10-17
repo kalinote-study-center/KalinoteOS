@@ -84,17 +84,17 @@ keystatus:
 		INT		0x16 			; keyboard BIOS
 		MOV		[LEDS],AL
 
-；防止PIC接受任何中断
-；在AT兼容机的规格中，如果要初始化PIC
-；如果不在CLI之前做的话，偶尔会死机
-；PIC的初始化稍后进行
+；PIC关闭所有中断
+；根据AT兼容机的规格，如果要初始化PIC，
+；必须在CLI之前进行，否则有事会挂起
+；随后进行PIC初始化
 
 		MOV		AL,0xff
 		OUT		0x21,AL
 		NOP						; 停顿一下，防止BUG(作者说某些机型如果连续UOT会死掉)
 		OUT		0xa1,AL
 
-		CLI						; 甚至CPU级别也禁止
+		CLI						; 禁止CPU级别中断
 
 ; 为了能够从CPU访问1MB以上的存储器，设定A20GATE
 
@@ -144,7 +144,7 @@ pipelineflush:
 		MOV		EDI,DSKCAC+512	; 传送源
 		MOV		ECX,0
 		MOV		CL,BYTE [CYLS]
-		IMUL	ECX,512*18*2/4	; シリンダ数からバイト数/4に変換
+		IMUL	ECX,512*18*2/4
 		SUB		ECX,512/4		; 只减去IPL的部分
 		CALL	memcpy
 

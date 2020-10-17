@@ -74,7 +74,7 @@ img :
 
 run :
 	$(MAKE) img
-	$(COPY) kalinote.img ..\z_tools\qemu\fdimage0.bin
+	$(COPY) kalinote.img ..\z_tools\qemu\kalinoteos.bin
 	$(COPY) kalinote.img D:\VMFile\kalinote.img
 	$(MAKE) -C ../z_tools/qemu
 
