@@ -26,8 +26,7 @@ struct TASK *task_init(struct MEMMAN *memman){
 	return task;
 }
 
-struct TASK *task_alloc(void)
-{
+struct TASK *task_alloc(void){
 	int i;
 	struct TASK *task;
 	for (i = 0; i < MAX_TASKS; i++) {
@@ -54,16 +53,14 @@ struct TASK *task_alloc(void)
 	return 0; /* 全部正在使用 */
 }
 
-void task_run(struct TASK *task)
-{
+void task_run(struct TASK *task){
 	task->flags = 2; /* 活动中标志 */
 	taskctl->tasks[taskctl->running] = task;
 	taskctl->running++;
 	return;
 }
 
-void task_switch(void)
-{
+void task_switch(void){
 	timer_settime(task_timer, 2);
 	if (taskctl->running >= 2) {
 		taskctl->now++;
