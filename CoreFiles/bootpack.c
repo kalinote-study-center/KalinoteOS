@@ -31,12 +31,12 @@ void KaliMain(void){
 		0,   0,   0,   0,   0,   0,   0,   '7', '8', '9', '-', '4', '5', '6', '+', '1',
 		'2', '3', '0', '.'
 	};																//字符对应编码
-	struct TASK *task_b;
+	struct TASK *task_a, *task_b;
 	
 	init_gdtidt();													// 初始化GDT和IDT
 	init_pic();														// 初始化中断控制器
 	io_sti(); 														// IDT/PIC初始化结束，解除CPU的中断禁止
-	fifo32_init(&fifo, 128, fifobuf);								// 初始化FIFO缓冲区
+	fifo32_init(&fifo, 128, fifobuf, 0);								// 初始化FIFO缓冲区
 	init_pit();														// 初始化定时器
 	init_keyboard(&fifo, 256);										// 初始化键盘FIFO缓冲区
 	enable_mouse(&fifo, 512, &mdec);								// 初始化鼠标FIFO缓冲区
@@ -99,7 +99,8 @@ void KaliMain(void){
 			memtotal / (1024 * 1024), memman_total(memman) / 1024);
 	putfonts8_asc_sht(sht_back, 0, 32, COL_WHITE, COL_LDBLUE, s, 40);
 	
-	task_init(memman);
+	task_a = task_init(memman);
+	fifo.task = task_a;
 	task_b = task_alloc();
 	task_b->tss.esp = memman_alloc_4k(memman, 64 * 1024) + 64 * 1024 - 8;
 	task_b->tss.eip = (int) &task_b_main;
@@ -116,7 +117,8 @@ void KaliMain(void){
 		//停止CPU
 		io_cli();
 		if (fifo32_status(&fifo) == 0) {
-			io_stihlt();
+			task_sleep(task_a);
+			io_sti();
 		} else {
 			i = fifo32_get(&fifo);
 			io_sti();
@@ -276,7 +278,7 @@ void task_b_main(struct SHEET *sht_back){
 	int i, fifobuf[128], count = 0, count0 = 0;
 	char s[12];
 
-	fifo32_init(&fifo, 128, fifobuf);
+	fifo32_init(&fifo, 128, fifobuf, 0);
 	timer_put = timer_alloc();
 	timer_init(timer_put, &fifo, 1);
 	timer_settime(timer_put, 1);

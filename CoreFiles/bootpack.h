@@ -107,8 +107,9 @@ void inthandler27(int *esp);					//27号中断
 struct FIFO32 {
 	int *buf;
 	int p, q, size, free, flags;
+	struct TASK *task;
 };
-void fifo32_init(struct FIFO32 *fifo, int size, int *buf);											//初始化FIFO缓冲区
+void fifo32_init(struct FIFO32 *fifo, int size, int *buf, struct TASK *task);						//初始化FIFO缓冲区
 int fifo32_put(struct FIFO32 *fifo, int data);														//向FIFO传数据并保存
 int fifo32_get(struct FIFO32 *fifo);																//从FIFO获得一个数据
 int fifo32_status(struct FIFO32 *fifo);																//查询缓冲区状态
@@ -184,14 +185,14 @@ struct TIMERCTL {
 extern struct TIMERCTL timerctl;
 void init_pit(void);
 struct TIMER *timer_alloc(void);
-void timer_free(struct TIMER *timer);
-void timer_init(struct TIMER *timer, struct FIFO32 *fifo, int data);
-void timer_settime(struct TIMER *timer, unsigned int timeout);
-void inthandler20(int *esp);
+void timer_free(struct TIMER *timer);																//释放定时器
+void timer_init(struct TIMER *timer, struct FIFO32 *fifo, int data);								//初始化定时器
+void timer_settime(struct TIMER *timer, unsigned int timeout);										//设置定时器
+void inthandler20(int *esp);																		//20号中断
 
-/* mtask.c */
-#define MAX_TASKS		8299	/* 最大任务数量(最多只能到8299，不知道为什么) */
-#define TASK_GDT0		3		/* 定义从GDT的几号开始分配给TSS */
+/* mtask.c(多任务) */
+#define MAX_TASKS		8299			/* 最大任务数量(最多只能到8299，不知道为什么，继续往上会导致CPU死掉) */
+#define TASK_GDT0		3				/* 定义从GDT的几号开始分配给TSS */
 struct TSS32 {
 	int backlink, esp0, ss0, esp1, ss1, esp2, ss2, cr3;
 	int eip, eflags, eax, ecx, edx, ebx, esp, ebp, esi, edi;
@@ -213,3 +214,4 @@ struct TASK *task_init(struct MEMMAN *memman);
 struct TASK *task_alloc(void);
 void task_run(struct TASK *task);																	//运行程序
 void task_switch(void);																				//切换程序
+void task_sleep(struct TASK *task);																	//程序睡眠
