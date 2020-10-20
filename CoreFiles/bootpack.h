@@ -191,8 +191,8 @@ void timer_settime(struct TIMER *timer, unsigned int timeout);										//设置定
 void inthandler20(int *esp);																		//20号中断
 
 /* mtask.c(多任务) */
-#define MAX_TASKS		2500			/* 最大任务数量 */
-#define TASK_GDT0		3				/* 定义从GDT的几号开始分配给TSS */
+#define MAX_TASKS		2500																		//最大任务数量
+#define TASK_GDT0		3																			//定义从GDT的几号开始分配给TSS
 struct TSS32 {
 	int backlink, esp0, ss0, esp1, ss1, esp2, ss2, cr3;
 	int eip, eflags, eax, ecx, edx, ebx, esp, ebp, esi, edi;
@@ -201,6 +201,7 @@ struct TSS32 {
 };
 struct TASK {
 	int sel, flags; /* sel用来存放GDT编号 */
+	int priority;	/* 程序优先级 */
 	struct TSS32 tss;
 };
 struct TASKCTL {
@@ -212,6 +213,6 @@ struct TASKCTL {
 extern struct TIMER *task_timer;
 struct TASK *task_init(struct MEMMAN *memman);
 struct TASK *task_alloc(void);
-void task_run(struct TASK *task);																	//运行程序
+void task_run(struct TASK *task, int priority);														//运行程序
 void task_switch(void);																				//切换程序
 void task_sleep(struct TASK *task);																	//程序睡眠
