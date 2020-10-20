@@ -21,19 +21,31 @@ void KaliMain(void){
 	unsigned int memtotal;
 	struct MOUSE_DEC mdec;
 	struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;
-	static char keytable[0x54] = {
+	unsigned char *buf_back, buf_mouse[256], *buf_win, *buf_cons;
+	struct SHEET *sht_back, *sht_mouse, *sht_win, *sht_cons;
+	struct TASK *task_a, *task_cons;
+	struct TIMER *timer;
+	int key_to = 0, key_shift = 0, key_leds = (binfo->leds >> 4) & 7;
+	static char keytable0[0x80] = {									//字符编码表(后面需要按照中文键盘优化符号)
 		0,   0,   '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '^', 0,   0,
 		'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', '@', '[', 0,   0,   'A', 'S',
 		'D', 'F', 'G', 'H', 'J', 'K', 'L', ';', ':', 0,   0,   ']', 'Z', 'X', 'C', 'V',
 		'B', 'N', 'M', ',', '.', '/', 0,   '*', 0,   ' ', 0,   0,   0,   0,   0,   0,
 		0,   0,   0,   0,   0,   0,   0,   '7', '8', '9', '-', '4', '5', '6', '+', '1',
-		'2', '3', '0', '.'
+		'2', '3', '0', '.', 0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
+		0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
+		0,   0,   0,   0x5c, 0,  0,   0,   0,   0,   0,   0,   0,   0,   0x5c, 0,  0
 	};
-	unsigned char *buf_back, buf_mouse[256], *buf_win, *buf_cons;
-	struct SHEET *sht_back, *sht_mouse, *sht_win, *sht_cons;
-	struct TASK *task_a, *task_cons;
-	struct TIMER *timer;
-	int key_to = 0;
+	static char keytable1[0x80] = {									//shift
+		0,   0,   '!', 0x22, '#', '$', '%', '&', 0x27, '(', ')', '~', '=', '~', 0,   0,
+		'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', '`', '{', 0,   0,   'A', 'S',
+		'D', 'F', 'G', 'H', 'J', 'K', 'L', '+', '*', 0,   0,   '}', 'Z', 'X', 'C', 'V',
+		'B', 'N', 'M', '<', '>', '?', 0,   '*', 0,   ' ', 0,   0,   0,   0,   0,   0,
+		0,   0,   0,   0,   0,   0,   0,   '7', '8', '9', '-', '4', '5', '6', '+', '1',
+		'2', '3', '0', '.', 0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
+		0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
+		0,   0,   0,   '_', 0,   0,   0,   0,   0,   0,   0,   0,   0,   '|', 0,   0
+	};
 	
 	init_gdtidt();													// 初始化GDT和IDT
 	init_pic();														// 初始化中断控制器
@@ -125,17 +137,31 @@ void KaliMain(void){
 			if (256 <= i && i <= 511) { /* 键盘数据 */
 				sprintf(s, "%02X", i - 256);
 				putfonts8_asc_sht(sht_back, 0, 16, COL_WHITE, COL_LDBLUE, s, 2);
-				if (i < 0x54 + 256 && keytable[i - 256] != 0) { /* 通常文字 */
+				if (i < 0x80 + 256) { /* 将按键编码转换为字符编码 */
+					if (key_shift == 0) {
+						s[0] = keytable0[i - 256];
+					} else {
+						s[0] = keytable1[i - 256];
+					}
+				} else {
+					s[0] = 0;
+				}
+				if ('A' <= s[0] && s[0] <= 'Z') {	/* 当输入字符为英文字母时 */
+					if (((key_leds & 4) == 0 && key_shift == 0) ||		// 这里对于CapsLock键的判断还有一点问题
+							((key_leds & 4) != 0 && key_shift != 0)) {
+						s[0] += 0x20;	/* 将大写字母转换为小写字母 */
+					}
+				}
+				if (s[0] != 0) { /* 通常文字 */
 					if (key_to == 0) {	/* 发送给任务A */
 						if (cursor_x < 128) {
 							/* 显示一个字符之后将光标后移一位 */
-							s[0] = keytable[i - 256];
 							s[1] = 0;
 							putfonts8_asc_sht(sht_win, cursor_x, 28, COL_BLACK, COL_WHITE, s, 1);
 							cursor_x += 8;
 						}
 					} else {	/* 发送给命令行窗口 */
-						fifo32_put(&task_cons->fifo, keytable[i - 256] + 256);
+						fifo32_put(&task_cons->fifo, s[0] + 256);
 					}
 				}
 				if (i == 256 + 0x0e) { /* backspace */
@@ -161,6 +187,18 @@ void KaliMain(void){
 					}
 					sheet_refresh(sht_win,  0, 0, sht_win->bxsize,  21);
 					sheet_refresh(sht_cons, 0, 0, sht_cons->bxsize, 21);
+				}
+				if (i == 256 + 0x2a) {	/* 左SHIFT ON */
+					key_shift |= 1;
+				}
+				if (i == 256 + 0x36) {	/* 右SHIFT ON */
+					key_shift |= 2;
+				}
+				if (i == 256 + 0xaa) {	/* 左SHIFT OFF */
+					key_shift &= ~1;
+				}
+				if (i == 256 + 0xb6) {	/* 右SHIFT OFF */
+					key_shift &= ~2;
 				}
 				/* 光标再次显示 */
 				boxfill8(sht_win->buf, sht_win->bxsize, cursor_c, cursor_x, 28, cursor_x + 7, 43);
