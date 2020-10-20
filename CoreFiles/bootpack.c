@@ -3,6 +3,14 @@
 #include "bootpack.h"
 #include <string.h>
 
+struct FILEINFO {
+	//文件结构(详见第367页)
+	unsigned char name[8], ext[3], type;
+	char reserve[10];
+	unsigned short time, date, clustno;
+	unsigned int size;
+};
+
 void make_window8(unsigned char *buf, int xsize, int ysize, char *title, char act);			// 生成一个窗口
 void putfonts8_asc_sht(struct SHEET *sht, int x, int y, int c, int b, char *s, int l);		// 先涂背景色，在写字符串
 void make_textbox8(struct SHEET *sht, int x0, int y0, int sx, int sy, int c);				// 生成编辑框
@@ -381,9 +389,10 @@ void console_task(struct SHEET *sheet, unsigned int memtotal){
 	struct TIMER *timer;
 	struct TASK *task = task_now();
 	int i, fifobuf[128], cursor_x = 16, cursor_y = 28, cursor_c = -1;
-	int x, y;
 	char s[30], cmdline[30];
 	struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;
+	int x, y;
+	struct FILEINFO *finfo = (struct FILEINFO *) (ADR_DISKIMG + 0x002600);
 
 	fifo32_init(&task->fifo, 128, fifobuf, task);
 	timer = timer_alloc();
@@ -454,6 +463,27 @@ void console_task(struct SHEET *sheet, unsigned int memtotal){
 						}
 						sheet_refresh(sheet, 8, 28, 8 + 240, 28 + 128);
 						cursor_y = 28;
+					} else if ((strcmp(cmdline, "dir") == 0) || (strcmp(cmdline, "ls") == 0)) {
+						/* dir指令 */
+						for (x = 0; x < 224; x++) {
+							if (finfo[x].name[0] == 0x00) {
+								break;
+							}
+							if (finfo[x].name[0] != 0xe5) {
+								if ((finfo[x].type & 0x18) == 0) {
+									sprintf(s, "filename.ext   %7d", finfo[x].size);
+									for (y = 0; y < 8; y++) {
+										s[y] = finfo[x].name[y];
+									}
+									s[ 9] = finfo[x].ext[0];
+									s[10] = finfo[x].ext[1];
+									s[11] = finfo[x].ext[2];
+									putfonts8_asc_sht(sheet, 8, cursor_y, COL_WHITE, COL_BLACK, s, 30);
+									cursor_y = cons_newline(cursor_y, sheet);
+								}
+							}
+						}
+						cursor_y = cons_newline(cursor_y, sheet);
 					} else if (cmdline[0] != 0) {
 						/* 不是内部或外部命令 */
 						putfonts8_asc_sht(sheet, 8, cursor_y, COL_WHITE, COL_BLACK, "Not a command.", 15);

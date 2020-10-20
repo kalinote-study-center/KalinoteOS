@@ -9,6 +9,7 @@ struct BOOTINFO {	/* 0x0ff0-0x0fff */
 	char *vram;
 };
 #define ADR_BOOTINFO	0x00000ff0
+#define ADR_DISKIMG		0x00100000			//文件位置
 
 //naskfunc.nas中的函数(汇编编写)
 void io_hlt(void);							//暂停处理器
@@ -38,7 +39,7 @@ void farjmp(int eip, int cs);				//切换任务
 void init_palette(void);																			//初始化调色板函数
 void set_palette(int start, int end, unsigned char *rgb);											//设置调色板
 void boxfill8(unsigned char *vram, int xsize, unsigned char c, int x0, int y0, int x1, int y1);		//绘制方块
-void init_screen8(char *vram, int x, int y);															//初始化屏幕
+void init_screen8(char *vram, int x, int y);														//初始化屏幕
 void putfont8(char *vram, int xsize, int x, int y, char c, char *font);								//绘制字体
 void putfonts8_asc(char *vram, int xsize, int x, int y, char c, unsigned char *s);					//绘制字符串
 void init_mouse_cursor8(char *mouse, char bc);														//初始化鼠标指针
