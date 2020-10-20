@@ -187,6 +187,11 @@ void KaliMain(void){
 						fifo32_put(&task_cons->fifo, 8 + 256);
 					}
 				}
+				if (i == 256 + 0x1c) {	/* Enter */
+					if (key_to != 0) {	/* 发送至命令行窗口 */
+						fifo32_put(&task_cons->fifo, 10 + 256);
+					}
+				}
 				if (i == 256 + 0x0f) { /* Tab */
 					if (key_to == 0) {
 						key_to = 1;
@@ -394,7 +399,7 @@ void console_task(struct SHEET *sheet){
 	/* 命令行代码 */
 	struct TIMER *timer;
 	struct TASK *task = task_now();
-	int i, fifobuf[128], cursor_x = 16, cursor_c = -1;
+	int i, fifobuf[128], cursor_x = 16, cursor_y = 28, cursor_c = -1;
 	char s[2];
 
 	fifo32_init(&task->fifo, 128, fifobuf, task);
@@ -430,7 +435,7 @@ void console_task(struct SHEET *sheet){
 				cursor_c = COL_WHITE;
 			}
 			if (i == 3) {	/* 关闭光标 */
-				boxfill8(sheet->buf, sheet->bxsize, COL_BLACK, cursor_x, 28, cursor_x + 7, 43);
+				boxfill8(sheet->buf, sheet->bxsize, COL_BLACK, cursor_x, cursor_y, cursor_x + 7, cursor_y + 15);
 				cursor_c = -1;
 			}
 			if (256 <= i && i <= 511) { /* 键盘数据(通过任务A) */
@@ -438,8 +443,18 @@ void console_task(struct SHEET *sheet){
 					/* backspace */
 					if (cursor_x > 16) {
 						/* 用空格键把光标消去后，前移一次光标 */
-						putfonts8_asc_sht(sheet, cursor_x, 28, COL_WHITE, COL_BLACK, " ", 1);
+						putfonts8_asc_sht(sheet, cursor_x, cursor_y, COL_WHITE, COL_BLACK, " ", 1);
 						cursor_x -= 8;
+					}
+				} else if (i == 10 + 256) {
+					/* Enter */
+					if (cursor_y < 28 + 112) {
+						/* 用空格把光标消去 */
+						putfonts8_asc_sht(sheet, cursor_x, cursor_y, COL_WHITE, COL_BLACK, " ", 1);
+						cursor_y += 16;
+						/* 显示提示符 */
+						putfonts8_asc_sht(sheet, 8, cursor_y, COL_WHITE, COL_BLACK, ">", 1);
+						cursor_x = 16;
 					}
 				} else {
 					/* 一般字符 */
@@ -447,16 +462,16 @@ void console_task(struct SHEET *sheet){
 						/* 显示一个字符后将光标后移一位 */
 						s[0] = i - 256;
 						s[1] = 0;
-						putfonts8_asc_sht(sheet, cursor_x, 28, COL_WHITE, COL_BLACK, s, 1);
+						putfonts8_asc_sht(sheet, cursor_x, cursor_y, COL_WHITE, COL_BLACK, s, 1);
 						cursor_x += 8;
 					}
 				}
 			}
 			/* 重新显示光标 */
 			if (cursor_c >= 0) {
-				boxfill8(sheet->buf, sheet->bxsize, cursor_c, cursor_x, 28, cursor_x + 7, 43);
+				boxfill8(sheet->buf, sheet->bxsize, cursor_c, cursor_x, cursor_y, cursor_x + 7, cursor_y + 15);
 			}
-			sheet_refresh(sheet, cursor_x, 28, cursor_x + 8, 44);
+			sheet_refresh(sheet, cursor_x, cursor_y, cursor_x + 8, cursor_y + 16);
 		}
 	}
 }
