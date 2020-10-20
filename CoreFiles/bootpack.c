@@ -125,19 +125,29 @@ void KaliMain(void){
 			if (256 <= i && i <= 511) { /* 键盘数据 */
 				sprintf(s, "%02X", i - 256);
 				putfonts8_asc_sht(sht_back, 0, 16, COL_WHITE, COL_LDBLUE, s, 2);
-				if (i < 0x54 + 256) {
-					if (keytable[i - 256] != 0 && cursor_x < 144) { /* 一般字符 */
-						/* 每显示一个字符，光标就向前移动一次 */
-						s[0] = keytable[i - 256];
-						s[1] = 0;
-						putfonts8_asc_sht(sht_win, cursor_x, 28, COL_BLACK, COL_WHITE, s, 1);
-						cursor_x += 8;
+				if (i < 0x54 + 256 && keytable[i - 256] != 0) { /* 通常文字 */
+					if (key_to == 0) {	/* 发送给任务A */
+						if (cursor_x < 128) {
+							/* 显示一个字符之后将光标后移一位 */
+							s[0] = keytable[i - 256];
+							s[1] = 0;
+							putfonts8_asc_sht(sht_win, cursor_x, 28, COL_BLACK, COL_WHITE, s, 1);
+							cursor_x += 8;
+						}
+					} else {	/* 发送给命令行窗口 */
+						fifo32_put(&task_cons->fifo, keytable[i - 256] + 256);
 					}
 				}
-				if (i == 256 + 0x0e && cursor_x > 8) { /* backspace */
-					/* 用空格键把光标消去后，后移一次光标 */
-					putfonts8_asc_sht(sht_win, cursor_x, 28, COL_BLACK, COL_WHITE, " ", 1);
-					cursor_x -= 8;
+				if (i == 256 + 0x0e) { /* backspace */
+					if (key_to == 0) {	/* 发送给任务A */
+						if (cursor_x > 8) {
+							/* 用空格键把光标消去后，后移一次光标 */
+							putfonts8_asc_sht(sht_win, cursor_x, 28, COL_BLACK, COL_WHITE, " ", 1);
+							cursor_x -= 8;
+						}
+					} else {	/* 发送给命令行窗口 */
+						fifo32_put(&task_cons->fifo, 8 + 256);
+					}
 				}
 				if (i == 256 + 0x0f) { /* Tab */
 					if (key_to == 0) {
@@ -297,37 +307,58 @@ void make_textbox8(struct SHEET *sht, int x0, int y0, int sx, int sy, int c){
 
 void console_task(struct SHEET *sheet){
 	/* 命令行代码 */
-	struct FIFO32 fifo;
 	struct TIMER *timer;
 	struct TASK *task = task_now();
+	int i, fifobuf[128], cursor_x = 16, cursor_c = COL_BLACK;
+	char s[2];
 
-	int i, fifobuf[128], cursor_x = 8, cursor_c = COL_BLACK;
-	fifo32_init(&fifo, 128, fifobuf, task);
-
+	fifo32_init(&task->fifo, 128, fifobuf, task);
 	timer = timer_alloc();
-	timer_init(timer, &fifo, 1);
+	timer_init(timer, &task->fifo, 1);
 	timer_settime(timer, 50);
+
+	putfonts8_asc_sht(sheet, 8, 28, COL_WHITE, COL_BLACK, ">", 1);			//命令提示符
 
 	for (;;) {
 		io_cli();
-		if (fifo32_status(&fifo) == 0) {
+		if (fifo32_status(&task->fifo) == 0) {
 			task_sleep(task);
 			io_sti();
 		} else {
-			i = fifo32_get(&fifo);
+			i = fifo32_get(&task->fifo);
 			io_sti();
 			if (i <= 1) { /* 光标定时器 */
 				if (i != 0) {
-					timer_init(timer, &fifo, 0); /* 置0 */
+					timer_init(timer, &task->fifo, 0); /* 置0 */
 					cursor_c = COL_WHITE;
 				} else {
-					timer_init(timer, &fifo, 1); /* 置1 */
+					timer_init(timer, &task->fifo, 1); /* 置1 */
 					cursor_c = COL_BLACK;
 				}
 				timer_settime(timer, 50);
-				boxfill8(sheet->buf, sheet->bxsize, cursor_c, cursor_x, 28, cursor_x + 7, 43);
-				sheet_refresh(sheet, cursor_x, 28, cursor_x + 8, 44);
 			}
+			if (256 <= i && i <= 511) { /* 键盘数据(通过任务A) */
+				if (i == 8 + 256) {
+					/* backspace */
+					if (cursor_x > 16) {
+						/* 用空格键把光标消去后，前移一次光标 */
+						putfonts8_asc_sht(sheet, cursor_x, 28, COL_WHITE, COL_BLACK, " ", 1);
+						cursor_x -= 8;
+					}
+				} else {
+					/* 一般字符 */
+					if (cursor_x < 240) {
+						/* 显示一个字符后将光标后移一位 */
+						s[0] = i - 256;
+						s[1] = 0;
+						putfonts8_asc_sht(sheet, cursor_x, 28, COL_WHITE, COL_BLACK, s, 1);
+						cursor_x += 8;
+					}
+				}
+			}
+			/* 重新显示光标 */
+			boxfill8(sheet->buf, sheet->bxsize, cursor_c, cursor_x, 28, cursor_x + 7, 43);
+			sheet_refresh(sheet, cursor_x, 28, cursor_x + 8, 44);
 		}
 	}
 }
