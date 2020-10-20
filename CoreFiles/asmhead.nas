@@ -13,7 +13,7 @@ DSKCAC0	EQU		0x00008000		; 磁盘缓存位置（实时模式）
 ;	0x101 :  640 x  480 x 8bit
 ;	0x103 :  800 x  600 x 8bit
 ;	0x105 : 1024 x  768 x 8bit
-;	0x107 : 1280 x 1024 x 8bit(qemu无法使用)
+;	0x107 : 1280 x 1024 x 8bit(qemu无法使用,VMware可以)
 ;	更多色彩模式代码去VESA查
 
 ; BOOT_INFO
@@ -70,12 +70,12 @@ VRAM	EQU		0x0ff8			; 图像缓冲区开始地址
 		JMP		keystatus
 
 scrn320:
-		MOV		AL,0x13			; VGA图形、320x200x8bit色彩
+		MOV		AL,0x13			; VGA图形、1024x768x8bit色彩
 		MOV		AH,0x00
 		INT		0x10
 		MOV		BYTE [VMODE],8	; 记录画面模式
-		MOV		WORD [SCRNX],320
-		MOV		WORD [SCRNY],200
+		MOV		WORD [SCRNX],1024
+		MOV		WORD [SCRNY],768
 		MOV		DWORD [VRAM],0x000a0000
 
 ; 用BIOS取得键盘上各种LED的状态
