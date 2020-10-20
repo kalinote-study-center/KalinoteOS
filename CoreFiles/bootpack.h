@@ -220,6 +220,7 @@ struct TASKCTL {
 extern struct TIMER *task_timer;
 struct TASK *task_init(struct MEMMAN *memman);
 struct TASK *task_alloc(void);
+struct TASK *task_now(void);
 void task_run(struct TASK *task, int level, int priority);											//运行程序
 void task_switch(void);																				//切换程序
 void task_sleep(struct TASK *task);																	//程序睡眠
