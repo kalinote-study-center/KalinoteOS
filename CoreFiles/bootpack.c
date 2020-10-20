@@ -1,6 +1,7 @@
 /*启动时的主程序*/
 #include <stdio.h>
 #include "bootpack.h"
+#include <string.h>
 
 void make_window8(unsigned char *buf, int xsize, int ysize, char *title, char act);			// 生成一个窗口
 void putfonts8_asc_sht(struct SHEET *sht, int x, int y, int c, int b, char *s, int l);		// 先涂背景色，在写字符串
@@ -380,6 +381,7 @@ void console_task(struct SHEET *sheet, unsigned int memtotal){
 	struct TIMER *timer;
 	struct TASK *task = task_now();
 	int i, fifobuf[128], cursor_x = 16, cursor_y = 28, cursor_c = -1;
+	int x, y;
 	char s[30], cmdline[30];
 	struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;
 
@@ -434,7 +436,7 @@ void console_task(struct SHEET *sheet, unsigned int memtotal){
 					cmdline[cursor_x / 8 - 2] = 0;
 					cursor_y = cons_newline(cursor_y, sheet);
 					/* 执行命令 */
-					if (cmdline[0] == 'm' && cmdline[1] == 'e' && cmdline[2] == 'm' && cmdline[3] == 0) {
+					if (strcmp(cmdline, "mem") == 0) {
 						/* mem命令 */
 						sprintf(s, "total   %dMB", memtotal / (1024 * 1024));
 						putfonts8_asc_sht(sheet, 8, cursor_y, COL_WHITE, COL_BLACK, s, 30);
@@ -443,9 +445,18 @@ void console_task(struct SHEET *sheet, unsigned int memtotal){
 						putfonts8_asc_sht(sheet, 8, cursor_y, COL_WHITE, COL_BLACK, s, 30);
 						cursor_y = cons_newline(cursor_y, sheet);
 						cursor_y = cons_newline(cursor_y, sheet);
+					} else if ((strcmp(cmdline, "cls") == 0) || (strcmp(cmdline, "clear") == 0)) {
+						/* cls&clear命令 */
+						for (y = 28; y < 28 + 128; y++) {
+							for (x = 8; x < 8 + 240; x++) {
+								sheet->buf[x + y * sheet->bxsize] = COL_BLACK;
+							}
+						}
+						sheet_refresh(sheet, 8, 28, 8 + 240, 28 + 128);
+						cursor_y = 28;
 					} else if (cmdline[0] != 0) {
 						/* 不是内部或外部命令 */
-						putfonts8_asc_sht(sheet, 8, cursor_y, COL_WHITE, COL_BLACK, "Not a command.", 12);
+						putfonts8_asc_sht(sheet, 8, cursor_y, COL_WHITE, COL_BLACK, "Not a command.", 15);
 						cursor_y = cons_newline(cursor_y, sheet);
 						cursor_y = cons_newline(cursor_y, sheet);
 					}
