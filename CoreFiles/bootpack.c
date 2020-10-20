@@ -194,11 +194,13 @@ void KaliMain(void){
 						make_wtitle8(buf_cons, sht_cons->bxsize, "console", 1);
 						cursor_c = -1; /* 不显示光标 */
 						boxfill8(sht_win->buf, sht_win->bxsize, COL_WHITE, cursor_x, 28, cursor_x + 7, 43);
+						fifo32_put(&task_cons->fifo, 2); /* 显示命令行光标 */
 					} else {
 						key_to = 0;
 						make_wtitle8(buf_win,  sht_win->bxsize,  "task_a",  1);
 						make_wtitle8(buf_cons, sht_cons->bxsize, "console", 0);
 						cursor_c = COL_BLACK; /* 显示光标 */
+						fifo32_put(&task_cons->fifo, 3); /* 关闭命令行光标 */
 					}
 					sheet_refresh(sht_win,  0, 0, sht_win->bxsize,  21);
 					sheet_refresh(sht_cons, 0, 0, sht_cons->bxsize, 21);
@@ -392,7 +394,7 @@ void console_task(struct SHEET *sheet){
 	/* 命令行代码 */
 	struct TIMER *timer;
 	struct TASK *task = task_now();
-	int i, fifobuf[128], cursor_x = 16, cursor_c = COL_BLACK;
+	int i, fifobuf[128], cursor_x = 16, cursor_c = -1;
 	char s[2];
 
 	fifo32_init(&task->fifo, 128, fifobuf, task);
@@ -413,12 +415,23 @@ void console_task(struct SHEET *sheet){
 			if (i <= 1) { /* 光标定时器 */
 				if (i != 0) {
 					timer_init(timer, &task->fifo, 0); /* 置0 */
-					cursor_c = COL_WHITE;
+					if (cursor_c >= 0) {
+						cursor_c = COL_WHITE;
+					}
 				} else {
 					timer_init(timer, &task->fifo, 1); /* 置1 */
-					cursor_c = COL_BLACK;
+					if (cursor_c >= 0) {
+						cursor_c = COL_BLACK;
+					}
 				}
 				timer_settime(timer, 50);
+			}
+			if (i == 2) {	/* 开启光标 */
+				cursor_c = COL_WHITE;
+			}
+			if (i == 3) {	/* 关闭光标 */
+				boxfill8(sheet->buf, sheet->bxsize, COL_BLACK, cursor_x, 28, cursor_x + 7, 43);
+				cursor_c = -1;
 			}
 			if (256 <= i && i <= 511) { /* 键盘数据(通过任务A) */
 				if (i == 8 + 256) {
@@ -440,7 +453,9 @@ void console_task(struct SHEET *sheet){
 				}
 			}
 			/* 重新显示光标 */
-			boxfill8(sheet->buf, sheet->bxsize, cursor_c, cursor_x, 28, cursor_x + 7, 43);
+			if (cursor_c >= 0) {
+				boxfill8(sheet->buf, sheet->bxsize, cursor_c, cursor_x, 28, cursor_x + 7, 43);
+			}
 			sheet_refresh(sheet, cursor_x, 28, cursor_x + 8, 44);
 		}
 	}
