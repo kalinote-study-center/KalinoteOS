@@ -1,7 +1,7 @@
 # KalinoteOS生成批处理文件
 OBJS_BOOTPACK = bootpack.obj naskfunc.obj fonts.obj graphic.obj dsctbl.obj \
 		int.obj fifo.obj keyboard.obj mouse.obj memory.obj sheet.obj timer.obj \
-		mtask.obj
+		mtask.obj window.obj console.obj file.obj
 
 TOOLPATH = ../z_tools/
 INCPATH  = ../z_tools/kalinote/

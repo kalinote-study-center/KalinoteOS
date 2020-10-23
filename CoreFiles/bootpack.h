@@ -226,3 +226,24 @@ struct TASK *task_now(void);
 void task_run(struct TASK *task, int level, int priority);											//运行程序
 void task_switch(void);																				//切换程序
 void task_sleep(struct TASK *task);																	//程序睡眠
+
+/* window.c */
+void make_window8(unsigned char *buf, int xsize, int ysize, char *title, char act);					// 生成一个窗口
+void putfonts8_asc_sht(struct SHEET *sht, int x, int y, int c, int b, char *s, int l);				// 先涂背景色，在写字符串
+void make_textbox8(struct SHEET *sht, int x0, int y0, int sx, int sy, int c);						// 生成编辑框
+void make_wtitle8(unsigned char *buf, int xsize, char *title, char act);							// 生成一个标题栏
+
+/* console.c */
+void console_task(struct SHEET *sheet, unsigned int memtotal);										// 命令窗口任务
+int cons_newline(int cursor_y, struct SHEET *sheet);												// 命令窗口换行
+
+/* file.c */
+struct FILEINFO {
+	//文件结构(详见第367页)
+	unsigned char name[8], ext[3], type;
+	char reserve[10];
+	unsigned short time, date, clustno;
+	unsigned int size;
+};
+void file_readfat(int *fat, unsigned char *img);													// 解码FAT
+void file_loadfile(int clustno, int size, char *buf, int *fat, char *img);							// 加载文件
