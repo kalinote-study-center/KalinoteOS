@@ -46,14 +46,18 @@ bootpack.bim : $(OBJS_BOOTPACK) Makefile
 
 bootpack.kal : bootpack.bim Makefile
 	$(BIM2KAL) bootpack.bim bootpack.kal 0
+	
+hlt.kal : hlt.nas Makefile
+	$(NASK) hlt.nas hlt.kal hlt.lst
 
 kalinote.sys : asmhead.bin bootpack.kal Makefile
 	copy /B asmhead.bin+bootpack.kal kalinote.sys
 
-kalinote.img : ipl10.bin kalinote.sys Makefile
+kalinote.img : ipl10.bin kalinote.sys hlt.kal Makefile
 	$(EDIMG)   imgin:../z_tools/fdimg0at.tek \
 		wbinimg src:ipl10.bin len:512 from:0 to:0 \
 		copy from:kalinote.sys to:@: \
+		copy from:hlt.kal to:@: \
 		imgout:kalinote.img
 
 # “ª∞„πÊ‘Ú
