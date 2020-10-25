@@ -248,7 +248,7 @@ void cmd_mem(struct CONSOLE *cons, unsigned int memtotal);											// CMD£º²éÑ
 void cmd_cls(struct CONSOLE *cons);																	// CMD£ºÇåÆÁ
 void cmd_dir(struct CONSOLE *cons);																	// CMD£º²éÑ¯Ä¿Â¼ÎÄ¼ş
 void cmd_type(struct CONSOLE *cons, int *fat, char *cmdline);										// CMD£ºÏÔÊ¾ÎÄ¼şÄÚÈİ
-void cmd_hlt(struct CONSOLE *cons, int *fat);														// KAL£ºĞİÃß³ÌĞò
+int cmd_app(struct CONSOLE *cons, int *fat, char *cmdline);											// Íâ²¿Ó¦ÓÃ³ÌĞò
 
 /* file.c */
 struct FILEINFO {

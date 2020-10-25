@@ -154,13 +154,13 @@ void cons_runcmd(char *cmdline, struct CONSOLE *cons, int *fat, unsigned int mem
 		cmd_dir(cons);
 	} else if (strncmp(cmdline, "type ", 5) == 0) {
 		cmd_type(cons, fat, cmdline);
-	} else if (strcmp(cmdline, "hlt") == 0) {
-		cmd_hlt(cons, fat);
 	} else if (cmdline[0] != 0) {
-		/* 不是内部或外部命令 */
-		putfonts8_asc_sht(cons->sht, 8, cons->cur_y, COL_WHITE, COL_BLACK, "Not a command.", 15);
-		cons_newline(cons);
-		cons_newline(cons);
+		if (cmd_app(cons, fat, cmdline) == 0) {
+			/* 不是内部或外部命令 */
+			putfonts8_asc_sht(cons->sht, 8, cons->cur_y, COL_WHITE, COL_BLACK, "Not a command.", 15);
+			cons_newline(cons);
+			cons_newline(cons);
+		}
 	}
 	return;
 }
@@ -240,11 +240,35 @@ void cmd_type(struct CONSOLE *cons, int *fat, char *cmdline){
 	return;
 }
 
-void cmd_hlt(struct CONSOLE *cons, int *fat){
+int cmd_app(struct CONSOLE *cons, int *fat, char *cmdline)
+{
 	struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;
-	struct FILEINFO *finfo = file_search("HLT.KAL", (struct FILEINFO *) (ADR_DISKIMG + 0x002600), 224);
+	struct FILEINFO *finfo;
 	struct SEGMENT_DESCRIPTOR *gdt = (struct SEGMENT_DESCRIPTOR *) ADR_GDT;
-	char *p;
+	char name[18], *p;
+	int i;
+
+	/* 根据命令生成文件名 */
+	for (i = 0; i < 13; i++) {
+		if (cmdline[i] <= ' ') {
+			break;
+		}
+		name[i] = cmdline[i];
+	}
+	name[i] = 0; /* 暂且将文件名后面置0 */
+
+	/* 寻找文件 */
+	finfo = file_search(name, (struct FILEINFO *) (ADR_DISKIMG + 0x002600), 224);
+	if (finfo == 0 && name[i - 1] != '.') {
+		/* 找不到的话，在文件末尾加上.KAL继续查找 */
+		name[i    ] = '.';
+		name[i + 1] = 'K';
+		name[i + 2] = 'A';
+		name[i + 3] = 'L';
+		name[i + 4] = 0;
+		finfo = file_search(name, (struct FILEINFO *) (ADR_DISKIMG + 0x002600), 224);
+	}
+
 	if (finfo != 0) {
 		/* 找到文件的情况 */
 		p = (char *) memman_alloc_4k(memman, finfo->size);
@@ -252,11 +276,9 @@ void cmd_hlt(struct CONSOLE *cons, int *fat){
 		set_segmdesc(gdt + 1003, finfo->size - 1, (int) p, AR_CODE32_ER);
 		farcall(0, 1003 * 8);
 		memman_free_4k(memman, (int) p, finfo->size);
-	} else {
-		/* 没有找到文件的情况 */
-		putfonts8_asc_sht(cons->sht, 8, cons->cur_y, COL_WHITE, COL_BLACK, "File not found.", 15);
 		cons_newline(cons);
+		return 1;
 	}
-	cons_newline(cons);
-	return;
+	/* 没有找到文件的情况 */
+	return 0;
 }
