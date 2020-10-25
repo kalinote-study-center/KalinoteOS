@@ -228,11 +228,12 @@ _farcall:								; void farcall(int eip, int cs);
 		CALL	FAR	[ESP+4]				; eip, cs
 		RET
 
-_asm_cons_putchar:
+_asm_cons_putchar:						;显示单个字符的API
+		STI
 		PUSH	1
 		AND		EAX,0xff	 			; 将AH和EAX的最高位置0，将EAX置为已存入字符编码的状态
 		PUSH	EAX
 		PUSH	DWORD [0x0fec]			; 读取内存并PUSH该值
 		CALL	_cons_putchar
 		ADD		ESP,12					; 将栈中的数据丢弃
-		RETF
+		IRETD
