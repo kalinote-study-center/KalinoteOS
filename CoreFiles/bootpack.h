@@ -26,6 +26,7 @@ void load_idtr(int limit, int addr);		//加载IDTR寄存器
 int load_cr0(void);							//加载CR0寄存器
 void store_cr0(int cr0);					//存入CR0寄存器
 void load_tr(int tr);						//加载TR寄存器
+void asm_inthandler0d(void);				//0d号中断，用于处理异常程序
 void asm_inthandler20(void);				//20号中断,用于timer
 void asm_inthandler21(void);				//21号中断，注册在0x21
 void asm_inthandler27(void);				//27号中断，注册在0x27
@@ -251,6 +252,8 @@ void cmd_cls(struct CONSOLE *cons);																	// CMD：清屏
 void cmd_dir(struct CONSOLE *cons);																	// CMD：查询目录文件
 void cmd_type(struct CONSOLE *cons, int *fat, char *cmdline);										// CMD：显示文件内容
 int cmd_app(struct CONSOLE *cons, int *fat, char *cmdline);											// 外部应用程序
+void kal_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int eax);				// 通过edx查找API
+int inthandler0d(int *esp);																			// 0d号中断，用于处理异常程序
 
 /* file.c */
 struct FILEINFO {
