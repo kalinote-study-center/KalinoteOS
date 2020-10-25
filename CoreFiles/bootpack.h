@@ -36,6 +36,8 @@ unsigned int memtest_sub(
 void farjmp(int eip, int cs);				//指令跳转
 void farcall(int eip, int cs);				//转移到调用的子程序(指定偏移)
 void asm_kal_api(void);						//KalinoteOS 系统API
+void start_app(int eip, int cs,
+	int esp, int ds);						//启动应用程序
 
 //graphic.c(画面显示)
 void init_palette(void);																			//初始化调色板函数

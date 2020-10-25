@@ -6,8 +6,6 @@
 [BITS 32]						; 制作32位模式用的机器语言
 [FILE "naskfunc.nas"]			; 源文件名信息
 		
-		; 程序中包含的函数名
-		; GLOBAL	_write_mem8
 		GLOBAL	_io_hlt, _io_cli, _io_sti, _io_stihlt
 		GLOBAL	_io_in8,  _io_in16,  _io_in32
 		GLOBAL	_io_out8, _io_out16, _io_out32
@@ -19,20 +17,12 @@
 		GLOBAL	_asm_inthandler27, _asm_inthandler2c
 		GLOBAL	_memtest_sub
 		GLOBAL	_farjmp, _farcall
-		GLOBAL	_asm_cons_putchar
-		GLOBAL	_asm_kal_api
+		GLOBAL	_asm_kal_api, _start_app
 		EXTERN	_inthandler20, _inthandler21
 		EXTERN	_inthandler27, _inthandler2c
 		EXTERN	_kal_api
 
 [SECTION .text]					; 目标文件中写了这些之后在写程序
-
-; 这个函数使用指针替换了
-;_write_mem8:					; void write_mem8(int addr, int data);
-; 		MOV		ECX,[ESP+4]		; [ESP+4]中存放地址
-;		MOV		AL,[ESP+8]		; [ESP+8]中存放数据
-;		MOV		[ECX],AL
-;		RET
 
 _io_hlt:						; void io_hlt(void);
 		HLT
@@ -126,13 +116,38 @@ _asm_inthandler20:
 		PUSH	ES
 		PUSH	DS
 		PUSHAD
+		MOV		AX,SS
+		CMP		AX,1*8
+		JNE		.from_app
+;	当操作系统活动时产生中断的情况和之前差不多
 		MOV		EAX,ESP
-		PUSH	EAX
+		PUSH	SS				; 保存中断时的SS
+		PUSH	EAX				; 保存中断时的ESP
 		MOV		AX,SS
 		MOV		DS,AX
 		MOV		ES,AX
 		CALL	_inthandler20
+		ADD		ESP,8
+		POPAD
+		POP		DS
+		POP		ES
+		IRETD
+.from_app:
+;	当应用程序活动时发生中断
+		MOV		EAX,1*8
+		MOV		DS,AX			; 先仅将DS设定为操作系统用
+		MOV		ECX,[0xfe4]		; 系统的ESP
+		ADD		ECX,-8
+		MOV		[ECX+4],SS		; 保存中断时的SS
+		MOV		[ECX  ],ESP		; 保存中断时的ESP
+		MOV		SS,AX
+		MOV		ES,AX
+		MOV		ESP,ECX
+		CALL	_inthandler20
+		POP		ECX
 		POP		EAX
+		MOV		SS,AX			; 将SS设回应用程序用
+		MOV		ESP,ECX			; 将ESP设回应用程序用
 		POPAD
 		POP		DS
 		POP		ES
@@ -142,13 +157,36 @@ _asm_inthandler21:
 		PUSH	ES
 		PUSH	DS
 		PUSHAD
+		MOV		AX,SS
+		CMP		AX,1*8
+		JNE		.from_app
 		MOV		EAX,ESP
+		PUSH	SS
 		PUSH	EAX
 		MOV		AX,SS
 		MOV		DS,AX
 		MOV		ES,AX
 		CALL	_inthandler21
+		ADD		ESP,8
+		POPAD
+		POP		DS
+		POP		ES
+		IRETD
+.from_app:
+		MOV		EAX,1*8
+		MOV		DS,AX
+		MOV		ECX,[0xfe4]
+		ADD		ECX,-8
+		MOV		[ECX+4],SS
+		MOV		[ECX  ],ESP
+		MOV		SS,AX
+		MOV		ES,AX
+		MOV		ESP,ECX
+		CALL	_inthandler21
+		POP		ECX
 		POP		EAX
+		MOV		SS,AX
+		MOV		ESP,ECX
 		POPAD
 		POP		DS
 		POP		ES
@@ -158,13 +196,36 @@ _asm_inthandler27:
 		PUSH	ES
 		PUSH	DS
 		PUSHAD
+		MOV		AX,SS
+		CMP		AX,1*8
+		JNE		.from_app
 		MOV		EAX,ESP
+		PUSH	SS
 		PUSH	EAX
 		MOV		AX,SS
 		MOV		DS,AX
 		MOV		ES,AX
 		CALL	_inthandler27
+		ADD		ESP,8
+		POPAD
+		POP		DS
+		POP		ES
+		IRETD
+.from_app:
+		MOV		EAX,1*8
+		MOV		DS,AX
+		MOV		ECX,[0xfe4]
+		ADD		ECX,-8
+		MOV		[ECX+4],SS
+		MOV		[ECX  ],ESP
+		MOV		SS,AX
+		MOV		ES,AX
+		MOV		ESP,ECX
+		CALL	_inthandler27
+		POP		ECX
 		POP		EAX
+		MOV		SS,AX
+		MOV		ESP,ECX
 		POPAD
 		POP		DS
 		POP		ES
@@ -174,13 +235,36 @@ _asm_inthandler2c:
 		PUSH	ES
 		PUSH	DS
 		PUSHAD
+		MOV		AX,SS
+		CMP		AX,1*8
+		JNE		.from_app
 		MOV		EAX,ESP
-		PUSH	EAX
+		PUSH	SS				; 割り込まれたときのSSを保存
+		PUSH	EAX				; 割り込まれたときのESPを保存
 		MOV		AX,SS
 		MOV		DS,AX
 		MOV		ES,AX
 		CALL	_inthandler2c
+		ADD		ESP,8
+		POPAD
+		POP		DS
+		POP		ES
+		IRETD
+.from_app:
+		MOV		EAX,1*8
+		MOV		DS,AX
+		MOV		ECX,[0xfe4]
+		ADD		ECX,-8
+		MOV		[ECX+4],SS
+		MOV		[ECX  ],ESP
+		MOV		SS,AX
+		MOV		ES,AX
+		MOV		ESP,ECX
+		CALL	_inthandler2c
+		POP		ECX
 		POP		EAX
+		MOV		SS,AX
+		MOV		ESP,ECX
 		POPAD
 		POP		DS
 		POP		ES
@@ -230,10 +314,81 @@ _farcall:								; void farcall(int eip, int cs);
 		RET
 
 _asm_kal_api:
-		STI
-		PUSHAD							; 用于保存寄存器的值的PUSH
-		PUSHAD							; 用于向kal_api传值的PUSH
+		; 为方便起见，开头禁止中断请求
+		PUSH	DS
+		PUSH	ES
+		PUSHAD							; 用于保存的PUSH
+		MOV		EAX,1*8
+		MOV		DS,AX					; 先仅将DS设定为操作系统用
+		MOV		ECX,[0xfe4]				; 操作系统的ESP
+		ADD		ECX,-40
+		MOV		[ECX+32],ESP			; 保存应用程序的ESP
+		MOV		[ECX+36],SS				; 保存应用程序的SS
+
+; 将PUSHAD后的值复制到系统栈
+		MOV		EDX,[ESP   ]
+		MOV		EBX,[ESP+ 4]
+		MOV		[ECX   ],EDX			; 复制传递给kal_api
+		MOV		[ECX+ 4],EBX			; 复制传递给kal_api
+		MOV		EDX,[ESP+ 8]
+		MOV		EBX,[ESP+12]
+		MOV		[ECX+ 8],EDX			; 复制传递给kal_api
+		MOV		[ECX+12],EBX			; 复制传递给kal_api
+		MOV		EDX,[ESP+16]
+		MOV		EBX,[ESP+20]
+		MOV		[ECX+16],EDX			; 复制传递给kal_api
+		MOV		[ECX+20],EBX			; 复制传递给kal_api
+		MOV		EDX,[ESP+24]
+		MOV		EBX,[ESP+28]
+		MOV		[ECX+24],EDX			; 复制传递给kal_api
+		MOV		[ECX+28],EBX			; 复制传递给kal_api
+
+		MOV		ES,AX					; 将剩余的段寄存器也设置为操作系统用
+		MOV		SS,AX
+		MOV		ESP,ECX
+		STI								; 恢复中断请求
+
 		CALL	_kal_api
-		ADD		ESP,32
+
+		MOV		ECX,[ESP+32]			; 取出应用的ESP
+		MOV		EAX,[ESP+36]			; 取出应用的SS
+		CLI
+		MOV		SS,AX
+		MOV		ESP,ECX
 		POPAD
-		IRETD
+		POP		ES
+		POP		DS
+		IRETD							; 该命令会自动执行STI
+
+_start_app:								; void start_app(int eip, int cs, int esp, int ds);
+		PUSHAD							; 将32位寄存器的值全部保存起来
+		MOV		EAX,[ESP+36]			; 应用程序用的EIP
+		MOV		ECX,[ESP+40]			; 应用程序用的CS
+		MOV		EDX,[ESP+44]			; 应用程序用的ESP
+		MOV		EBX,[ESP+48]			; 应用程序用的DS/SS
+		MOV		[0xfe4],ESP				; 系统用的ESP
+		CLI								; 切换过程中禁止中断请求
+		MOV		ES,BX
+		MOV		SS,BX
+		MOV		DS,BX
+		MOV		FS,BX
+		MOV		GS,BX
+		MOV		ESP,EDX
+		STI								; 切换完成后恢复中断请求
+		PUSH	ECX						; 用于far-CALL的PUSH（cs）
+		PUSH	EAX						; 用于far-CALL的USH（eip）
+		CALL	FAR [ESP]				; 调用应用程序
+
+;	应用程序结束后返回此处
+
+		MOV		EAX,1*8					; 系统用的DS/SS
+		CLI								; 再次进行切换，禁止中断请求
+		MOV		ES,AX
+		MOV		SS,AX
+		MOV		DS,AX
+		MOV		FS,AX
+		MOV		GS,AX
+		MOV		ESP,[0xfe4]
+		STI								; 切换完成后恢复中断请求
+		POPAD							; 恢复之前保存的寄存器值
+		RET
