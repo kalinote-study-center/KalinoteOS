@@ -38,7 +38,7 @@ void farjmp(int eip, int cs);				//指令跳转
 void farcall(int eip, int cs);				//转移到调用的子程序(指定偏移)
 void asm_kal_api(void);						//KalinoteOS 系统API
 void start_app(int eip, int cs,
-	int esp, int ds);						//启动应用程序
+	int esp, int ds, int *tss_esp0);		//启动应用程序
 
 //graphic.c(画面显示)
 void init_palette(void);																			//初始化调色板函数
@@ -252,8 +252,8 @@ void cmd_cls(struct CONSOLE *cons);																	// CMD：清屏
 void cmd_dir(struct CONSOLE *cons);																	// CMD：查询目录文件
 void cmd_type(struct CONSOLE *cons, int *fat, char *cmdline);										// CMD：显示文件内容
 int cmd_app(struct CONSOLE *cons, int *fat, char *cmdline);											// 外部应用程序
-void kal_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int eax);				// 通过edx查找API
-int inthandler0d(int *esp);																			// 0d号中断，用于处理异常程序
+int *kal_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int eax);				// 通过edx查找API
+int *inthandler0d(int *esp);																			// 0d号中断，用于处理异常程序
 
 /* file.c */
 struct FILEINFO {
