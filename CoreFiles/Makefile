@@ -50,14 +50,18 @@ bootpack.kal : bootpack.bim Makefile
 hello.kal : hello.nas Makefile
 	$(NASK) hello.nas hello.kal hello.lst
 
+hello2.kal : hello2.nas Makefile
+	$(NASK) hello2.nas hello2.kal hello2.lst
+
 kalinote.sys : asmhead.bin bootpack.kal Makefile
 	copy /B asmhead.bin+bootpack.kal kalinote.sys
 
-kalinote.img : ipl10.bin kalinote.sys hello.kal Makefile
+kalinote.img : ipl10.bin kalinote.sys hello.kal hello2.kal Makefile
 	$(EDIMG)   imgin:../z_tools/fdimg0at.tek \
 		wbinimg src:ipl10.bin len:512 from:0 to:0 \
 		copy from:kalinote.sys to:@: \
 		copy from:hello.kal to:@: \
+		copy from:hello2.kal to:@: \
 		imgout:kalinote.img
 
 # “ª∞„πÊ‘Ú
