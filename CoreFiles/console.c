@@ -145,6 +145,23 @@ void cons_newline(struct CONSOLE *cons){
 	return;
 }
 
+void cons_putstr0(struct CONSOLE *cons, char *s){
+	/* 显示字符串：结尾字符编码0时停止 */
+	for (; *s != 0; s++) {
+		cons_putchar(cons, *s, 1);
+	}
+	return;
+}
+
+void cons_putstr1(struct CONSOLE *cons, char *s, int l){
+	/* 显示字符串：指定长度并显示 */
+	int i;
+	for (i = 0; i < l; i++) {
+		cons_putchar(cons, s[i], 1);
+	}
+	return;
+}
+
 void cons_runcmd(char *cmdline, struct CONSOLE *cons, int *fat, unsigned int memtotal){
 	if (strcmp(cmdline, "mem") == 0) {
 		cmd_mem(cons, memtotal);
@@ -157,9 +174,7 @@ void cons_runcmd(char *cmdline, struct CONSOLE *cons, int *fat, unsigned int mem
 	} else if (cmdline[0] != 0) {
 		if (cmd_app(cons, fat, cmdline) == 0) {
 			/* 不是内部或外部命令 */
-			putfonts8_asc_sht(cons->sht, 8, cons->cur_y, COL_WHITE, COL_BLACK, "Not a command.", 15);
-			cons_newline(cons);
-			cons_newline(cons);
+			cons_putstr0(cons, "Not a command.\n\n");
 		}
 	}
 	return;
@@ -168,14 +183,9 @@ void cons_runcmd(char *cmdline, struct CONSOLE *cons, int *fat, unsigned int mem
 
 void cmd_mem(struct CONSOLE *cons, unsigned int memtotal){
 	struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;
-	char s[30];
-	sprintf(s, "total   %dMB", memtotal / (1024 * 1024));
-	putfonts8_asc_sht(cons->sht, 8, cons->cur_y, COL_WHITE, COL_BLACK, s, 30);
-	cons_newline(cons);
-	sprintf(s, "free %dKB", memman_total(memman) / 1024);
-	putfonts8_asc_sht(cons->sht, 8, cons->cur_y, COL_WHITE, COL_BLACK, s, 30);
-	cons_newline(cons);
-	cons_newline(cons);
+	char s[60];
+	sprintf(s, "total   %dMB\nfree %dKB\n\n", memtotal / (1024 * 1024), memman_total(memman) / 1024);
+	cons_putstr0(cons, s);
 	return;
 }
 
@@ -209,8 +219,7 @@ void cmd_dir(struct CONSOLE *cons){
 				s[ 9] = finfo[i].ext[0];
 				s[10] = finfo[i].ext[1];
 				s[11] = finfo[i].ext[2];
-				putfonts8_asc_sht(cons->sht, 8, cons->cur_y, COL_WHITE, COL_BLACK, s, 30);
-				cons_newline(cons);
+				cons_putstr0(cons, s);
 			}
 		}
 	}
@@ -281,4 +290,16 @@ int cmd_app(struct CONSOLE *cons, int *fat, char *cmdline)
 	}
 	/* 没有找到文件的情况 */
 	return 0;
+}
+
+void kal_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int eax){
+	struct CONSOLE *cons = (struct CONSOLE *) *((int *) 0x0fec);
+	if (edx == 1) {
+		cons_putchar(cons, eax & 0xff, 1);
+	} else if (edx == 2) {
+		cons_putstr0(cons, (char *) ebx);
+	} else if (edx == 3) {
+		cons_putstr1(cons, (char *) ebx, ecx);
+	}
+	return;
 }

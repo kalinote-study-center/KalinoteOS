@@ -28,8 +28,7 @@ void init_gdtidt(void)
 	set_gatedesc(idt + 0x21, (int) asm_inthandler21, 2 * 8, AR_INTGATE32);
 	set_gatedesc(idt + 0x27, (int) asm_inthandler27, 2 * 8, AR_INTGATE32);
 	set_gatedesc(idt + 0x2c, (int) asm_inthandler2c, 2 * 8, AR_INTGATE32);
-	// 下面是API的注册，在0x30-0xff之间都可以使用
-	set_gatedesc(idt + 0x40, (int) asm_cons_putchar, 2 * 8, AR_INTGATE32);		// API:asm_cons_putchar
+	set_gatedesc(idt + 0x40, (int) asm_kal_api, 2 * 8, AR_INTGATE32);
 
 	return;
 }
