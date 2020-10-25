@@ -46,22 +46,37 @@ bootpack.bim : $(OBJS_BOOTPACK) Makefile
 
 bootpack.kal : bootpack.bim Makefile
 	$(BIM2KAL) bootpack.bim bootpack.kal 0
-	
+
+kalinote.sys : asmhead.bin bootpack.kal Makefile
+	copy /B asmhead.bin+bootpack.kal kalinote.sys
+
 hello.kal : hello.nas Makefile
 	$(NASK) hello.nas hello.kal hello.lst
 
 hello2.kal : hello2.nas Makefile
 	$(NASK) hello2.nas hello2.kal hello2.lst
 
-kalinote.sys : asmhead.bin bootpack.kal Makefile
-	copy /B asmhead.bin+bootpack.kal kalinote.sys
+a.bim : a.obj a_nask.obj Makefile
+	$(OBJ2BIM) @$(RULEFILE) out:a.bim map:a.map a.obj a_nask.obj
 
-kalinote.img : ipl10.bin kalinote.sys hello.kal hello2.kal Makefile
+a.kal : a.bim Makefile
+	$(BIM2KAL) a.bim a.kal 0
+
+hello3.bim : hello3.obj a_nask.obj Makefile
+	$(OBJ2BIM) @$(RULEFILE) out:hello3.bim map:hello3.map hello3.obj a_nask.obj
+
+hello3.kal : hello3.bim Makefile
+	$(BIM2KAL) hello3.bim hello3.kal 0
+
+kalinote.img : ipl10.bin kalinote.sys Makefile \
+		hello.kal hello2.kal a.kal hello3.kal
 	$(EDIMG)   imgin:../z_tools/fdimg0at.tek \
 		wbinimg src:ipl10.bin len:512 from:0 to:0 \
 		copy from:kalinote.sys to:@: \
 		copy from:hello.kal to:@: \
 		copy from:hello2.kal to:@: \
+		copy from:hello3.kal to:@: \
+		copy from:a.kal to:@: \
 		imgout:kalinote.img
 
 # “ª∞„πÊ‘Ú
@@ -95,9 +110,9 @@ clean :
 	-$(DEL) *.bin
 	-$(DEL) *.lst
 	-$(DEL) *.obj
-	-$(DEL) bootpack.map
-	-$(DEL) bootpack.bim
-	-$(DEL) bootpack.kal
+	-$(DEL) *.map
+	-$(DEL) *.bim
+	-$(DEL) *.kal
 	-$(DEL) kalinote.sys
 
 src_only :
