@@ -33,8 +33,8 @@ void asm_inthandler2c(void);				//2c号中断，注册在0x2c
 unsigned int memtest_sub(
 	unsigned int start,
 	unsigned int end);						//读取内存
-void farjmp(int eip, int cs);				//切换任务
-
+void farjmp(int eip, int cs);				//指令跳转
+void farcall(int eip, int cs);				//转移到调用的子程序(指定偏移)
 //graphic.c(画面显示)
 void init_palette(void);																			//初始化调色板函数
 void set_palette(int start, int end, unsigned char *rgb);											//设置调色板
