@@ -68,17 +68,26 @@ hello3.bim : hello3.obj a_nask.obj Makefile
 hello3.kal : hello3.bim Makefile
 	$(BIM2KAL) hello3.bim hello3.kal 0
 
-crack1.bim : crack1.obj Makefile
-	$(OBJ2BIM) @$(RULEFILE) out:crack1.bim map:crack1.map crack1.obj a_nask.obj
+bug1.bim : bug1.obj Makefile
+	$(OBJ2BIM) @$(RULEFILE) out:bug1.bim map:bug1.map bug1.obj a_nask.obj
 
-crack1.kal : crack1.bim Makefile
-	$(BIM2KAL) crack1.bim crack1.kal 0
+bug1.kal : bug1.bim Makefile
+	$(BIM2KAL) bug1.bim bug1.kal 0
 
-crack2.kal : crack2.nas Makefile
-	$(NASK) crack2.nas crack2.kal crack2.lst
+bug2.bim : bug2.obj Makefile
+	$(OBJ2BIM) @$(RULEFILE) out:bug2.bim map:bug2.map bug2.obj
+
+bug2.kal : bug2.bim Makefile
+	$(BIM2KAL) bug2.bim bug2.kal 0
+
+bug3.bim : bug3.obj Makefile
+	$(OBJ2BIM) @$(RULEFILE) out:bug3.bim map:bug3.map bug3.obj a_nask.obj
+
+bug3.kal : bug3.bim Makefile
+	$(BIM2KAL) bug3.bim bug3.kal 0
 
 kalinote.img : ipl10.bin kalinote.sys Makefile \
-		hello.kal hello2.kal a.kal hello3.kal crack1.kal crack2.kal
+		hello.kal hello2.kal a.kal hello3.kal bug1.kal bug2.kal bug3.kal
 	$(EDIMG)   imgin:../z_tools/fdimg0at.tek \
 		wbinimg src:ipl10.bin len:512 from:0 to:0 \
 		copy from:kalinote.sys to:@: \
@@ -86,8 +95,9 @@ kalinote.img : ipl10.bin kalinote.sys Makefile \
 		copy from:hello2.kal to:@: \
 		copy from:hello3.kal to:@: \
 		copy from:a.kal to:@: \
-		copy from:crack1.kal to:@: \
-		copy from:crack2.kal to:@: \
+		copy from:bug1.kal to:@: \
+		copy from:bug2.kal to:@: \
+		copy from:bug3.kal to:@: \
 		imgout:kalinote.img
 
 # “ª∞„πÊ‘Ú
@@ -106,11 +116,13 @@ kalinote.img : ipl10.bin kalinote.sys Makefile \
 img :
 	$(MAKE) kalinote.img
 	$(COPY) kalinote.img D:\VMFile\kalinote.img
+	$(COPY) kalinote.img D:\Projects\OSProject\kalinoteOS\z_tools\qemu\kalinoteos.vfd
 
 run :
 	$(MAKE) img
 	$(COPY) kalinote.img ..\z_tools\qemu\kalinoteos.bin
 	$(COPY) kalinote.img D:\VMFile\kalinote.img
+	$(COPY) kalinote.img D:\Projects\OSProject\kalinoteOS\z_tools\qemu\kalinoteos.vfd
 	$(MAKE) -C ../z_tools/qemu
 
 install :

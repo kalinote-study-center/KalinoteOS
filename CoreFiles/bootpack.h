@@ -26,8 +26,9 @@ void load_idtr(int limit, int addr);		//加载IDTR寄存器
 int load_cr0(void);							//加载CR0寄存器
 void store_cr0(int cr0);					//存入CR0寄存器
 void load_tr(int tr);						//加载TR寄存器
+void asm_inthandler0c(void);				//0c号中断，用于处理栈异常
 void asm_inthandler0d(void);				//0d号中断，用于处理异常程序
-void asm_inthandler20(void);				//20号中断,用于timer
+void asm_inthandler20(void);				//20号中断，用于timer
 void asm_inthandler21(void);				//21号中断，注册在0x21
 void asm_inthandler27(void);				//27号中断，注册在0x27
 void asm_inthandler2c(void);				//2c号中断，注册在0x2c
