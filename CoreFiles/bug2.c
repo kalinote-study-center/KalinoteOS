@@ -1,4 +1,0 @@
-void KaliMain(void)
-{
-	for (;;) { }
-}

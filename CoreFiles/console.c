@@ -255,7 +255,7 @@ int cmd_app(struct CONSOLE *cons, int *fat, char *cmdline){
 	struct SEGMENT_DESCRIPTOR *gdt = (struct SEGMENT_DESCRIPTOR *) ADR_GDT;
 	char name[18], *p, *q;
 	struct TASK *task = task_now();
-	int i;
+	int i, segsiz, datsiz, esp, dathrb;
 
 	/* 根据命令生成文件名 */
 	for (i = 0; i < 13; i++) {
@@ -281,22 +281,25 @@ int cmd_app(struct CONSOLE *cons, int *fat, char *cmdline){
 	if (finfo != 0) {
 		/* 找到文件的情况 */
 		p = (char *) memman_alloc_4k(memman, finfo->size);
-		q = (char *) memman_alloc_4k(memman, 64 * 1024);
-		*((int *) 0xfe8) = (int) p;
 		file_loadfile(finfo->clustno, finfo->size, p, fat, (char *) (ADR_DISKIMG + 0x003e00));
-		set_segmdesc(gdt + 1003, finfo->size - 1, (int) p, AR_CODE32_ER + 0x60);
-		set_segmdesc(gdt + 1004, 64 * 1024 - 1,   (int) q, AR_DATA32_RW + 0x60);
-		if (finfo->size >= 8 && strncmp(p + 4, "Kali", 4) == 0) {
-			p[0] = 0xe8;
-			p[1] = 0x16;
-			p[2] = 0x00;
-			p[3] = 0x00;
-			p[4] = 0x00;
-			p[5] = 0xcb;
+		if (finfo->size >= 36 && strncmp(p + 4, "Kali", 4) == 0 && *p == 0x00) {
+			segsiz = *((int *) (p + 0x0000));
+			esp    = *((int *) (p + 0x000c));
+			datsiz = *((int *) (p + 0x0010));
+			dathrb = *((int *) (p + 0x0014));
+			q = (char *) memman_alloc_4k(memman, segsiz);
+			*((int *) 0xfe8) = (int) q;
+			set_segmdesc(gdt + 1003, finfo->size - 1, (int) p, AR_CODE32_ER + 0x60);
+			set_segmdesc(gdt + 1004, segsiz - 1,      (int) q, AR_DATA32_RW + 0x60);
+			for (i = 0; i < datsiz; i++) {
+				q[esp + i] = p[dathrb + i];
+			}
+			start_app(0x1b, 1003 * 8, esp, 1004 * 8, &(task->tss.esp0));
+			memman_free_4k(memman, (int) q, segsiz);
+		} else {
+			cons_putstr0(cons, "\nUnrecognized file format.\n");
 		}
-		start_app(0, 1003 * 8, 64 * 1024, 1004 * 8, &(task->tss.esp0));
 		memman_free_4k(memman, (int) p, finfo->size);
-		memman_free_4k(memman, (int) q, 64 * 1024);
 		cons_newline(cons);
 		return 1;
 	}
@@ -326,7 +329,7 @@ int *inthandler0d(int *esp){
 	struct TASK *task = task_now();
 	char s[30];
 	cons_putstr0(cons, "\nINT 0x0D :\n General Protected Exception.\n");
-	sprintf(s, "EIP = %08X\n", esp[11]);/* esp11号是EIP，详细esp列表在书上第451页 */
+	sprintf(s, "EIP = 0x%08X\n", esp[11]);/* esp11号是EIP，详细esp列表在书上第451页 */
 	cons_putstr0(cons, s);
 	return &(task->tss.esp0);	/* 强制结束程序 */
 }
@@ -336,7 +339,7 @@ int *inthandler0c(int *esp){
 	struct TASK *task = task_now();
 	char s[30];
 	cons_putstr0(cons, "\nINT 0x0C :\n Stack Exception.\n");
-	sprintf(s, "EIP = %08X\n", esp[11]);
+	sprintf(s, "EIP = 0x%08X\n", esp[11]);
 	cons_putstr0(cons, s);
 	return &(task->tss.esp0);	/* 强制结束程序 */
 }

@@ -190,7 +190,7 @@ _asm_inthandler0c:
 		MOV		ES,AX
 		CALL	_inthandler0c
 		CMP		EAX,0
-		JNE		end_app
+		JNE		_asm_end_app
 		POP		EAX
 		POPAD
 		POP		DS
@@ -210,7 +210,7 @@ _asm_inthandler0d:
 		MOV		ES,AX
 		CALL	_inthandler0d
 		CMP		EAX,0
-		JNE		end_app
+		JNE		_asm_end_app
 		POP		EAX
 		POPAD
 		POP		DS
@@ -272,7 +272,7 @@ _asm_kal_api:
 		MOV		ES,AX
 		CALL	_kal_api
 		CMP		EAX,0		; 当EAX不为0时程序结束
-		JNE		end_app
+		JNE		_asm_end_app
 		ADD		ESP,32
 		POPAD
 		POP		ES
