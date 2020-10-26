@@ -1,7 +1,6 @@
 /*启动时的主程序*/
 #include <stdio.h>
 #include "bootpack.h"
-#include <string.h>
 
 #define KEYCMD_LED		0xed
 
@@ -23,6 +22,7 @@ void KaliMain(void){
 	struct TASK *task_a, *task_cons;
 	struct TIMER *timer;
 	int key_to = 0, key_shift = 0, key_leds = (binfo->leds >> 4) & 7, keycmd_wait = -1;
+	struct CONSOLE *cons;
 	static char keytable0[0x80] = {									//字符编码表(后面需要按照中文键盘优化符号)
 		0,   0,   '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '^', 0,   0,
 		'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', '@', '[', 0,   0,   'A', 'S',
@@ -33,7 +33,7 @@ void KaliMain(void){
 		0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
 		0,   0,   0,   0x5c, 0,  0,   0,   0,   0,   0,   0,   0,   0,   0x5c, 0,  0
 	};
-	static char keytable1[0x80] = {									//shift
+	static char keytable1[0x80] = {									// shift
 		0,   0,   '!', 0x22, '#', '$', '%', '&', 0x27, '(', ')', '~', '=', '~', 0,   0,
 		'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', '`', '{', 0,   0,   'A', 'S',
 		'D', 'F', 'G', 'H', 'J', 'K', 'L', '+', '*', 0,   0,   '}', 'Z', 'X', 'C', 'V',
@@ -225,6 +225,14 @@ void KaliMain(void){
 					key_leds ^= 1;
 					fifo32_put(&keycmd, KEYCMD_LED);
 					fifo32_put(&keycmd, key_leds);
+				}
+				if (i == 256 + 0x3b && key_shift != 0 && task_cons->tss.ss0 != 0) {	/* Shift+F1 强制中断程序 */
+					cons = (struct CONSOLE *) *((int *) 0x0fec);
+					cons_putstr0(cons, "\nBreak(key) :\n");
+					io_cli();	/* 不能在改变寄存器值时切换到其他任务 */
+					task_cons->tss.eax = (int) &(task_cons->tss.esp0);
+					task_cons->tss.eip = (int) asm_end_app;
+					io_sti();
 				}
 				if (i == 256 + 0xfa) {	/* 键盘成功接收到数据 */
 					keycmd_wait = -1;

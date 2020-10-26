@@ -40,6 +40,7 @@ void farcall(int eip, int cs);				//转移到调用的子程序(指定偏移)
 void asm_kal_api(void);						//KalinoteOS 系统API
 void start_app(int eip, int cs,
 	int esp, int ds, int *tss_esp0);		//启动应用程序
+void asm_end_app(void);						//结束应用程序
 
 //graphic.c(画面显示)
 void init_palette(void);																			//初始化调色板函数
@@ -247,6 +248,8 @@ struct CONSOLE {
 void console_task(struct SHEET *sheet, unsigned int memtotal);										// 命令窗口任务
 void cons_newline(struct CONSOLE *cons);															// 命令窗口换行
 void cons_putchar(struct CONSOLE *cons, int chr, char move);										// 在命令窗口上显示文字
+void cons_putstr0(struct CONSOLE *cons, char *s);													// 显示字符串(通过字符编码0结尾)
+void cons_putstr1(struct CONSOLE *cons, char *s, int l);											// 显示字符串(通过指定长度)
 void cons_runcmd(char *cmdline, struct CONSOLE *cons, int *fat, unsigned int memtotal);				// 执行命令
 void cmd_mem(struct CONSOLE *cons, unsigned int memtotal);											// CMD：查询内存使用状态
 void cmd_cls(struct CONSOLE *cons);																	// CMD：清屏
@@ -254,7 +257,8 @@ void cmd_dir(struct CONSOLE *cons);																	// CMD：查询目录文件
 void cmd_type(struct CONSOLE *cons, int *fat, char *cmdline);										// CMD：显示文件内容
 int cmd_app(struct CONSOLE *cons, int *fat, char *cmdline);											// 外部应用程序
 int *kal_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int eax);				// 通过edx查找API
-int *inthandler0d(int *esp);																			// 0d号中断，用于处理异常程序
+int *inthandler0d(int *esp);																		// 0d号中断，用于处理异常程序
+int *inthandler0c(int *esp);																		// 0c号中断，用于处理栈异常
 
 /* file.c */
 struct FILEINFO {

@@ -16,7 +16,7 @@
 		GLOBAL	_asm_inthandler20, _asm_inthandler21
 		GLOBAL	_asm_inthandler27, _asm_inthandler2c
 		GLOBAL	_asm_inthandler0c, _asm_inthandler0d
-		GLOBAL	_memtest_sub
+		GLOBAL	_asm_end_app, _memtest_sub
 		GLOBAL	_farjmp, _farcall
 		GLOBAL	_asm_kal_api, _start_app
 		EXTERN	_inthandler20, _inthandler21
@@ -278,9 +278,9 @@ _asm_kal_api:
 		POP		ES
 		POP		DS
 		IRETD
-end_app:
-;	EAX为tss.esp0的地址
+_asm_end_app:
 		MOV		ESP,[EAX]
+		MOV		DWORD [EAX+4],0
 		POPAD
 		RET
 
@@ -306,3 +306,5 @@ _start_app:								; void start_app(int eip, int cs, int esp, int ds, int *tss_e
 		PUSH	EAX						; 应用程序的EIP
 		RETF
 ;	应用程序结束后不会回到这里
+
+
