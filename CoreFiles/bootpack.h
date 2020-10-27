@@ -259,6 +259,7 @@ int cmd_app(struct CONSOLE *cons, int *fat, char *cmdline);											// Íâ²¿Ó¦Ó
 int *kal_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int eax);				// Í¨¹ıedx²éÕÒAPI
 int *inthandler0d(int *esp);																		// 0dºÅÖĞ¶Ï£¬ÓÃÓÚ´¦ÀíÒì³£³ÌĞò
 int *inthandler0c(int *esp);																		// 0cºÅÖĞ¶Ï£¬ÓÃÓÚ´¦ÀíÕ»Òì³£
+void kal_api_linewin(struct SHEET *sht, int x0, int y0, int x1, int y1, int col);					// »æÖÆÒ»ÌõÖ±Ïß
 
 /* file.c */
 struct FILEINFO {

@@ -354,24 +354,36 @@ int *kal_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int 
 			sheet_refresh(sht, eax, ecx, esi + 1, edi + 1);
 		}
 	} else if (edx == 8) {
+		/* 初始化内存管理 */
 		memman_init((struct MEMMAN *) (ebx + ds_base));
 		ecx &= 0xfffffff0;	/* 以16字节为单位 */
 		memman_free((struct MEMMAN *) (ebx + ds_base), eax, ecx);
 	} else if (edx == 9) {
+		/* 分配内存 */
 		ecx = (ecx + 0x0f) & 0xfffffff0; /* 以16字节为单位进位取整 */
 		reg[7] = memman_alloc((struct MEMMAN *) (ebx + ds_base), ecx);
 	} else if (edx == 10) {
+		/* 释放内存 */
 		ecx = (ecx + 0x0f) & 0xfffffff0; /* 以16字节为单位进位取整 */
 		memman_free((struct MEMMAN *) (ebx + ds_base), eax, ecx);
 	} else if (edx == 11) {
+		/* 绘制像素点 */
 		sht = (struct SHEET *) (ebx & 0xfffffffe);
 		sht->buf[sht->bxsize * edi + esi] = eax;
 		if ((ebx & 1) == 0) {
 			sheet_refresh(sht, esi, edi, esi + 1, edi + 1);
 		}
 	} else if (edx == 12) {
+		/* 区域刷新窗口 */
 		sht = (struct SHEET *) ebx;
 		sheet_refresh(sht, eax, ecx, esi, edi);
+	} else if (edx == 13) {
+		/* 绘制直线 */
+		sht = (struct SHEET *) (ebx & 0xfffffffe);
+		kal_api_linewin(sht, eax, ecx, esi, edi, ebp);
+		if ((ebx & 1) == 0) {
+			sheet_refresh(sht, eax, ecx, esi + 1, edi + 1);
+		}
 	}
 	return 0;
 }
@@ -395,3 +407,53 @@ int *inthandler0c(int *esp){
 	cons_putstr0(cons, s);
 	return &(task->tss.esp0);	/* 强制结束程序 */
 }
+
+void kal_api_linewin(struct SHEET *sht, int x0, int y0, int x1, int y1, int col){
+	/* 绘制直线 */
+	int i, x, y, len, dx, dy;
+
+	dx = x1 - x0;
+	dy = y1 - y0;
+	x = x0 << 10;
+	y = y0 << 10;
+	if (dx < 0) {
+		dx = - dx;
+	}
+	if (dy < 0) {
+		dy = - dy;
+	}
+	if (dx >= dy) {
+		len = dx + 1;
+		if (x0 > x1) {
+			dx = -1024;
+		} else {
+			dx =  1024;
+		}
+		if (y0 <= y1) {
+			dy = ((y1 - y0 + 1) << 10) / len;
+		} else {
+			dy = ((y1 - y0 - 1) << 10) / len;
+		}
+	} else {
+		len = dy + 1;
+		if (y0 > y1) {
+			dy = -1024;
+		} else {
+			dy =  1024;
+		}
+		if (x0 <= x1) {
+			dx = ((x1 - x0 + 1) << 10) / len;
+		} else {
+			dx = ((x1 - x0 - 1) << 10) / len;
+		}
+	}
+
+	for (i = 0; i < len; i++) {
+		sht->buf[(y >> 10) * sht->bxsize + (x >> 10)] = col;
+		x += dx;
+		y += dy;
+	}
+
+	return;
+}
+
