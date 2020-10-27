@@ -308,18 +308,36 @@ int cmd_app(struct CONSOLE *cons, int *fat, char *cmdline){
 }
 
 int *kal_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int eax){
-	int cs_base = *((int *) 0xfe8);
+	/* 开放给外部程序的系统API */
+	int ds_base = *((int *) 0xfe8);
 	struct TASK *task = task_now();
 	struct CONSOLE *cons = (struct CONSOLE *) *((int *) 0x0fec);
+	struct SHTCTL *shtctl = (struct SHTCTL *) *((int *) 0x0fe4);
+	struct SHEET *sht;
+	int *reg = &eax + 1;	/* eax后面的地址 */
+		/* 强行改写通过PUSHAD保存的值 */
+		/* reg[0] : EDI,   reg[1] : ESI,   reg[2] : EBP,   reg[3] : ESP */
+		/* reg[4] : EBX,   reg[5] : EDX,   reg[6] : ECX,   reg[7] : EAX */
+
 	if (edx == 1) {
+		//打印字符
 		cons_putchar(cons, eax & 0xff, 1);
 	} else if (edx == 2) {
-		cons_putstr0(cons, (char *) ebx + cs_base);
+		//打印字符串(以字符编码0结尾)
+		cons_putstr0(cons, (char *) ebx + ds_base);
 	} else if (edx == 3) {
-		cons_putstr1(cons, (char *) ebx + cs_base, ecx);
+		//打印字符串(指定长度)
+		cons_putstr1(cons, (char *) ebx + ds_base, ecx);
 	} else if (edx == 4) {
 		//结束程序
 		return &(task->tss.esp0);
+	} else if (edx == 5) {
+		sht = sheet_alloc(shtctl);
+		sheet_setbuf(sht, (char *) ebx + ds_base, esi, edi, eax);
+		make_window8((char *) ebx + ds_base, esi, edi, (char *) ecx + ds_base, 0);
+		sheet_slide(sht, 100, 50);
+		sheet_updown(sht, 3);	/* 背景层高于3位于task_a之上 */
+		reg[7] = (int) sht;
 	}
 	return 0;
 }

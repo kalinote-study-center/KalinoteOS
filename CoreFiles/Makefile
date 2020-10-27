@@ -76,8 +76,15 @@ hello4.bim : hello4.obj a_nask.obj Makefile
 hello4.kal : hello4.bim Makefile
 	$(BIM2KAL) hello4.bim hello4.kal 0
 
+winhelo.bim : winhelo.obj a_nask.obj Makefile
+	$(OBJ2BIM) @$(RULEFILE) out:winhelo.bim map:winhelo.map winhelo.obj a_nask.obj
+
+winhelo.kal : winhelo.bim Makefile
+	$(BIM2KAL) winhelo.bim winhelo.kal 0
+
 kalinote.img : ipl10.bin kalinote.sys Makefile \
-		hello.kal hello2.kal a.kal hello3.kal hello4.kal
+		hello.kal hello2.kal hello3.kal hello4.kal \
+		winhelo.kal
 	$(EDIMG)   imgin:../z_tools/fdimg0at.tek \
 		wbinimg src:ipl10.bin len:512 from:0 to:0 \
 		copy from:kalinote.sys to:@: \
@@ -85,7 +92,7 @@ kalinote.img : ipl10.bin kalinote.sys Makefile \
 		copy from:hello2.kal to:@: \
 		copy from:hello3.kal to:@: \
 		copy from:hello4.kal to:@: \
-		copy from:a.kal to:@: \
+		copy from:winhelo.kal to:@: \
 		imgout:kalinote.img
 
 # “ª∞„πÊ‘Ú
