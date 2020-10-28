@@ -228,4 +228,3 @@ _api_beep:							; void api_beep(int tone);
 		MOV		EAX,[ESP+4]			; tone
 		INT		0x40
 		RET
-

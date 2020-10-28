@@ -124,10 +124,17 @@ beepup.bim : beepup.obj a_nask.obj Makefile
 beepup.kal : beepup.bim Makefile
 	$(BIM2KAL) beepup.bim beepup.kal 0
 
+color.bim : color.obj a_nask.obj Makefile
+	$(OBJ2BIM) @$(RULEFILE) out:color.bim map:color.map color.obj a_nask.obj
+
+color.kal : color.bim Makefile
+	$(BIM2KAL) color.bim color.kal 0
+
 kalinote.img : ipl10.bin kalinote.sys Makefile \
 		hello.kal hello2.kal hello3.kal hello4.kal \
 		winhelo.kal star.kal lines.kal walk.kal \
-		counter.kal noodle.kal beepdown.kal beepup.kal
+		counter.kal noodle.kal beepdown.kal beepup.kal \
+		color.kal
 	$(EDIMG)   imgin:../z_tools/fdimg0at.tek \
 		wbinimg src:ipl10.bin len:512 from:0 to:0 \
 		copy from:kalinote.sys to:@: \
@@ -143,6 +150,7 @@ kalinote.img : ipl10.bin kalinote.sys Makefile \
 		copy from:noodle.kal to:@: \
 		copy from:beepdown.kal to:@: \
 		copy from:beepup.kal to:@: \
+		copy from:color.kal to:@: \
 		imgout:kalinote.img
 
 # “ª∞„πÊ‘Ú
