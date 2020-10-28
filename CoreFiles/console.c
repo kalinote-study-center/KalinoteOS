@@ -6,7 +6,6 @@
 
 void console_task(struct SHEET *sheet, unsigned int memtotal){
 	/* 命令行代码 */
-	struct TIMER *timer;
 	struct TASK *task = task_now();
 	struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;
 	int i, fifobuf[128], *fat = (int *) memman_alloc_4k(memman, 4 * 2880);
@@ -19,9 +18,9 @@ void console_task(struct SHEET *sheet, unsigned int memtotal){
 	*((int *) 0x0fec) = (int) &cons;
 
 	fifo32_init(&task->fifo, 128, fifobuf, task);
-	timer = timer_alloc();
-	timer_init(timer, &task->fifo, 1);
-	timer_settime(timer, 50);
+	cons.timer = timer_alloc();
+	timer_init(cons.timer, &task->fifo, 1);
+	timer_settime(cons.timer, 50);
 	file_readfat(fat, (unsigned char *) (ADR_DISKIMG + 0x000200));
 
 	cons_putchar(&cons, '>', 1);			//命令提示符
@@ -36,17 +35,17 @@ void console_task(struct SHEET *sheet, unsigned int memtotal){
 			io_sti();
 			if (i <= 1) { /* 光标定时器 */
 				if (i != 0) {
-					timer_init(timer, &task->fifo, 0); /* 置0 */
+					timer_init(cons.timer, &task->fifo, 0); /* 置0 */
 					if (cons.cur_c >= 0) {
 						cons.cur_c = COL_WHITE;
 					}
 				} else {
-					timer_init(timer, &task->fifo, 1); /* 置1 */
+					timer_init(cons.timer, &task->fifo, 1); /* 置1 */
 					if (cons.cur_c >= 0) {
 						cons.cur_c = COL_BLACK;
 					}
 				}
-				timer_settime(timer, 50);
+				timer_settime(cons.timer, 50);
 			}
 			if (i == 2) {	/* 开启光标 */
 				cons.cur_c = COL_WHITE;
@@ -309,6 +308,7 @@ int cmd_app(struct CONSOLE *cons, int *fat, char *cmdline){
 
 int *kal_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int eax){
 	/* 开放给外部程序的系统API */
+	int i;
 	int ds_base = *((int *) 0xfe8);
 	struct TASK *task = task_now();
 	struct CONSOLE *cons = (struct CONSOLE *) *((int *) 0x0fec);
@@ -387,6 +387,37 @@ int *kal_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int 
 	} else if (edx == 14) {
 		/* 关闭窗口 */
 		sheet_free((struct SHEET *) ebx);
+	} else if (edx == 15) {
+		/* 键盘数据 */
+		for (;;) {
+			io_cli();
+			if (fifo32_status(&task->fifo) == 0) {
+				if (eax != 0) {
+					task_sleep(task);	/* FIFO为空，休眠并等待 */
+				} else {
+					io_sti();
+					reg[7] = -1;
+					return 0;
+				}
+			}
+			i = fifo32_get(&task->fifo);
+			io_sti();
+			if (i <= 1) { /* 光标定时器 */
+				/* 应用程序运行时不显示光标，因此总是将下次显示用的值置1 */
+				timer_init(cons->timer, &task->fifo, 1); /* 置1 */
+				timer_settime(cons->timer, 50);
+			}
+			if (i == 2) {	/* 光标ON */
+				cons->cur_c = COL_WHITE;
+			}
+			if (i == 3) {	/* 光标OFF */
+				cons->cur_c = -1;
+			}
+			if (256 <= i && i <= 511) { /* 键盘数据（通过任务A） */
+				reg[7] = i - 256;
+				return 0;
+			}
+		}
 	}
 	return 0;
 }

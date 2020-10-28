@@ -244,6 +244,7 @@ void make_wtitle8(unsigned char *buf, int xsize, char *title, char act);							/
 struct CONSOLE {
 	struct SHEET *sht;
 	int cur_x, cur_y, cur_c;
+	struct TIMER *timer;
 };
 void console_task(struct SHEET *sheet, unsigned int memtotal);										// 命令窗口任务
 void cons_newline(struct CONSOLE *cons);															// 命令窗口换行
