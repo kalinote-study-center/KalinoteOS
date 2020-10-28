@@ -84,3 +84,33 @@ void make_textbox8(struct SHEET *sht, int x0, int y0, int sx, int sy, int c){
 	boxfill8(sht->buf, sht->bxsize, c,           x0 - 1, y0 - 1, x1 + 0, y1 + 0);
 	return;
 }
+
+void change_wtitle8(struct SHEET *sht, char act){
+	/* 改变窗口标题栏颜色 */
+	int x, y, xsize = sht->bxsize;
+	char c, tc_new, tbc_new, tc_old, tbc_old, *buf = sht->buf;
+	if (act != 0) {
+		tc_new  = COL_WHITE;
+		tbc_new = COL_DBLUE;
+		tc_old  = COL_BGREY;
+		tbc_old = COL_DGREY;
+	} else {
+		tc_new  = COL_BGREY;
+		tbc_new = COL_DGREY;
+		tc_old  = COL_WHITE;
+		tbc_old = COL_DBLUE;
+	}
+	for (y = 3; y <= 20; y++) {
+		for (x = 3; x <= xsize - 4; x++) {
+			c = buf[y * xsize + x];
+			if (c == tc_old && x <= xsize - 22) {
+				c = tc_new;
+			} else if (c == tbc_old) {
+				c = tbc_new;
+			}
+			buf[y * xsize + x] = c;
+		}
+	}
+	sheet_refresh(sht, 3, 3, xsize, 21);
+	return;
+}
