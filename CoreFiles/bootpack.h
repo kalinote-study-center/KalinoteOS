@@ -182,7 +182,8 @@ void sheet_free(struct SHEET *sht);																	//释放已使用的图层内存
 #define MAX_TIMER		500
 struct TIMER {
 	struct TIMER *next;
-	unsigned int timeout, flags;
+	unsigned int timeout;
+	char flags, flags2;
 	struct FIFO32 *fifo;
 	int data;
 };
@@ -192,12 +193,14 @@ struct TIMERCTL {
 	struct TIMER timers0[MAX_TIMER];
 };
 extern struct TIMERCTL timerctl;
-void init_pit(void);
+void init_pit(void);																				//初始化可编程间隔化定时器(PIT)
 struct TIMER *timer_alloc(void);
 void timer_free(struct TIMER *timer);																//释放定时器
 void timer_init(struct TIMER *timer, struct FIFO32 *fifo, int data);								//初始化定时器
 void timer_settime(struct TIMER *timer, unsigned int timeout);										//设置定时器
 void inthandler20(int *esp);																		//20号中断
+int timer_cancel(struct TIMER *timer);																//取消定时器
+void timer_cancelall(struct FIFO32 *fifo);															//取消所有定时器
 
 /* mtask.c(多任务) */
 #define MAX_TASKS		2500																		//最大任务数量

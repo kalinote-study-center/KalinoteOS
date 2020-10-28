@@ -304,6 +304,7 @@ int cmd_app(struct CONSOLE *cons, int *fat, char *cmdline){
 					sheet_free(sht);	/* 关闭 */
 				}
 			}
+			timer_cancelall(&task->fifo);
 			memman_free_4k(memman, (int) q, segsiz);
 		} else {
 			cons_putstr0(cons, "\nUnrecognized file format.\n");
@@ -433,6 +434,7 @@ int *kal_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int 
 	} else if (edx == 16) {
 		/* 获取定时器 */
 		reg[7] = (int) timer_alloc();
+		((struct TIMER *) reg[7])->flags2 = 1;	/* 运行自动取消 */
 	} else if (edx == 17) {
 		/* 设置定时器发送数据 */
 		timer_init((struct TIMER *) ebx, &task->fifo, eax + 256);
@@ -442,6 +444,19 @@ int *kal_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int 
 	} else if (edx == 19) {
 		/* 释放定时器 */
 		timer_free((struct TIMER *) ebx);
+	} else if (edx == 20) {
+		/* 蜂鸣器 */
+		if (eax == 0) {
+			i = io_in8(0x61);
+			io_out8(0x61, i & 0x0d);
+		} else {
+			i = 1193180000 / eax;
+			io_out8(0x43, 0xb6);
+			io_out8(0x42, i & 0xff);
+			io_out8(0x42, i >> 8);
+			i = io_in8(0x61);
+			io_out8(0x61, (i | 0x03) & 0x0f);
+		}
 	}
 	return 0;
 }
