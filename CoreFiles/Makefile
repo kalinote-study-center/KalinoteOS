@@ -94,9 +94,15 @@ lines.bim : lines.obj a_nask.obj Makefile
 lines.kal : lines.bim Makefile
 	$(BIM2KAL) lines.bim lines.kal 0
 
+walk.bim : walk.obj a_nask.obj Makefile
+	$(OBJ2BIM) @$(RULEFILE) out:walk.bim map:walk.map walk.obj a_nask.obj
+
+walk.kal : walk.bim Makefile
+	$(BIM2KAL) walk.bim walk.kal 0
+
 kalinote.img : ipl10.bin kalinote.sys Makefile \
 		hello.kal hello2.kal hello3.kal hello4.kal \
-		winhelo.kal star.kal lines.kal
+		winhelo.kal star.kal lines.kal walk.kal
 	$(EDIMG)   imgin:../z_tools/fdimg0at.tek \
 		wbinimg src:ipl10.bin len:512 from:0 to:0 \
 		copy from:kalinote.sys to:@: \
@@ -107,6 +113,7 @@ kalinote.img : ipl10.bin kalinote.sys Makefile \
 		copy from:winhelo.kal to:@: \
 		copy from:star.kal to:@: \
 		copy from:lines.kal to:@: \
+		copy from:walk.kal to:@: \
 		imgout:kalinote.img
 
 # “ª∞„πÊ‘Ú
