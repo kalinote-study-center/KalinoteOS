@@ -23,8 +23,8 @@ void KaliMain(void){
 	struct TIMER *timer;
 	int key_to = 0, key_shift = 0, key_leds = (binfo->leds >> 4) & 7, keycmd_wait = -1;
 	struct CONSOLE *cons;
-	int j, x, y;
-	struct SHEET *sht;
+	int j, x, y, mmx = -1, mmy = -1;
+	struct SHEET *sht = 0;
 	static char keytable0[0x80] = {									//字符编码表(后面需要按照中文键盘优化符号)
 		0,   0,   '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '^', 0,   0,
 		'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', '@', '[', 0,   0,   'A', 'S',
@@ -275,18 +275,35 @@ void KaliMain(void){
 					sheet_slide(sht_mouse, mx, my); /* 包含sheet_refresh */
 					if ((mdec.btn & 0x01) != 0) {
 						/* 按下左键 */
-						/* 按照从上到下的顺序寻找鼠标所指的图层 */
-						for (j = shtctl->top - 1; j > 0; j--) {
-							sht = shtctl->sheets[j];
-							x = mx - sht->vx0;
-							y = my - sht->vy0;
-							if (0 <= x && x < sht->bxsize && 0 <= y && y < sht->bysize) {
-								if (sht->buf[y * sht->bxsize + x] != sht->col_inv) {
-									sheet_updown(sht, shtctl->top - 1);
-									break;
+						if (mmx < 0) {
+							/* 如果处于通常模式 */
+							/* 按照从上到下的顺序寻找鼠标所指的图层 */
+							for (j = shtctl->top - 1; j > 0; j--) {
+								sht = shtctl->sheets[j];
+								x = mx - sht->vx0;
+								y = my - sht->vy0;
+								if (0 <= x && x < sht->bxsize && 0 <= y && y < sht->bysize) {
+									if (sht->buf[y * sht->bxsize + x] != sht->col_inv) {
+										sheet_updown(sht, shtctl->top - 1);
+										if (3 <= x && x < sht->bxsize - 3 && 3 <= y && y < 21) {
+											mmx = mx;	/* 进入窗口移动模式 */
+											mmy = my;
+										}
+										break;
+									}
 								}
 							}
+						} else {
+							/* 如果处于窗口移动模式 */
+							x = mx - mmx;	/* 计算鼠标的移动距离 */
+							y = my - mmy;
+							sheet_slide(sht, sht->vx0 + x, sht->vy0 + y);
+							mmx = mx;	/* 更新为移动后的坐标 */
+							mmy = my;
 						}
+					} else {
+						/* 没有按下左键 */
+						mmx = -1;	/* 返回通常模式 */
 					}
 				}
 			} else if (i <= 1) { /* 光标定时器 */
