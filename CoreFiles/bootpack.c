@@ -23,6 +23,8 @@ void KaliMain(void){
 	struct TIMER *timer;
 	int key_to = 0, key_shift = 0, key_leds = (binfo->leds >> 4) & 7, keycmd_wait = -1;
 	struct CONSOLE *cons;
+	int j, x, y;
+	struct SHEET *sht;
 	static char keytable0[0x80] = {									//字符编码表(后面需要按照中文键盘优化符号)
 		0,   0,   '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '^', 0,   0,
 		'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', '@', '[', 0,   0,   'A', 'S',
@@ -235,6 +237,9 @@ void KaliMain(void){
 					task_cons->tss.eip = (int) asm_end_app;
 					io_sti();
 				}
+				if (i == 256 + 0x57 && shtctl->top > 2) {	/* F11 切换窗口 */
+					sheet_updown(shtctl->sheets[1], shtctl->top - 1);
+				}
 				if (i == 256 + 0xfa) {	/* 键盘成功接收到数据 */
 					keycmd_wait = -1;
 				}
@@ -269,8 +274,19 @@ void KaliMain(void){
 					putfonts8_asc_sht(sht_back, 0, 0, COL_WHITE, COL_LDBLUE, s, 10);
 					sheet_slide(sht_mouse, mx, my); /* 包含sheet_refresh */
 					if ((mdec.btn & 0x01) != 0) {
-						/* 按下左键，移动sht_win */
-						sheet_slide(sht_win, mx - 80, my - 8);
+						/* 按下左键 */
+						/* 按照从上到下的顺序寻找鼠标所指的图层 */
+						for (j = shtctl->top - 1; j > 0; j--) {
+							sht = shtctl->sheets[j];
+							x = mx - sht->vx0;
+							y = my - sht->vy0;
+							if (0 <= x && x < sht->bxsize && 0 <= y && y < sht->bysize) {
+								if (sht->buf[y * sht->bxsize + x] != sht->col_inv) {
+									sheet_updown(sht, shtctl->top - 1);
+									break;
+								}
+							}
+						}
 					}
 				}
 			} else if (i <= 1) { /* 光标定时器 */
