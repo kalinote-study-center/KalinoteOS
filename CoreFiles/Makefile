@@ -100,9 +100,22 @@ walk.bim : walk.obj a_nask.obj Makefile
 walk.kal : walk.bim Makefile
 	$(BIM2KAL) walk.bim walk.kal 0
 
+counter.bim : counter.obj a_nask.obj Makefile
+	$(OBJ2BIM) @$(RULEFILE) out:counter.bim map:counter.map counter.obj a_nask.obj
+
+counter.kal : counter.bim Makefile
+	$(BIM2KAL) counter.bim counter.kal 0
+
+noodle.bim : noodle.obj a_nask.obj Makefile
+	$(OBJ2BIM) @$(RULEFILE) out:noodle.bim map:noodle.map noodle.obj a_nask.obj
+
+noodle.kal : noodle.bim Makefile
+	$(BIM2KAL) noodle.bim noodle.kal 0
+
 kalinote.img : ipl10.bin kalinote.sys Makefile \
 		hello.kal hello2.kal hello3.kal hello4.kal \
-		winhelo.kal star.kal lines.kal walk.kal
+		winhelo.kal star.kal lines.kal walk.kal \
+		counter.kal noodle.kal
 	$(EDIMG)   imgin:../z_tools/fdimg0at.tek \
 		wbinimg src:ipl10.bin len:512 from:0 to:0 \
 		copy from:kalinote.sys to:@: \
@@ -114,6 +127,8 @@ kalinote.img : ipl10.bin kalinote.sys Makefile \
 		copy from:star.kal to:@: \
 		copy from:lines.kal to:@: \
 		copy from:walk.kal to:@: \
+		copy from:counter.kal to:@: \
+		copy from:noodle.kal to:@: \
 		imgout:kalinote.img
 
 # “ª∞„πÊ‘Ú

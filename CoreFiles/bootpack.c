@@ -133,6 +133,7 @@ void KaliMain(void){
 	fifo32_put(&keycmd, key_leds);
 	
 	for(;;){
+		
 		if (fifo32_status(&keycmd) > 0 && keycmd_wait < 0) {
 			/* 如果存在向键盘控制器发送的数据，则发送它 */
 			keycmd_wait = fifo32_get(&keycmd);
