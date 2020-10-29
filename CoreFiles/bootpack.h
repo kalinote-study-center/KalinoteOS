@@ -264,6 +264,7 @@ void cmd_cls(struct CONSOLE *cons);																	// CMD：清屏
 void cmd_dir(struct CONSOLE *cons);																	// CMD：查询目录文件
 void cmd_type(struct CONSOLE *cons, int *fat, char *cmdline);										// CMD：显示文件内容
 void cmd_exit(struct CONSOLE *cons, int *fat);														// CMD：关闭命令窗口
+void cmd_start(struct CONSOLE *cons, char *cmdline, int memtotal);									// CMD：在新的命令行中启动一个程序
 int cmd_app(struct CONSOLE *cons, int *fat, char *cmdline);											// 外部应用程序
 int *kal_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int eax);				// 通过edx查找API
 int *inthandler0d(int *esp);																		// 0d号中断，用于处理异常程序
@@ -281,3 +282,6 @@ struct FILEINFO {
 void file_readfat(int *fat, unsigned char *img);													// 解码FAT
 void file_loadfile(int clustno, int size, char *buf, int *fat, char *img);							// 加载文件
 struct FILEINFO *file_search(char *name, struct FILEINFO *finfo, int max);
+
+/* bootpack.c */
+struct SHEET *open_console(struct SHTCTL *shtctl, unsigned int memtotal);							// 开启一个命令窗口
