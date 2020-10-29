@@ -6,6 +6,7 @@
 
 void keywin_off(struct SHEET *key_win);														//控制窗口标题栏颜色和光标激活状态
 void keywin_on(struct SHEET *key_win);														//控制窗口标题栏颜色和光标激活状态
+struct SHEET *open_console(struct SHTCTL *shtctl, unsigned int memtotal);					//新建命令行窗口
 
 void KaliMain(void){
 	/* 系统入口 */
@@ -15,14 +16,14 @@ void KaliMain(void){
 	struct SHTCTL *shtctl;
 	char s[40];
 	struct FIFO32 fifo, keycmd;
-	int fifobuf[128], keycmd_buf[32], *cons_fifo[2];
+	int fifobuf[128], keycmd_buf[32];
 	int mx, my, i, new_mx = -1, new_my = 0, new_wx = 0x7fffffff, new_wy = 0;
 	unsigned int memtotal;
 	struct MOUSE_DEC mdec;
 	struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;
-	unsigned char *buf_back, buf_mouse[256], *buf_cons[2];
+	unsigned char *buf_back, buf_mouse[256];
 	struct SHEET *sht_back, *sht_mouse, *sht_cons[2];
-	struct TASK *task_a, *task_cons[2], *task;
+	struct TASK *task_a, *task;
 	int key_shift = 0, key_leds = (binfo->leds >> 4) & 7, keycmd_wait = -1;
 	int j, x, y, mmx = -1, mmy = -1, mmx2 = 0;
 	struct SHEET *sht = 0, *key_win;
@@ -77,29 +78,8 @@ void KaliMain(void){
 	init_screen8(buf_back, binfo->scrnx, binfo->scrny);
 
 	/* sht_cons */
-	for (i = 0; i < 2; i++) {
-		sht_cons[i] = sheet_alloc(shtctl);
-		buf_cons[i] = (unsigned char *) memman_alloc_4k(memman, 256 * 165);
-		sheet_setbuf(sht_cons[i], buf_cons[i], 256, 165, -1); /* 无透明色 */
-		make_window8(buf_cons[i], 256, 165, "console", 0);
-		make_textbox8(sht_cons[i], 8, 28, 240, 128, COL_BLACK);
-		task_cons[i] = task_alloc();
-		task_cons[i]->tss.esp = memman_alloc_4k(memman, 64 * 1024) + 64 * 1024 - 12;
-		task_cons[i]->tss.eip = (int) &console_task;
-		task_cons[i]->tss.es = 1 * 8;
-		task_cons[i]->tss.cs = 2 * 8;
-		task_cons[i]->tss.ss = 1 * 8;
-		task_cons[i]->tss.ds = 1 * 8;
-		task_cons[i]->tss.fs = 1 * 8;
-		task_cons[i]->tss.gs = 1 * 8;
-		*((int *) (task_cons[i]->tss.esp + 4)) = (int) sht_cons[i];
-		*((int *) (task_cons[i]->tss.esp + 8)) = memtotal;
-		task_run(task_cons[i], 2, 2); /* level=2, priority=2 */
-		sht_cons[i]->task = task_cons[i];
-		sht_cons[i]->flags |= 0x20;	/* 有光标 */
-		cons_fifo[i] = (int *) memman_alloc_4k(memman, 128 * 4);
-		fifo32_init(&task_cons[i]->fifo, 128, cons_fifo[i], task_cons[i]);
-	}
+	sht_cons[0] = open_console(shtctl, memtotal);
+	sht_cons[1] = 0; /* 未打开状态 */
 
 	/* sht_mouse */
 	sht_mouse = sheet_alloc(shtctl);
@@ -109,13 +89,11 @@ void KaliMain(void){
 	my = (binfo->scrny - 28 - 16) / 2;
 
 	sheet_slide(sht_back,  0,  0);
-	sheet_slide(sht_cons[1], 56,  6);
-	sheet_slide(sht_cons[0],  8,  2);
+	sheet_slide(sht_cons[0], 32, 4);
 	sheet_slide(sht_mouse, mx, my);
 	sheet_updown(sht_back,     0);
-	sheet_updown(sht_cons[1],  1);
-	sheet_updown(sht_cons[0],  2);
-	sheet_updown(sht_mouse,    3);
+	sheet_updown(sht_cons[0],  1);
+	sheet_updown(sht_mouse,    2);
 	key_win = sht_cons[0];
 	keywin_on(key_win);
 	
@@ -216,6 +194,15 @@ void KaliMain(void){
 						task->tss.eip = (int) asm_end_app;
 						io_sti();
 					}
+				}
+				if (i == 256 + 0x3c && key_shift != 0 && sht_cons[1] == 0) {	/* Shift+F2 打开新的命令窗口 */
+					sht_cons[1] = open_console(shtctl, memtotal);
+					sheet_slide(sht_cons[1], 32, 4);
+					sheet_updown(sht_cons[1], shtctl->top);
+					/* 自动将输入焦点切换到新打开的命令行窗口 */
+					keywin_off(key_win);
+					key_win = sht_cons[1];
+					keywin_on(key_win);
 				}
 				if (i == 256 + 0x57 && shtctl->top > 2) {	/* F11 切换窗口 */
 					sheet_updown(shtctl->sheets[1], shtctl->top - 1);
@@ -326,4 +313,30 @@ void keywin_on(struct SHEET *key_win)
 		fifo32_put(&key_win->task->fifo, 2); /* 命令行窗口光标ON */
 	}
 	return;
+}
+
+struct SHEET *open_console(struct SHTCTL *shtctl, unsigned int memtotal){
+	struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;
+	struct SHEET *sht = sheet_alloc(shtctl);
+	unsigned char *buf = (unsigned char *) memman_alloc_4k(memman, 256 * 165);
+	struct TASK *task = task_alloc();
+	int *cons_fifo = (int *) memman_alloc_4k(memman, 128 * 4);
+	sheet_setbuf(sht, buf, 256, 165, -1); /* 无透明色 */
+	make_window8(buf, 256, 165, "console", 0);
+	make_textbox8(sht, 8, 28, 240, 128, COL_BLACK);
+	task->tss.esp = memman_alloc_4k(memman, 64 * 1024) + 64 * 1024 - 12;
+	task->tss.eip = (int) &console_task;
+	task->tss.es = 1 * 8;
+	task->tss.cs = 2 * 8;
+	task->tss.ss = 1 * 8;
+	task->tss.ds = 1 * 8;
+	task->tss.fs = 1 * 8;
+	task->tss.gs = 1 * 8;
+	*((int *) (task->tss.esp + 4)) = (int) sht;
+	*((int *) (task->tss.esp + 8)) = memtotal;
+	task_run(task, 2, 2); /* level=2, priority=2 */
+	sht->task = task;
+	sht->flags |= 0x20;	/* カーソルあり */
+	fifo32_init(&task->fifo, 128, cons_fifo, task);
+	return sht;
 }
