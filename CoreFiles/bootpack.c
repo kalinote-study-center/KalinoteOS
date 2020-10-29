@@ -193,7 +193,7 @@ void KaliMain(void){
 						io_sti();
 					}
 				}
-				if (i == 256 + 0x3c && key_shift != 0 && sht_cons[1] == 0) {	/* Shift+F2 打开新的命令窗口 */
+				if (i == 256 + 0x3c && key_shift != 0) {	/* Shift+F2 打开新的命令窗口 */
 					/* 自动将输入焦点切换到新打开的命令行窗口 */
 					keywin_off(key_win);
 					key_win = open_console(shtctl, memtotal);
