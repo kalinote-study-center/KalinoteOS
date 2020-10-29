@@ -21,7 +21,7 @@ void KaliMain(void)
 	api_putstr0("enjoy full color :)");
 	for (y = 0; y < 128; y++) {
 		for (x = 0; x < 128; x++) {
-			api_point(win, x + 8, y + 28, rgb2pal(x * 2, y * 2, 0, x, y));
+			api_point(win, x + 8, y + 28, rgb2pal(x * 2, 0, y * 2, x, y));
 			//buf[(x + 8) + (y + 28) * 144] = rgb2pal(x * 2, y * 2, 0, x, y);
 		}
 	}

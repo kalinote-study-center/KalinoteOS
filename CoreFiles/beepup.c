@@ -12,7 +12,7 @@ void KaliMain(void)
 	timer = api_alloctimer();
 	api_inittimer(timer, 128);
 	for (i = 20000; i <= 20000000; i += i / 100) {
-		/* 20KHz～20Hz : 人类可以听到的声音范围 */
+		/* 20Hz～20KHz : 人类可以听到的声音范围 */
 		/* i以1%的速度递减 */
 		api_beep(i);
 		api_settimer(timer, 1);		/* 0.01秒 */
