@@ -67,7 +67,7 @@ void boxfill8(unsigned char *vram, int xsize, unsigned char c, int x0, int y0, i
 
 void init_screen8(char *vram, int x, int y){
 	/*初始化屏幕*/
-	boxfill8( vram, x, COL_LDBLUE, 0, 0, x - 1, y - 1);		//绘制一个纯色背景当桌面
+	boxfill8(vram, x, COL_LDBLUE, 0, 0, x - 1, y - 1);		//绘制一个纯色背景当桌面
 }
 
 void putfont8(char *vram, int xsize, int x, int y, char c, char *font)

@@ -269,12 +269,17 @@ void KaliMain(void){
 										}
 										if (sht->bxsize - 21 <= x && x < sht->bxsize - 5 && 5 <= y && y < 19) {
 											/* 按下X按钮 */
-											if ((sht->flags & 0x10) != 0) {	/* 该窗口是否为应用程序窗口 */
+											if ((sht->flags & 0x10) != 0) {		/* 是否为应用程序窗口 */
 												task = sht->task;
 												cons_putstr0(task->cons, "\nBreak(mouse) :\n");
-												io_cli();	/* 强制结束处理中禁止切换任务 */
+												io_cli();	/* 禁止在强制结束处理时切换任务 */
 												task->tss.eax = (int) &(task->tss.esp0);
 												task->tss.eip = (int) asm_end_app;
+												io_sti();
+											} else {	/* 命令行窗口 */
+												task = sht->task;
+												io_cli();
+												fifo32_put(&task->fifo, 4);
 												io_sti();
 											}
 										}
