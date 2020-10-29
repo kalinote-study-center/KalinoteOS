@@ -7,6 +7,8 @@
 void keywin_off(struct SHEET *key_win);														//控制窗口标题栏颜色和光标激活状态
 void keywin_on(struct SHEET *key_win);														//控制窗口标题栏颜色和光标激活状态
 struct SHEET *open_console(struct SHTCTL *shtctl, unsigned int memtotal);					//新建命令行窗口
+void close_console(struct SHEET *sht);														//关闭命令窗口
+void close_constask(struct TASK *task);														//结束任务
 
 void KaliMain(void){
 	/* 系统入口 */
@@ -58,6 +60,7 @@ void KaliMain(void){
 	io_out8(PIC0_IMR, 0xf8); 										// 允许PIT、PIC1和键盘(11111000)
 	io_out8(PIC1_IMR, 0xef); 										// 允许鼠标(11101111)
 	fifo32_init(&keycmd, 32, keycmd_buf, 0);
+	*((int *) 0x0fec) = (int) &fifo;
 	
 	memtotal = memtest(0x00400000, 0xbfffffff);
 	memman_init(memman);
@@ -124,9 +127,13 @@ void KaliMain(void){
 		} else {
 			i = fifo32_get(&fifo);
 			io_sti();
-			if (key_win->flags == 0) {	/* 输入窗口被关闭 */
-				key_win = shtctl->sheets[shtctl->top - 1];
-				keywin_on(key_win);
+			if (key_win != 0 && key_win->flags == 0) {	/* 窗口被关闭 */
+				if (shtctl->top == 1) {	/* 只剩鼠标和背景时 */
+					key_win = 0;
+				} else {
+					key_win = shtctl->sheets[shtctl->top - 1];
+					keywin_on(key_win);
+				}
 			}
 			if (256 <= i && i <= 511) { /* 键盘数据 */
 				if (i < 0x80 + 256) { /* 将按键编码转换为字符编码 */
@@ -144,10 +151,10 @@ void KaliMain(void){
 						s[0] += 0x20;	/* 将大写字母转换为小写字母 */
 					}
 				}
-				if (s[0] != 0) { /* 一般字符、BackSpace、Enter */
+				if (s[0] != 0 && key_win != 0) { /* 一般字符、BackSpace、Enter */
 					fifo32_put(&key_win->task->fifo, s[0] + 256);
 				}
-				if (i == 256 + 0x0f) {	/* Tab */
+				if (i == 256 + 0x0f && key_win != 0){	/* Tab */
 					keywin_off(key_win);
 					j = key_win->height - 1;
 					if (j == 0) {
@@ -183,9 +190,9 @@ void KaliMain(void){
 					fifo32_put(&keycmd, KEYCMD_LED);
 					fifo32_put(&keycmd, key_leds);
 				}
-				if (i == 256 + 0x3b && key_shift != 0) {
+				if (i == 256 + 0x3b && key_shift != 0 && key_win != 0) {/* Shift+F1 强行停止应用程序 */
 					task = key_win->task;
-					if (task != 0 && task->tss.ss0 != 0) {	/* Shift+F1 强行停止应用程序 */
+					if (task != 0 && task->tss.ss0 != 0) {	
 						cons_putstr0(task->cons, "\nBreak(key) :\n");
 						io_cli();	/* 强制结束处理时禁止任务切换 */
 						task->tss.eax = (int) &(task->tss.esp0);
@@ -195,6 +202,9 @@ void KaliMain(void){
 				}
 				if (i == 256 + 0x3c && key_shift != 0) {	/* Shift+F2 打开新的命令窗口 */
 					/* 自动将输入焦点切换到新打开的命令行窗口 */
+					if (key_win != 0) {
+						keywin_off(key_win);
+					}
 					keywin_off(key_win);
 					key_win = open_console(shtctl, memtotal);
 					sheet_slide(key_win, 32, 4);
@@ -289,6 +299,8 @@ void KaliMain(void){
 						}
 					}
 				}
+			} else if (768 <= i && i <= 1023) {	/* 命令行窗口关闭处理 */
+				close_console(shtctl->sheets0 + (i - 768));
 			}
 		}
 	}
@@ -321,6 +333,8 @@ struct SHEET *open_console(struct SHTCTL *shtctl, unsigned int memtotal){
 	sheet_setbuf(sht, buf, 256, 165, -1); /* 无透明色 */
 	make_window8(buf, 256, 165, "console", 0);
 	make_textbox8(sht, 8, 28, 240, 128, COL_BLACK);
+	task->cons_stack = memman_alloc_4k(memman, 64 * 1024);
+	task->tss.esp = task->cons_stack + 64 * 1024 - 12;
 	task->tss.esp = memman_alloc_4k(memman, 64 * 1024) + 64 * 1024 - 12;
 	task->tss.eip = (int) &console_task;
 	task->tss.es = 1 * 8;
@@ -336,4 +350,24 @@ struct SHEET *open_console(struct SHTCTL *shtctl, unsigned int memtotal){
 	sht->flags |= 0x20;	/* カーソルあり */
 	fifo32_init(&task->fifo, 128, cons_fifo, task);
 	return sht;
+}
+
+void close_constask(struct TASK *task)
+{
+	struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;
+	task_sleep(task);
+	memman_free_4k(memman, task->cons_stack, 64 * 1024);
+	memman_free_4k(memman, (int) task->fifo.buf, 128 * 4);
+	task->flags = 0; /* 用来替代task_free(task); */
+	return;
+}
+
+void close_console(struct SHEET *sht)
+{
+	struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;
+	struct TASK *task = sht->task;
+	memman_free_4k(memman, (int) sht->buf, 256 * 165);
+	sheet_free(sht);
+	close_constask(task);
+	return;
 }

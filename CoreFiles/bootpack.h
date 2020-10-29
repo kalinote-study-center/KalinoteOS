@@ -219,7 +219,7 @@ struct TASK {
 	struct FIFO32 fifo;
 	struct TSS32 tss;
 	struct CONSOLE *cons;
-	int ds_base;
+	int ds_base, cons_stack;
 };
 struct TASKLEVEL {
 	int running; /* ÕıÔÚÔËĞĞµÄÈÎÎñÊıÁ¿ */
@@ -263,6 +263,7 @@ void cmd_mem(struct CONSOLE *cons, unsigned int memtotal);											// CMD£º²éÑ
 void cmd_cls(struct CONSOLE *cons);																	// CMD£ºÇåÆÁ
 void cmd_dir(struct CONSOLE *cons);																	// CMD£º²éÑ¯Ä¿Â¼ÎÄ¼ş
 void cmd_type(struct CONSOLE *cons, int *fat, char *cmdline);										// CMD£ºÏÔÊ¾ÎÄ¼şÄÚÈİ
+void cmd_exit(struct CONSOLE *cons, int *fat);														// CMD£º¹Ø±ÕÃüÁî´°¿Ú
 int cmd_app(struct CONSOLE *cons, int *fat, char *cmdline);											// Íâ²¿Ó¦ÓÃ³ÌĞò
 int *kal_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int eax);				// Í¨¹ıedx²éÕÒAPI
 int *inthandler0d(int *esp);																		// 0dºÅÖĞ¶Ï£¬ÓÃÓÚ´¦ÀíÒì³£³ÌĞò
