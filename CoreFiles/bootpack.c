@@ -22,7 +22,7 @@ void KaliMain(void){
 	struct MOUSE_DEC mdec;
 	struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;
 	unsigned char *buf_back, buf_mouse[256];
-	struct SHEET *sht_back, *sht_mouse, *sht_cons[2];
+	struct SHEET *sht_back, *sht_mouse;
 	struct TASK *task_a, *task;
 	int key_shift = 0, key_leds = (binfo->leds >> 4) & 7, keycmd_wait = -1;
 	int j, x, y, mmx = -1, mmy = -1, mmx2 = 0;
@@ -78,8 +78,7 @@ void KaliMain(void){
 	init_screen8(buf_back, binfo->scrnx, binfo->scrny);
 
 	/* sht_cons */
-	sht_cons[0] = open_console(shtctl, memtotal);
-	sht_cons[1] = 0; /* 未打开状态 */
+	key_win = open_console(shtctl, memtotal);
 
 	/* sht_mouse */
 	sht_mouse = sheet_alloc(shtctl);
@@ -89,12 +88,11 @@ void KaliMain(void){
 	my = (binfo->scrny - 28 - 16) / 2;
 
 	sheet_slide(sht_back,  0,  0);
-	sheet_slide(sht_cons[0], 32, 4);
+	sheet_slide(key_win,   32, 4);
 	sheet_slide(sht_mouse, mx, my);
-	sheet_updown(sht_back,     0);
-	sheet_updown(sht_cons[0],  1);
-	sheet_updown(sht_mouse,    2);
-	key_win = sht_cons[0];
+	sheet_updown(sht_back,  0);
+	sheet_updown(key_win,   1);
+	sheet_updown(sht_mouse, 2);
 	keywin_on(key_win);
 	
 	/* 为了避免和键盘当前状态存在冲突，在一开始先进行设置 */
@@ -196,12 +194,11 @@ void KaliMain(void){
 					}
 				}
 				if (i == 256 + 0x3c && key_shift != 0 && sht_cons[1] == 0) {	/* Shift+F2 打开新的命令窗口 */
-					sht_cons[1] = open_console(shtctl, memtotal);
-					sheet_slide(sht_cons[1], 32, 4);
-					sheet_updown(sht_cons[1], shtctl->top);
 					/* 自动将输入焦点切换到新打开的命令行窗口 */
 					keywin_off(key_win);
-					key_win = sht_cons[1];
+					key_win = open_console(shtctl, memtotal);
+					sheet_slide(key_win, 32, 4);
+					sheet_updown(key_win, shtctl->top);
 					keywin_on(key_win);
 				}
 				if (i == 256 + 0x57 && shtctl->top > 2) {	/* F11 切换窗口 */
