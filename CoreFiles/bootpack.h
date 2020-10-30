@@ -232,6 +232,7 @@ struct TASKCTL {
 	struct TASKLEVEL level[MAX_TASKLEVELS];
 	struct TASK tasks0[MAX_TASKS];
 };
+extern struct TASKCTL *taskctl;
 extern struct TIMER *task_timer;
 struct TASK *task_init(struct MEMMAN *memman);
 struct TASK *task_alloc(void);
@@ -265,6 +266,7 @@ void cmd_dir(struct CONSOLE *cons);																	// CMD：查询目录文件
 void cmd_type(struct CONSOLE *cons, int *fat, char *cmdline);										// CMD：显示文件内容
 void cmd_exit(struct CONSOLE *cons, int *fat);														// CMD：关闭命令窗口
 void cmd_start(struct CONSOLE *cons, char *cmdline, int memtotal);									// CMD：在新的命令行中启动一个程序
+void cmd_run(struct CONSOLE *cons, char *cmdline, int memtotal);									// CMD：在当前命令窗口执行命令，且不占用命令窗口
 int cmd_app(struct CONSOLE *cons, int *fat, char *cmdline);											// 外部应用程序
 int *kal_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int eax);				// 通过edx查找API
 int *inthandler0d(int *esp);																		// 0d号中断，用于处理异常程序
@@ -285,3 +287,4 @@ struct FILEINFO *file_search(char *name, struct FILEINFO *finfo, int max);
 
 /* bootpack.c */
 struct SHEET *open_console(struct SHTCTL *shtctl, unsigned int memtotal);							// 开启一个命令窗口
+struct TASK *open_constask(struct SHEET *sht, unsigned int memtotal);								// 开启一个任务

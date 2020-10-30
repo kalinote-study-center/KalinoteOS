@@ -28,7 +28,7 @@ void KaliMain(void){
 	struct TASK *task_a, *task;
 	int key_shift = 0, key_leds = (binfo->leds >> 4) & 7, keycmd_wait = -1;
 	int j, x, y, mmx = -1, mmy = -1, mmx2 = 0;
-	struct SHEET *sht = 0, *key_win;
+	struct SHEET *sht = 0, *key_win, *sht2;
 	static char keytable0[0x80] = {
 		0,   0,   '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '^', 0x08, 0,
 		'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', '@', '[', 0x0a, 0, 'A', 'S',
@@ -198,6 +198,7 @@ void KaliMain(void){
 						task->tss.eax = (int) &(task->tss.esp0);
 						task->tss.eip = (int) asm_end_app;
 						io_sti();
+						task_run(task, -1, 0);	/* 为了确实执行结束处理，如果处于休眠状态则唤醒 */
 					}
 				}
 				if (i == 256 + 0x3c && key_shift != 0) {	/* Shift+F2 打开新的命令窗口 */
@@ -276,8 +277,13 @@ void KaliMain(void){
 												task->tss.eax = (int) &(task->tss.esp0);
 												task->tss.eip = (int) asm_end_app;
 												io_sti();
+												task_run(task, -1, 0);
 											} else {	/* 命令行窗口 */
 												task = sht->task;
+												sheet_updown(sht, -1); /* 隐藏图层 */
+												keywin_off(key_win);
+												key_win = shtctl->sheets[shtctl->top - 1];
+												keywin_on(key_win);
 												io_cli();
 												fifo32_put(&task->fifo, 4);
 												io_sti();
@@ -306,13 +312,18 @@ void KaliMain(void){
 				}
 			} else if (768 <= i && i <= 1023) {	/* 命令行窗口关闭处理 */
 				close_console(shtctl->sheets0 + (i - 768));
+			} else if (1024 <= i && i <= 2023) {
+				close_constask(taskctl->tasks0 + (i - 1024));
+			} else if (2024 <= i && i <= 2279) {	/* 只关闭命令行窗口 */
+				sht2 = shtctl->sheets0 + (i - 2024);
+				memman_free_4k(memman, (int) sht2->buf, 256 * 165);
+				sheet_free(sht2);
 			}
 		}
 	}
 }
 
-void keywin_off(struct SHEET *key_win)
-{
+void keywin_off(struct SHEET *key_win){
 	change_wtitle8(key_win, 0);
 	if ((key_win->flags & 0x20) != 0) {
 		fifo32_put(&key_win->task->fifo, 3); /* 命令行窗口光标OFF */
@@ -320,8 +331,7 @@ void keywin_off(struct SHEET *key_win)
 	return;
 }
 
-void keywin_on(struct SHEET *key_win)
-{
+void keywin_on(struct SHEET *key_win){
 	change_wtitle8(key_win, 1);
 	if ((key_win->flags & 0x20) != 0) {
 		fifo32_put(&key_win->task->fifo, 2); /* 命令行窗口光标ON */
@@ -329,15 +339,10 @@ void keywin_on(struct SHEET *key_win)
 	return;
 }
 
-struct SHEET *open_console(struct SHTCTL *shtctl, unsigned int memtotal){
+struct TASK *open_constask(struct SHEET *sht, unsigned int memtotal){
 	struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;
-	struct SHEET *sht = sheet_alloc(shtctl);
-	unsigned char *buf = (unsigned char *) memman_alloc_4k(memman, 256 * 165);
 	struct TASK *task = task_alloc();
 	int *cons_fifo = (int *) memman_alloc_4k(memman, 128 * 4);
-	sheet_setbuf(sht, buf, 256, 165, -1);
-	make_window8(buf, 256, 165, "console", 0);
-	make_textbox8(sht, 8, 28, 240, 128, COL_BLACK);
 	task->cons_stack = memman_alloc_4k(memman, 64 * 1024);
 	task->tss.esp = task->cons_stack + 64 * 1024 - 12;
 	task->tss.eip = (int) &console_task;
@@ -349,15 +354,24 @@ struct SHEET *open_console(struct SHTCTL *shtctl, unsigned int memtotal){
 	task->tss.gs = 1 * 8;
 	*((int *) (task->tss.esp + 4)) = (int) sht;
 	*((int *) (task->tss.esp + 8)) = memtotal;
-	task_run(task, 2, 2); 
-	sht->task = task;
-	sht->flags |= 0x20;	
+	task_run(task, 2, 2); /* level=2, priority=2 */
 	fifo32_init(&task->fifo, 128, cons_fifo, task);
+	return task;
+}
+
+struct SHEET *open_console(struct SHTCTL *shtctl, unsigned int memtotal){
+	struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;
+	struct SHEET *sht = sheet_alloc(shtctl);
+	unsigned char *buf = (unsigned char *) memman_alloc_4k(memman, 256 * 165);
+	sheet_setbuf(sht, buf, 256, 165, -1); /* 无透明色 */
+	make_window8(buf, 256, 165, "console", 0);
+	make_textbox8(sht, 8, 28, 240, 128, COL_BLACK);
+	sht->task = open_constask(sht, memtotal);
+	sht->flags |= 0x20;	/* 有光标 */
 	return sht;
 }
 
-void close_constask(struct TASK *task)
-{
+void close_constask(struct TASK *task){
 	struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;
 	task_sleep(task);
 	memman_free_4k(memman, task->cons_stack, 64 * 1024);
@@ -366,8 +380,7 @@ void close_constask(struct TASK *task)
 	return;
 }
 
-void close_console(struct SHEET *sht)
-{
+void close_console(struct SHEET *sht){
 	struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;
 	struct TASK *task = sht->task;
 	memman_free_4k(memman, (int) sht->buf, 256 * 165);
