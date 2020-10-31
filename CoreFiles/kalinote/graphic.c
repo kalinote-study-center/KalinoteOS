@@ -94,9 +94,66 @@ void putfonts8_asc(char *vram, int xsize, int x, int y, char c, unsigned char *s
 {
 	/*绘制字符串(ASCLL编码) - 此处原内容在第96页*/
 	extern char fonts[4096];
-	for (; *s != 0x00; s++) {
-		putfont8(vram, xsize, x, y, c, fonts + *s * 16);
-		x += 8;
+	struct TASK *task = task_now();
+	char *nihongo = (char *) *((int *) 0x0fe8), *font;
+	int k, t;
+	
+	if (task->langmode == 0) {
+		/* fonts字库 */
+		for (; *s != 0x00; s++) {
+			putfont8(vram, xsize, x, y, c, fonts + *s * 16);
+			x += 8;
+		}
+	}
+	if (task->langmode == 1) {
+		/* nihongo.fnt字库 */
+		for (; *s != 0x00; s++) {
+			if (task->langbyte1 == 0) {
+				if ((0x81 <= *s && *s <= 0x9f) || (0xe0 <= *s && *s <= 0xfc)) {
+					task->langbyte1 = *s;
+				} else {
+					putfont8(vram, xsize, x, y, c, nihongo + *s * 16);
+				}
+			} else {
+				if (0x81 <= task->langbyte1 && task->langbyte1 <= 0x9f) {
+					k = (task->langbyte1 - 0x81) * 2;
+				} else {
+					k = (task->langbyte1 - 0xe0) * 2 + 62;
+				}
+				if (0x40 <= *s && *s <= 0x7e) {
+					t = *s - 0x40;
+				} else if (0x80 <= *s && *s <= 0x9e) {
+					t = *s - 0x80 + 63;
+				} else {
+					t = *s - 0x9f;
+					k++;
+				}
+				task->langbyte1 = 0;
+				font = nihongo + 256 * 16 + (k * 94 + t) * 32;
+				putfont8(vram, xsize, x - 8, y, c, font     );	/* 左半部分 */
+				putfont8(vram, xsize, x    , y, c, font + 16);	/* 右半部分 */
+			}
+			x += 8;
+		}
+	}
+	if (task->langmode == 2) {
+		for (; *s != 0x00; s++) {
+			if (task->langbyte1 == 0) {
+				if (0x81 <= *s && *s <= 0xfe) {
+					task->langbyte1 = *s;
+				} else {
+					putfont8(vram, xsize, x, y, c, nihongo + *s * 16);
+				}
+			} else {
+				k = task->langbyte1 - 0xa1;
+				t = *s - 0xa1;
+				task->langbyte1 = 0;
+				font = nihongo + 256 * 16 + (k * 94 + t) * 32;
+				putfont8(vram, xsize, x - 8, y, c, font     );	/* 左半部分 */
+				putfont8(vram, xsize, x    , y, c, font + 16);	/* 右半部分 */
+			}
+			x += 8;
+		}
 	}
 	return;
 }

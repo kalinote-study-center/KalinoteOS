@@ -225,6 +225,7 @@ struct TASK {
 	struct FILEHANDLE *fhandle;
 	int *fat;
 	char *cmdline;
+	unsigned char langmode, langbyte1;
 };
 struct TASKLEVEL {
 	int running; /* ÕıÔÚÔËĞĞµÄÈÎÎñÊıÁ¿ */
@@ -277,6 +278,7 @@ void cmd_type(struct CONSOLE *cons, int *fat, char *cmdline);										// CMD£ºÏ
 void cmd_exit(struct CONSOLE *cons, int *fat);														// CMD£º¹Ø±ÕÃüÁî´°¿Ú
 void cmd_start(struct CONSOLE *cons, char *cmdline, int memtotal);									// CMD£ºÔÚĞÂµÄÃüÁîĞĞÖĞÆô¶¯Ò»¸ö³ÌĞò
 void cmd_run(struct CONSOLE *cons, char *cmdline, int memtotal);									// CMD£ºÔÚµ±Ç°ÃüÁî´°¿ÚÖ´ĞĞÃüÁî£¬ÇÒ²»Õ¼ÓÃÃüÁî´°¿Ú
+void cmd_langmode(struct CONSOLE *cons, char *cmdline);												// CMD£ºÇĞ»»ÓïÑÔÄ£Ê½
 int cmd_app(struct CONSOLE *cons, int *fat, char *cmdline);											// Íâ²¿Ó¦ÓÃ³ÌĞò
 int *kal_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int eax);				// Í¨¹ıedx²éÕÒAPI
 int *inthandler0d(int *esp);																		// 0dºÅÖĞ¶Ï£¬ÓÃÓÚ´¦ÀíÒì³£³ÌĞò
