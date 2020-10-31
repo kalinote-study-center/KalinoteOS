@@ -1,4 +1,4 @@
-/* ???取?言模式API的程序 */
+/* 获取当前语言模式API的程序 */
 #include "apilib.h"
 
 void KaliMain(void)
@@ -16,7 +16,7 @@ void KaliMain(void)
 		api_putstr0("English ASCII mode\n");
 	}
 	if (langmode == 1) {
-		api_putstr0("现在是中文模式");
+		api_putstr0("现在是中文模式\n");
 	}
 	if (langmode == 2) {
 		api_putstr0(s1);

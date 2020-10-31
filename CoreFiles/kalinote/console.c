@@ -350,6 +350,15 @@ void cmd_langmode(struct CONSOLE *cons, char *cmdline){
 	unsigned char mode = cmdline[9] - '0';
 	if (mode <= 3) {
 		task->langmode = mode;
+		if (task->langmode == 0) {
+			cons_putstr0(cons,"Switch to English ASCII mode\n");
+		} else if (task->langmode == 1) {
+			cons_putstr0(cons,"切换到中文模式\n");
+		} else if (task->langmode == 2) {
+			cons_putstr0(cons,"Switch to shift-JIS encoding Japanese\n");
+		} else if (task->langmode == 3) {
+			cons_putstr0(cons,"Switch to EUC encoding Japanese\n");
+		}
 	} else {
 		cons_putstr0(cons, "mode number error.\n");
 	}

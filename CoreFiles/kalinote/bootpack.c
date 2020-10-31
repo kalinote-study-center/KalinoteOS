@@ -284,6 +284,7 @@ void KaliMain(void){
 					}
 					new_mx = mx;
 					new_my = my;
+					/* Êó±êÎ»ÖÃ */
 					sprintf(s, "(%3d, %3d)", mx, my);
 					putfonts8_asc_sht(sht_back, 0, 0, COL_WHITE, COL_LDBLUE, s, 10);
 					sheet_slide(sht_mouse, mx, my); /* °üº¬sheet_refresh */
