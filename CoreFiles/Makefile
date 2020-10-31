@@ -22,6 +22,7 @@ BIN2OBJ  = $(TOOLPATH)bin2obj.exe
 RULEFILE = $(TOOLPATH)kalinote/kalinote.rul
 EDIMG    = $(TOOLPATH)edimg.exe
 IMGTOL   = $(TOOLPATH)imgtol.com
+GOLIB    = $(TOOLPATH)golib00.exe 
 COPY     = copy
 DEL      = del
 
@@ -57,94 +58,88 @@ bootpack.kal : bootpack.bim Makefile
 kalinote.sys : asmhead.bin bootpack.kal Makefile
 	copy /B asmhead.bin+bootpack.kal kalinote.sys
 
-hello.kal : hello.nas Makefile
-	$(NASK) hello.nas hello.kal hello.lst
+apilib.lib : Makefile $(OBJS_API)
+	$(GOLIB) $(OBJS_API) out:apilib.lib
 
-hello2.kal : hello2.nas Makefile
-	$(NASK) hello2.nas hello2.kal hello2.lst
-
-a.bim : a.obj $(OBJS_API) Makefile
-	$(OBJ2BIM) @$(RULEFILE) out:a.bim map:a.map a.obj $(OBJS_API)
+a.bim : a.obj apilib.lib Makefile
+	$(OBJ2BIM) @$(RULEFILE) out:a.bim map:a.map a.obj apilib.lib
 
 a.kal : a.bim Makefile
 	$(BIM2KAL) a.bim a.kal 0
 
-hello3.bim : hello3.obj $(OBJS_API) Makefile
-	$(OBJ2BIM) @$(RULEFILE) out:hello3.bim map:hello3.map hello3.obj $(OBJS_API)
+hello3.bim : hello3.obj apilib.lib Makefile
+	$(OBJ2BIM) @$(RULEFILE) out:hello3.bim map:hello3.map hello3.obj apilib.lib
 
 hello3.kal : hello3.bim Makefile
 	$(BIM2KAL) hello3.bim hello3.kal 0
 
-hello4.bim : hello4.obj $(OBJS_API) Makefile
-	$(OBJ2BIM) @$(RULEFILE) out:hello4.bim map:hello4.map hello4.obj $(OBJS_API)
+hello4.bim : hello4.obj apilib.lib Makefile
+	$(OBJ2BIM) @$(RULEFILE) out:hello4.bim map:hello4.map hello4.obj apilib.lib
 
 hello4.kal : hello4.bim Makefile
 	$(BIM2KAL) hello4.bim hello4.kal 0
 
-winhelo.bim : winhelo.obj $(OBJS_API) Makefile
-	$(OBJ2BIM) @$(RULEFILE) out:winhelo.bim map:winhelo.map winhelo.obj $(OBJS_API)
+winhelo.bim : winhelo.obj apilib.lib Makefile
+	$(OBJ2BIM) @$(RULEFILE) out:winhelo.bim map:winhelo.map winhelo.obj apilib.lib
 
 winhelo.kal : winhelo.bim Makefile
 	$(BIM2KAL) winhelo.bim winhelo.kal 40k
 
-star.bim : star.obj $(OBJS_API) Makefile
-	$(OBJ2BIM) @$(RULEFILE) out:star.bim map:star.map star.obj $(OBJS_API)
+star.bim : star.obj apilib.lib Makefile
+	$(OBJ2BIM) @$(RULEFILE) out:star.bim map:star.map star.obj apilib.lib
 
 star.kal : star.bim Makefile
 	$(BIM2KAL) star.bim star.kal 47k
 
-lines.bim : lines.obj $(OBJS_API) Makefile
-	$(OBJ2BIM) @$(RULEFILE) out:lines.bim map:lines.map lines.obj $(OBJS_API)
+lines.bim : lines.obj apilib.lib Makefile
+	$(OBJ2BIM) @$(RULEFILE) out:lines.bim map:lines.map lines.obj apilib.lib
 
 lines.kal : lines.bim Makefile
 	$(BIM2KAL) lines.bim lines.kal 48k
 
-walk.bim : walk.obj $(OBJS_API) Makefile
-	$(OBJ2BIM) @$(RULEFILE) out:walk.bim map:walk.map walk.obj $(OBJS_API)
+walk.bim : walk.obj apilib.lib Makefile
+	$(OBJ2BIM) @$(RULEFILE) out:walk.bim map:walk.map walk.obj apilib.lib
 
 walk.kal : walk.bim Makefile
 	$(BIM2KAL) walk.bim walk.kal 48k
 
-counter.bim : counter.obj $(OBJS_API) Makefile
-	$(OBJ2BIM) @$(RULEFILE) out:counter.bim map:counter.map counter.obj $(OBJS_API)
+counter.bim : counter.obj apilib.lib Makefile
+	$(OBJ2BIM) @$(RULEFILE) out:counter.bim map:counter.map counter.obj apilib.lib
 
 counter.kal : counter.bim Makefile
 	$(BIM2KAL) counter.bim counter.kal 48k
 
-noodle.bim : noodle.obj $(OBJS_API) Makefile
-	$(OBJ2BIM) @$(RULEFILE) out:noodle.bim map:noodle.map noodle.obj $(OBJS_API)
+noodle.bim : noodle.obj apilib.lib Makefile
+	$(OBJ2BIM) @$(RULEFILE) out:noodle.bim map:noodle.map noodle.obj apilib.lib
 
 noodle.kal : noodle.bim Makefile
 	$(BIM2KAL) noodle.bim noodle.kal 40k
 
-beepdown.bim : beepdown.obj $(OBJS_API) Makefile
-	$(OBJ2BIM) @$(RULEFILE) out:beepdown.bim map:beepdown.map beepdown.obj $(OBJS_API)
+beepdown.bim : beepdown.obj apilib.lib Makefile
+	$(OBJ2BIM) @$(RULEFILE) out:beepdown.bim map:beepdown.map beepdown.obj apilib.lib
 
 beepdown.kal : beepdown.bim Makefile
 	$(BIM2KAL) beepdown.bim beepdown.kal 40k
 
-beepup.bim : beepup.obj $(OBJS_API) Makefile
-	$(OBJ2BIM) @$(RULEFILE) out:beepup.bim map:beepup.map beepup.obj $(OBJS_API)
+beepup.bim : beepup.obj apilib.lib Makefile
+	$(OBJ2BIM) @$(RULEFILE) out:beepup.bim map:beepup.map beepup.obj apilib.lib
 
 beepup.kal : beepup.bim Makefile
 	$(BIM2KAL) beepup.bim beepup.kal 40k
 
-color.bim : color.obj $(OBJS_API) Makefile
-	$(OBJ2BIM) @$(RULEFILE) out:color.bim map:color.map color.obj $(OBJS_API)
+color.bim : color.obj apilib.lib Makefile
+	$(OBJ2BIM) @$(RULEFILE) out:color.bim map:color.map color.obj apilib.lib
 
 color.kal : color.bim Makefile
 	$(BIM2KAL) color.bim color.kal 56k
 
 kalinote.img : ipl10.bin kalinote.sys Makefile \
-		hello.kal hello2.kal hello3.kal hello4.kal \
+		hello3.kal hello4.kal color.kal \
 		winhelo.kal star.kal lines.kal walk.kal \
-		counter.kal noodle.kal beepdown.kal beepup.kal \
-		color.kal
+		counter.kal noodle.kal beepdown.kal beepup.kal
 	$(EDIMG)   imgin:../z_tools/fdimg0at.tek \
 		wbinimg src:ipl10.bin len:512 from:0 to:0 \
 		copy from:kalinote.sys to:@: \
-		copy from:hello.kal to:@: \
-		copy from:hello2.kal to:@: \
 		copy from:hello3.kal to:@: \
 		copy from:hello4.kal to:@: \
 		copy from:winhelo.kal to:@: \

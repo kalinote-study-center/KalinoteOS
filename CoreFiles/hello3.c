@@ -1,7 +1,6 @@
 /* 简单的应用程序 */
 
-void api_putchar(int c);
-void api_end(void);
+#include "apilib.h"
 
 void KaliMain(void)
 {
