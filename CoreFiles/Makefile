@@ -15,10 +15,10 @@ default :
 # 文件生成??
 
 kalinote.img : kalinote/ipl10.bin kalinote/kalinote.sys Makefile \
-		a/a.kal hello3/hello3.kal hello4/hello4.kal \
+		a/a.kal hello3/hello3.kal hello4/hello4.kal color/color.kal \
 		winhelo/winhelo.kal star/star.kal counter/counter.kal \
 		lines/lines.kal walk/walk.kal noodle/noodle.kal \
-		beepdown/beepdown.kal beepup/beepup.kal color/color.kal
+		beepdown/beepdown.kal beepup/beepup.kal sosu/sosu.kal
 	$(EDIMG)   imgin:../z_tools/fdimg0at.tek \
 		wbinimg src:kalinote/ipl10.bin len:512 from:0 to:0 \
 		copy from:kalinote/kalinote.sys to:@: \
@@ -36,6 +36,7 @@ kalinote.img : kalinote/ipl10.bin kalinote/kalinote.sys Makefile \
 		copy from:beepup/beepup.kal to:@: \
 		copy from:color/color.kal to:@: \
 		copy from:counter/counter.kal to:@: \
+		copy from:sosu/sosu.kal to:@: \
 		imgout:kalinote.img
 
 # 命令
@@ -64,6 +65,7 @@ full :
 	$(MAKE) -C beepup
 	$(MAKE) -C color
 	$(MAKE) -C counter
+	$(MAKE) -C sosu
 	$(MAKE) kalinote.img
 
 run_full :
@@ -101,6 +103,7 @@ clean_full :
 	$(MAKE) -C beepup		clean
 	$(MAKE) -C color		clean
 	$(MAKE) -C counter		clean
+	$(MAKE) -C sosu		clean
 
 src_only_full :
 	$(MAKE) -C kalinote		src_only
@@ -117,6 +120,7 @@ src_only_full :
 	$(MAKE) -C beepup		src_only
 	$(MAKE) -C color		src_only
 	$(MAKE) -C counter		src_only
+	$(MAKE) -C sosu		src_only
 	-$(DEL) kalinote.img
 
 refresh :
