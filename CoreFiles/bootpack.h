@@ -70,7 +70,7 @@ void putblock8_8(char *vram, int vxsize, int pxsize,
 #define COL_LDBLUE		14
 #define COL_DGREY		15
 
-//dsctbl.c(GDT°¢IDT°¢LDTπ‹¿Ì)
+//dsctlb.c(ª≠√Ê‰÷»æ)
 struct SEGMENT_DESCRIPTOR {
 	short limit_low, base_low;
 	char base_mid, access_right;
@@ -218,7 +218,6 @@ struct TASK {
 	int level, priority;
 	struct FIFO32 fifo;
 	struct TSS32 tss;
-	struct SEGMENT_DESCRIPTOR ldt[2];
 	struct CONSOLE *cons;
 	int ds_base, cons_stack;
 };
