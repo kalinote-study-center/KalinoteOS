@@ -1,14 +1,14 @@
-/* ???庢?尵柾幃API揑掱彉 */
+/* ???取?言模式API的程序 */
 #include "apilib.h"
 
 void KaliMain(void)
 {
 	int langmode = api_getlang();
-	static char s1[23] = {	/* 擔暥SHIFT-JIS柾幃 */
+	static char s1[23] = {	/* 日文SHIFT-JIS模式 */
 		0x93, 0xfa, 0x96, 0x7b, 0x8c, 0xea, 0x83, 0x56, 0x83, 0x74, 0x83, 0x67,
 		0x4a, 0x49, 0x53, 0x83, 0x82, 0x81, 0x5b, 0x83, 0x68, 0x0a, 0x00
 	};
-	static char s2[17] = {	/* 擔暥EUC柾幃 */
+	static char s2[17] = {	/* 日文EUC模式 */
 		0xc6, 0xfc, 0xcb, 0xdc, 0xb8, 0xec, 0x45, 0x55, 0x43, 0xa5, 0xe2, 0xa1,
 		0xbc, 0xa5, 0xc9, 0x0a, 0x00
 	};
@@ -16,9 +16,12 @@ void KaliMain(void)
 		api_putstr0("English ASCII mode\n");
 	}
 	if (langmode == 1) {
-		api_putstr0(s1);
+		api_putstr0("现在是中文模式");
 	}
 	if (langmode == 2) {
+		api_putstr0(s1);
+	}
+	if (langmode == 3) {
 		api_putstr0(s2);
 	}
 	api_end();

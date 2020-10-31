@@ -12,7 +12,7 @@ void console_task(struct SHEET *sheet, unsigned int memtotal){
 	struct CONSOLE cons;
 	struct FILEHANDLE fhandle[8];
 	char cmdline[30];
-	unsigned char *nihongo = (char *) *((int *) 0x0fe8);
+	unsigned char *hzk = (char *) *((int *) 0x0fe8);
 
 	cons.sht = sheet;
 	cons.cur_x =  8;
@@ -32,7 +32,7 @@ void console_task(struct SHEET *sheet, unsigned int memtotal){
 	}
 	task->fhandle = fhandle;
 	task->fat = fat;
-	if (nihongo[4096] != 0xff) {	/* 是否载入了日文字库？ */
+	if (hzk[4096] != 0xff) {	/* 是否载入了字库？ */
 		task->langmode = 1;
 	} else {
 		task->langmode = 0;
@@ -348,7 +348,7 @@ void cmd_run(struct CONSOLE *cons, char *cmdline, int memtotal){
 void cmd_langmode(struct CONSOLE *cons, char *cmdline){
 	struct TASK *task = task_now();
 	unsigned char mode = cmdline[9] - '0';
-	if (mode <= 2) {
+	if (mode <= 3) {
 		task->langmode = mode;
 	} else {
 		cons_putstr0(cons, "mode number error.\n");

@@ -90,12 +90,57 @@ void putfont8(char *vram, int xsize, int x, int y, char c, char *font)
 	return;
 }
 
+void putfont32(char *vram, int xsize, int x, int y, char c, char *font1, char *font2){
+	/* 中文字库的渲染方式和日文不同，中文为上下组合，日文为左右组合 */
+	int i,k,j,f;
+	char *p;
+	j=0;
+	p=vram+(y+j)*xsize+x;
+	j++;
+	//上半部分
+	for(i=0;i<16;i++){
+		for(k=0;k<8;k++){
+			if(font1[i]&(0x80>>k)){
+				p[k+(i%2)*8]=c;
+			}
+		}
+		for(k=0;k<8/2;k++){
+			f=p[k+(i%2)*8];
+			p[k+(i%2)*8]=p[8-1-k+(i%2)*8];
+			p[8-1-k+(i%2)*8]=f;
+		}
+		if(i%2){
+			p=vram+(y+j)*xsize+x;
+			j++;
+		}
+	}
+	//下半部分
+	for(i=0;i<16;i++){
+		for(k=0;k<8;k++){
+			if(font2[i]&(0x80>>k)){
+				p[k+(i%2)*8]=c;
+			}
+		}
+		for(k=0;k<8/2;k++){
+			f=p[k+(i%2)*8];
+			p[k+(i%2)*8]=p[8-1-k+(i%2)*8];
+			p[8-1-k+(i%2)*8]=f;
+		}
+		if(i%2){
+			p=vram+(y+j)*xsize+x;
+			j++;
+		}
+	}
+	return;
+}
+
 void putfonts8_asc(char *vram, int xsize, int x, int y, char c, unsigned char *s)
 {
 	/*绘制字符串(ASCLL编码) - 此处原内容在第96页*/
 	extern char fonts[4096];
 	struct TASK *task = task_now();
-	char *nihongo = (char *) *((int *) 0x0fe8), *font;
+	char *hzk = (char *) *((int *) 0x0fe8), *font;
+	char *nihongo = (char *) *((int *) 0xef9);
 	int k, t;
 	
 	if (task->langmode == 0) {
@@ -106,7 +151,26 @@ void putfonts8_asc(char *vram, int xsize, int x, int y, char c, unsigned char *s
 		}
 	}
 	if (task->langmode == 1) {
-		/* nihongo.fnt字库 */
+		/* 中文 */
+		for (; *s != 0x00; s++) {
+			if (task->langbyte1 == 0) {
+				if (0xa1 <= *s && *s <= 0xfe) {
+					task->langbyte1 = *s;
+				} else {
+					putfont8(vram, xsize, x, y, c, fonts + *s * 16);//只要是半角就使用fonts里面的字符
+				}
+			} else {
+				k = task->langbyte1 - 0xa1;
+				t = *s - 0xa1;
+				task->langbyte1 = 0;
+				font = hzk + (k * 94 + t) * 32;
+				putfont32(vram,xsize,x-8,y,c,font,font+16);
+			}
+			x += 8;
+		}
+	}
+	if (task->langmode == 2) {
+		/* 日文Shift-JIS */
 		for (; *s != 0x00; s++) {
 			if (task->langbyte1 == 0) {
 				if ((0x81 <= *s && *s <= 0x9f) || (0xe0 <= *s && *s <= 0xfc)) {
@@ -136,7 +200,8 @@ void putfonts8_asc(char *vram, int xsize, int x, int y, char c, unsigned char *s
 			x += 8;
 		}
 	}
-	if (task->langmode == 2) {
+	if (task->langmode == 3) {
+		/* 日文EUC */
 		for (; *s != 0x00; s++) {
 			if (task->langbyte1 == 0) {
 				if (0x81 <= *s && *s <= 0xfe) {

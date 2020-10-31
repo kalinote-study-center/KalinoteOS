@@ -7,23 +7,23 @@ IMGTOL   = $(TOOLPATH)imgtol.com
 COPY     = copy
 DEL      = del
 
-# 默??作
+# 默认操作
 
 default :
 	$(MAKE) kalinote.img
 
-# 文件生成??
+# 文件生成规则
 
-kalinote.img : kalinote/ipl20.bin kalinote/kalinote.sys Makefile \
+kalinote.img : kalinote/ipl50.bin kalinote/kalinote.sys Makefile \
 		a/a.kal hello3/hello3.kal hello4/hello4.kal color/color.kal \
 		winhelo/winhelo.kal star/star.kal counter/counter.kal \
 		lines/lines.kal walk/walk.kal noodle/noodle.kal typeipl/typeipl.kal \
 		beepdown/beepdown.kal beepup/beepup.kal sosu/sosu.kal \
 		cat/cat.kal iroha/iroha.kal chklang/chklang.kal
 	$(EDIMG)   imgin:../z_tools/fdimg0at.tek \
-		wbinimg src:kalinote/ipl20.bin len:512 from:0 to:0 \
+		wbinimg src:kalinote/ipl50.bin len:512 from:0 to:0 \
 		copy from:kalinote/kalinote.sys to:@: \
-		copy from:kalinote/ipl20.nas to:@: \
+		copy from:kalinote/ipl50.nas to:@: \
 		copy from:make.bat to:@: \
 		copy from:a/a.kal to:@: \
 		copy from:hello3/hello3.kal to:@: \
@@ -42,6 +42,7 @@ kalinote.img : kalinote/ipl20.bin kalinote/kalinote.sys Makefile \
 		copy from:cat/cat.kal to:@: \
 		copy from:iroha/iroha.kal to:@: \
 		copy from:chklang/chklang.kal to:@: \
+		copy from:langs/HZK16.fnt to:@: \
 		copy from:langs/nihongo.fnt to:@: \
 		imgout:kalinote.img
 
