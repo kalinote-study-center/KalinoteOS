@@ -18,7 +18,8 @@ kalinote.img : kalinote/ipl10.bin kalinote/kalinote.sys Makefile \
 		a/a.kal hello3/hello3.kal hello4/hello4.kal color/color.kal \
 		winhelo/winhelo.kal star/star.kal counter/counter.kal \
 		lines/lines.kal walk/walk.kal noodle/noodle.kal typeipl/typeipl.kal \
-		beepdown/beepdown.kal beepup/beepup.kal sosu/sosu.kal
+		beepdown/beepdown.kal beepup/beepup.kal sosu/sosu.kal \
+		cat/cat.kal
 	$(EDIMG)   imgin:../z_tools/fdimg0at.tek \
 		wbinimg src:kalinote/ipl10.bin len:512 from:0 to:0 \
 		copy from:kalinote/kalinote.sys to:@: \
@@ -38,6 +39,7 @@ kalinote.img : kalinote/ipl10.bin kalinote/kalinote.sys Makefile \
 		copy from:counter/counter.kal to:@: \
 		copy from:sosu/sosu.kal to:@: \
 		copy from:typeipl/typeipl.kal to:@: \
+		copy from:cat/cat.kal to:@: \
 		imgout:kalinote.img
 
 # √¸¡Ó
@@ -68,6 +70,7 @@ full :
 	$(MAKE) -C counter
 	$(MAKE) -C sosu
 	$(MAKE) -C typeipl
+	$(MAKE) -C cat
 	$(MAKE) kalinote.img
 
 run_full :
@@ -107,6 +110,7 @@ clean_full :
 	$(MAKE) -C counter		clean
 	$(MAKE) -C sosu			clean
 	$(MAKE) -C typeipl		clean
+	$(MAKE) -C cat		clean
 
 src_only_full :
 	$(MAKE) -C kalinote		src_only
@@ -125,6 +129,7 @@ src_only_full :
 	$(MAKE) -C counter		src_only
 	$(MAKE) -C sosu			src_only
 	$(MAKE) -C typeipl		src_only
+	$(MAKE) -C cat		src_only
 	-$(DEL) kalinote.img
 
 refresh :
