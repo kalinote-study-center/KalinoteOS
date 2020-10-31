@@ -1,196 +1,125 @@
-# KalinoteOS生成批处理文件
-OBJS_BOOTPACK = bootpack.obj naskfunc.obj fonts.obj graphic.obj dsctbl.obj \
-		int.obj fifo.obj keyboard.obj mouse.obj memory.obj sheet.obj timer.obj \
-		mtask.obj window.obj console.obj file.obj
-
-OBJS_API =	api001.obj api002.obj api003.obj api004.obj api005.obj api006.obj \
-			api007.obj api008.obj api009.obj api010.obj api011.obj api012.obj \
-			api013.obj api014.obj api015.obj api016.obj api017.obj api018.obj \
-			api019.obj api020.obj
-
 TOOLPATH = ../z_tools/
 INCPATH  = ../z_tools/kalinote/
 
 MAKE     = $(TOOLPATH)make.exe -r
-NASK     = $(TOOLPATH)nask.exe
-CC1      = $(TOOLPATH)cc1.exe -I$(INCPATH) -Os -Wall -quiet
-GAS2NASK = $(TOOLPATH)gas2nask.exe -a
-OBJ2BIM  = $(TOOLPATH)obj2bim.exe
-BIM2KAL  = $(TOOLPATH)bim2kal.exe
-MAKEFONT = $(TOOLPATH)makefont.exe
-BIN2OBJ  = $(TOOLPATH)bin2obj.exe
-RULEFILE = $(TOOLPATH)kalinote/kalinote.rul
 EDIMG    = $(TOOLPATH)edimg.exe
 IMGTOL   = $(TOOLPATH)imgtol.com
-GOLIB    = $(TOOLPATH)golib00.exe 
 COPY     = copy
 DEL      = del
 
-# 默认
+# 默??作
 
 default :
-	$(MAKE) img
-	$(COPY) kalinote.img D:\VMFile\kalinote.img
-	$(COPY) kalinote.img D:\Projects\OSProject\kalinoteOS\z_tools\qemu\kalinoteos.vfd
+	$(MAKE) kalinote.img
 
-# 文件生成规则
+# 文件生成??
 
-ipl10.bin : ipl10.nas Makefile
-	$(NASK) ipl10.nas ipl10.bin ipl10.lst
-
-asmhead.bin : asmhead.nas Makefile
-	$(NASK) asmhead.nas asmhead.bin asmhead.lst
-
-fonts.bin : fonts.txt Makefile
-	$(MAKEFONT) fonts.txt fonts.bin
-
-fonts.obj : fonts.bin Makefile
-	$(BIN2OBJ) fonts.bin fonts.obj _fonts
-
-bootpack.bim : $(OBJS_BOOTPACK) Makefile
-	$(OBJ2BIM) @$(RULEFILE) out:bootpack.bim stack:3136k map:bootpack.map \
-		$(OBJS_BOOTPACK)
-# 3MB+64KB=3136KB
-
-bootpack.kal : bootpack.bim Makefile
-	$(BIM2KAL) bootpack.bim bootpack.kal 0
-
-kalinote.sys : asmhead.bin bootpack.kal Makefile
-	copy /B asmhead.bin+bootpack.kal kalinote.sys
-
-apilib.lib : Makefile $(OBJS_API)
-	$(GOLIB) $(OBJS_API) out:apilib.lib
-
-a.bim : a.obj apilib.lib Makefile
-	$(OBJ2BIM) @$(RULEFILE) out:a.bim map:a.map a.obj apilib.lib
-
-a.kal : a.bim Makefile
-	$(BIM2KAL) a.bim a.kal 0
-
-hello3.bim : hello3.obj apilib.lib Makefile
-	$(OBJ2BIM) @$(RULEFILE) out:hello3.bim map:hello3.map hello3.obj apilib.lib
-
-hello3.kal : hello3.bim Makefile
-	$(BIM2KAL) hello3.bim hello3.kal 0
-
-hello4.bim : hello4.obj apilib.lib Makefile
-	$(OBJ2BIM) @$(RULEFILE) out:hello4.bim map:hello4.map hello4.obj apilib.lib
-
-hello4.kal : hello4.bim Makefile
-	$(BIM2KAL) hello4.bim hello4.kal 0
-
-winhelo.bim : winhelo.obj apilib.lib Makefile
-	$(OBJ2BIM) @$(RULEFILE) out:winhelo.bim map:winhelo.map winhelo.obj apilib.lib
-
-winhelo.kal : winhelo.bim Makefile
-	$(BIM2KAL) winhelo.bim winhelo.kal 40k
-
-star.bim : star.obj apilib.lib Makefile
-	$(OBJ2BIM) @$(RULEFILE) out:star.bim map:star.map star.obj apilib.lib
-
-star.kal : star.bim Makefile
-	$(BIM2KAL) star.bim star.kal 47k
-
-lines.bim : lines.obj apilib.lib Makefile
-	$(OBJ2BIM) @$(RULEFILE) out:lines.bim map:lines.map lines.obj apilib.lib
-
-lines.kal : lines.bim Makefile
-	$(BIM2KAL) lines.bim lines.kal 48k
-
-walk.bim : walk.obj apilib.lib Makefile
-	$(OBJ2BIM) @$(RULEFILE) out:walk.bim map:walk.map walk.obj apilib.lib
-
-walk.kal : walk.bim Makefile
-	$(BIM2KAL) walk.bim walk.kal 48k
-
-counter.bim : counter.obj apilib.lib Makefile
-	$(OBJ2BIM) @$(RULEFILE) out:counter.bim map:counter.map counter.obj apilib.lib
-
-counter.kal : counter.bim Makefile
-	$(BIM2KAL) counter.bim counter.kal 48k
-
-noodle.bim : noodle.obj apilib.lib Makefile
-	$(OBJ2BIM) @$(RULEFILE) out:noodle.bim map:noodle.map noodle.obj apilib.lib
-
-noodle.kal : noodle.bim Makefile
-	$(BIM2KAL) noodle.bim noodle.kal 40k
-
-beepdown.bim : beepdown.obj apilib.lib Makefile
-	$(OBJ2BIM) @$(RULEFILE) out:beepdown.bim map:beepdown.map beepdown.obj apilib.lib
-
-beepdown.kal : beepdown.bim Makefile
-	$(BIM2KAL) beepdown.bim beepdown.kal 40k
-
-beepup.bim : beepup.obj apilib.lib Makefile
-	$(OBJ2BIM) @$(RULEFILE) out:beepup.bim map:beepup.map beepup.obj apilib.lib
-
-beepup.kal : beepup.bim Makefile
-	$(BIM2KAL) beepup.bim beepup.kal 40k
-
-color.bim : color.obj apilib.lib Makefile
-	$(OBJ2BIM) @$(RULEFILE) out:color.bim map:color.map color.obj apilib.lib
-
-color.kal : color.bim Makefile
-	$(BIM2KAL) color.bim color.kal 56k
-
-kalinote.img : ipl10.bin kalinote.sys Makefile \
-		hello3.kal hello4.kal color.kal \
-		winhelo.kal star.kal lines.kal walk.kal \
-		counter.kal noodle.kal beepdown.kal beepup.kal
+kalinote.img : kalinote/ipl10.bin kalinote/kalinote.sys Makefile \
+		a/a.kal hello3/hello3.kal hello4/hello4.kal \
+		winhelo/winhelo.kal star/star.kal counter/counter.kal \
+		lines/lines.kal walk/walk.kal noodle/noodle.kal \
+		beepdown/beepdown.kal beepup/beepup.kal color/color.kal
 	$(EDIMG)   imgin:../z_tools/fdimg0at.tek \
-		wbinimg src:ipl10.bin len:512 from:0 to:0 \
-		copy from:kalinote.sys to:@: \
-		copy from:hello3.kal to:@: \
-		copy from:hello4.kal to:@: \
-		copy from:winhelo.kal to:@: \
-		copy from:star.kal to:@: \
-		copy from:lines.kal to:@: \
-		copy from:walk.kal to:@: \
-		copy from:counter.kal to:@: \
-		copy from:noodle.kal to:@: \
-		copy from:beepdown.kal to:@: \
-		copy from:beepup.kal to:@: \
-		copy from:color.kal to:@: \
+		wbinimg src:kalinote/ipl10.bin len:512 from:0 to:0 \
+		copy from:kalinote/kalinote.sys to:@: \
+		copy from:kalinote/ipl10.nas to:@: \
+		copy from:make.bat to:@: \
+		copy from:a/a.kal to:@: \
+		copy from:hello3/hello3.kal to:@: \
+		copy from:hello4/hello4.kal to:@: \
+		copy from:winhelo/winhelo.kal to:@: \
+		copy from:star/star.kal to:@: \
+		copy from:lines/lines.kal to:@: \
+		copy from:walk/walk.kal to:@: \
+		copy from:noodle/noodle.kal to:@: \
+		copy from:beepdown/beepdown.kal to:@: \
+		copy from:beepup/beepup.kal to:@: \
+		copy from:color/color.kal to:@: \
+		copy from:counter/counter.kal to:@: \
 		imgout:kalinote.img
-
-# 一般规则
-
-%.gas : %.c bootpack.h Makefile
-	$(CC1) -o $*.gas $*.c
-
-%.nas : %.gas Makefile
-	$(GAS2NASK) $*.gas $*.nas
-
-%.obj : %.nas Makefile
-	$(NASK) $*.nas $*.obj $*.lst
 
 # 命令
 
-img :
-	$(MAKE) kalinote.img
-	$(COPY) kalinote.img D:\VMFile\kalinote.img
-	$(COPY) kalinote.img D:\Projects\OSProject\kalinoteOS\z_tools\qemu\kalinoteos.vfd
-
 run :
-	$(MAKE) img
+	$(MAKE) kalinote.img
 	$(COPY) kalinote.img ..\z_tools\qemu\kalinoteos.bin
-	$(COPY) kalinote.img D:\VMFile\kalinote.img
-	$(COPY) kalinote.img D:\Projects\OSProject\kalinoteOS\z_tools\qemu\kalinoteos.vfd
 	$(MAKE) -C ../z_tools/qemu
 
 install :
-	$(MAKE) img
+	$(MAKE) kalinote.img
 	$(IMGTOL) w a: kalinote.img
 
+full :
+	$(MAKE) -C kalinote
+	$(MAKE) -C apilib
+	$(MAKE) -C a
+	$(MAKE) -C hello3
+	$(MAKE) -C hello4
+	$(MAKE) -C winhelo
+	$(MAKE) -C star
+	$(MAKE) -C lines
+	$(MAKE) -C walk
+	$(MAKE) -C noodle
+	$(MAKE) -C beepdown
+	$(MAKE) -C beepup
+	$(MAKE) -C color
+	$(MAKE) -C counter
+	$(MAKE) kalinote.img
+
+run_full :
+	$(MAKE) full
+	$(COPY) kalinote.img ..\z_tools\qemu\kalinoteos.bin
+	$(MAKE) -C ../z_tools/qemu
+
+install_full :
+	$(MAKE) full
+	$(IMGTOL) w a: kalinote.img
+
+run_os :
+	$(MAKE) -C kalinote
+	$(MAKE) run
+
 clean :
-	-$(DEL) *.bin
-	-$(DEL) *.lst
-	-$(DEL) *.obj
-	-$(DEL) *.map
-	-$(DEL) *.bim
-	-$(DEL) *.kal
-	-$(DEL) kalinote.sys
+# 何もしない
 
 src_only :
 	$(MAKE) clean
+	-$(DEL) kalinote.img
+
+clean_full :
+	$(MAKE) -C kalinote		clean
+	$(MAKE) -C apilib		clean
+	$(MAKE) -C a			clean
+	$(MAKE) -C hello3		clean
+	$(MAKE) -C hello4		clean
+	$(MAKE) -C winhelo		clean
+	$(MAKE) -C star			clean
+	$(MAKE) -C lines		clean
+	$(MAKE) -C walk			clean
+	$(MAKE) -C noodle		clean
+	$(MAKE) -C beepdown		clean
+	$(MAKE) -C beepup		clean
+	$(MAKE) -C color		clean
+	$(MAKE) -C counter		clean
+
+src_only_full :
+	$(MAKE) -C kalinote		src_only
+	$(MAKE) -C apilib		src_only
+	$(MAKE) -C a			src_only
+	$(MAKE) -C hello3		src_only
+	$(MAKE) -C hello4		src_only
+	$(MAKE) -C winhelo		src_only
+	$(MAKE) -C star			src_only
+	$(MAKE) -C lines		src_only
+	$(MAKE) -C walk			src_only
+	$(MAKE) -C noodle		src_only
+	$(MAKE) -C beepdown		src_only
+	$(MAKE) -C beepup		src_only
+	$(MAKE) -C color		src_only
+	$(MAKE) -C counter		src_only
+	-$(DEL) kalinote.img
+
+refresh :
+	$(MAKE) full
+	$(MAKE) clean_full
 	-$(DEL) kalinote.img

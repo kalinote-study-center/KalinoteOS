@@ -16,5 +16,10 @@ void KaliMain(void){
 		api_point(win + 1, x, y, 3 /* »Æ */);
 	}
 	api_refreshwin(win,  6, 26, 144, 94);
+	for (;;) {
+		if (api_getkey(1) == 0x0a) {
+			break; /* Enter to break; */
+		}
+	}
 	api_end();
 }
