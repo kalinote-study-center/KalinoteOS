@@ -1,5 +1,5 @@
 APP      = star
 STACK    = 1k
-MALLOC   = 47k
+MALLOC   = 60k
 
 include ../app_make.txt

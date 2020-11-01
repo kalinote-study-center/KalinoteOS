@@ -3,10 +3,10 @@
 
 void KaliMain(void)
 {
-	char *buf;
+	int *buf;
 	int win, i;
 	api_initmalloc();
-	buf = api_malloc(160 * 100);
+	buf = api_malloc(160 * 100 * 4);
 	win = api_openwin(buf, 160, 100, -1, "lines");
 	for (i = 0; i < 8; i++) {
 		api_linewin(win + 1,  8, 26, 77, i * 9 + 26, i);

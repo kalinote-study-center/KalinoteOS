@@ -23,7 +23,7 @@ void KaliMain(void){
 	unsigned int memtotal;
 	struct MOUSE_DEC mdec;
 	struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;
-	unsigned char *buf_back, buf_mouse[256];
+	unsigned int *buf_back, buf_mouse[256];
 	struct SHEET *sht_back, *sht_mouse;
 	struct TASK *task_a, *task;
 	int key_shift = 0, key_leds = (binfo->leds >> 4) & 7, keycmd_wait = -1;
@@ -72,7 +72,7 @@ void KaliMain(void){
 	memman_free(memman, 0x00001000, 0x0009e000); /* 0x00001000 - 0x0009efff */
 	memman_free(memman, 0x00400000, memtotal - 0x00400000);
 	
-	init_palette();
+	//init_palette();												// 初始化调色板
 	shtctl = shtctl_init(memman, binfo->vram, binfo->scrnx, binfo->scrny);
 	task_a = task_init(memman);
 	fifo.task = task_a;
@@ -82,9 +82,9 @@ void KaliMain(void){
 
 	/* sht_back */
 	sht_back  = sheet_alloc(shtctl);
-	buf_back  = (unsigned char *) memman_alloc_4k(memman, binfo->scrnx * binfo->scrny);
+	buf_back  = (unsigned int *) memman_alloc_4k(memman, binfo->scrnx * binfo->scrny * 4);
 	sheet_setbuf(sht_back, buf_back, binfo->scrnx, binfo->scrny, -1);
-	init_screen8(buf_back, binfo->scrnx, binfo->scrny);
+	init_screen8(buf_back, binfo->scrnx, binfo->scrny, binfo->vmode);
 
 	/* sht_cons */
 	key_win = open_console(shtctl, memtotal);
@@ -405,7 +405,7 @@ struct TASK *open_constask(struct SHEET *sht, unsigned int memtotal){
 struct SHEET *open_console(struct SHTCTL *shtctl, unsigned int memtotal){
 	struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;
 	struct SHEET *sht = sheet_alloc(shtctl);
-	unsigned char *buf = (unsigned char *) memman_alloc_4k(memman, 256 * 165);
+	unsigned int *buf = (unsigned int *) memman_alloc_4k(memman, 256 * 165 * 4);
 	sheet_setbuf(sht, buf, 256, 165, -1); /* 无透明色 */
 	make_window8(buf, 256, 165, "console", 0);
 	make_textbox8(sht, 8, 28, 240, 128, COL_BLACK);
@@ -426,7 +426,7 @@ void close_constask(struct TASK *task){
 void close_console(struct SHEET *sht){
 	struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;
 	struct TASK *task = sht->task;
-	memman_free_4k(memman, (int) sht->buf, 256 * 165);
+	memman_free_4k(memman, (int) sht->buf, 256 * 165 * 4);
 	sheet_free(sht);
 	close_constask(task);
 	return;

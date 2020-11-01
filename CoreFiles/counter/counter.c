@@ -3,11 +3,12 @@
 #include "apilib.h"
 
 void KaliMain(void){
-	char *buf, s[10];
+	int *buf;
+	char s[10];
 	int counter = 0;
 	int win;
 	api_initmalloc();
-	buf = api_malloc(160*100);
+	buf = api_malloc(160*100*4);
 	win = api_openwin(buf,160,100,-1,"counter");
 	for(;;){
 		counter += 1;

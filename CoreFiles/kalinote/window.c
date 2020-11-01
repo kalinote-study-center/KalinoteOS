@@ -2,7 +2,7 @@
 
 #include "bootpack.h"
 
-void make_window8(unsigned char *buf, int xsize, int ysize, char *title, char act){
+void make_window8(unsigned int *buf, int xsize, int ysize, char *title, char act){
 	/* 窗口窗体 */
 	boxfill8(buf, xsize, COL_BGREY, 0,         0,         xsize - 1, 0        );
 	boxfill8(buf, xsize, COL_WHITE, 1,         1,         xsize - 2, 1        );
@@ -17,7 +17,7 @@ void make_window8(unsigned char *buf, int xsize, int ysize, char *title, char ac
 	return;
 }
 
-void make_wtitle8(unsigned char *buf, int xsize, char *title, char act){
+void make_wtitle8(unsigned int *buf, int xsize, char *title, char act){
 	/* 窗口标题栏 */
 	static char closebtn[14][16] = {
 		"OOOOOOOOOOOOOOO@",
@@ -36,7 +36,7 @@ void make_wtitle8(unsigned char *buf, int xsize, char *title, char act){
 		"@@@@@@@@@@@@@@@@"
 	};
 	int x, y;
-	char c, tc, tbc;
+	int c, tc, tbc;
 	if (act != 0) {
 		tc = COL_WHITE;
 		tbc = COL_DBLUE;
@@ -94,7 +94,7 @@ void make_textbox8(struct SHEET *sht, int x0, int y0, int sx, int sy, int c){
 void change_wtitle8(struct SHEET *sht, char act){
 	/* 改变窗口标题栏颜色 */
 	int x, y, xsize = sht->bxsize;
-	char c, tc_new, tbc_new, tc_old, tbc_old, *buf = sht->buf;
+	int c, tc_new, tbc_new, tc_old, tbc_old, *buf = sht->buf;
 	if (act != 0) {
 		tc_new  = COL_WHITE;
 		tbc_new = COL_DBLUE;

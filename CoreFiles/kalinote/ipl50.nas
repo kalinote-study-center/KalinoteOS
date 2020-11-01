@@ -44,72 +44,110 @@ entry:
 		MOV		CH,0			; 柱面0
 		MOV		DH,0			; 磁头0
 		MOV		CL,2			; 扇区2
-		
-readloop:
-		MOV		SI,0			; 记录失败次数
-		
-retry:
-; 启动失败，尝试重新启动
-		MOV		AH,0x02			; 读盘
-		MOV		AL,1			; 1个扇区
-		MOV		BX,0
-		MOV		DL,0x00			; A驱动器
-		INT		0x13			; 调用磁盘BIOS
-		JNC		next			; 没有出错的话跳转到next
-		ADD		SI,1			; SI加1
-		CMP		SI,5			; SI和5比较
-		JAE		error			; 超过5次重试，报错
-		MOV		AH,0x00
-		MOV		DL,0x00			; A驱动器
-		INT		0x13			; 重置驱动器
-		JMP		retry
-		
-next:
-		MOV		AX,ES			; 内存地址后移0x200
-		ADD		AX,0x0020
-		MOV		ES,AX
-		ADD		CL,1			; CL加1
-		CMP		CL,18			; CL和18比较
-		JBE		readloop		; 如果CL小于18，跳到readloop重复读取
-		MOV		CL,1
-		ADD		DH,1
-		CMP		DH,2
-		JB		readloop		; DH小于2跳转到readloop
-		MOV		DH,0
-		ADD		CH,1
-		CMP		CH,CYLS
-		JB		readloop		; CH小于CYLS跳转到readloop
-		
-; 读取完成执行kalinote.sys
-		
-		MOV		[0x0ff0],CH		; 记录IPL读取位置
+		MOV		BX,18*2*CYLS-1	; 要读取的合计扇区数
+		CALL	readfast		; 高速读取
+
+; 读取结束，运行kalinote.sys
+
+		MOV		BYTE [0x0ff0],CYLS	; 记录IPL实际读取了多少内容
 		JMP		0xc200
-		
-fin:
-; 启动完成
-		HLT						; 停止CPU，等待指令
-		JMP		fin				; 无限循环
 
 error:
-; 启动错误，显示错误信息
+		MOV		AX,0
+		MOV		ES,AX
 		MOV		SI,msg
-
 putloop:
 		MOV		AL,[SI]
 		ADD		SI,1			; SI加1
 		CMP		AL,0
 		JE		fin
-		MOV		AH,0x0e			; 显示一个文字
-		MOV		BX,15			; 指定一个颜色
-		INT		0x10			; 调用显卡
+		MOV		AH,0x0e			; 显示一个字符的函数
+		MOV		BX,15			; 颜色代码
+		INT		0x10			; 调用显示BIOS
 		JMP		putloop
-
+fin:
+		HLT						; 暂时让CPU停止运行
+		JMP		fin				; 无限循环
 msg:
-		DB		0x0a, 0x0a		; 换行两次
-		DB		"KalinoteOS load failed"
+		DB		0x0a, 0x0a		; 两个换行
+		DB		"KalinoteOS load error!"
 		DB		0x0a			; 换行
-		DB		"maybe your device have some error"
 		DB		0
+
+readfast:	; 使用AL尽量一次性读取数据
+;	ES:读取地址, CH:柱面, DH:磁头, CL:扇区, BX:读取扇区数
+
+		MOV		AX,ES			; < 通过ES计算AL最大值 >
+		SHL		AX,3			; 将AX除以32，将结果存入AH(SHL是左位移指令)
+		AND		AH,0x7f			; AH是AH除以128所得的余数（512*128=64K）
+		MOV		AL,128			; AL = 128 - AH; AH是AH除以128所得的余数
+		SUB		AL,AH
+
+		MOV		AH,BL			; < 通过BX计算AL的最大值并存入AH >
+		CMP		BH,0			; if (BH != 0) { AH = 18; }
+		JE		.skip1
+		MOV		AH,18
+.skip1:
+		CMP		AL,AH			; if (AL > AH) { AL = AH; }
+		JBE		.skip2
+		MOV		AL,AH
+.skip2:
+
+		MOV		AH,19			; < 通过CL计算AL的最大值并存入AH >
+		SUB		AH,CL			; AH = 19 - CL;
+		CMP		AL,AH			; if (AL > AH) { AL = AH; }
+		JBE		.skip3
+		MOV		AL,AH
+.skip3:
+
+		PUSH	BX
+		MOV		SI,0			; 计算失败次数的寄存器
+retry:
+		MOV		AH,0x02			; AH=0x02 : 读取磁盘
+		MOV		BX,0
+		MOV		DL,0x00			; A盘
+		PUSH	ES
+		PUSH	DX
+		PUSH	CX
+		PUSH	AX
+		INT		0x13			; 调用磁盘BIOS
+		JNC		next			; 没有出错的话转至next
+		ADD		SI,1			; SI+1
+		CMP		SI,5			; SI和5比较
+		JAE		error			; SI >= 5 跳转至error
+		MOV		AH,0x00
+		MOV		DL,0x00			; A盘
+		INT		0x13			; 驱动器重置
+		POP		AX
+		POP		CX
+		POP		DX
+		POP		ES
+		JMP		retry
+next:
+		POP		AX
+		POP		CX
+		POP		DX
+		POP		BX				; 将ES的内容存至BX
+		SHR		BX,5			; 将BX由16字节单位转换为512字节单位
+		MOV		AH,0
+		ADD		BX,AX			; BX += AL;
+		SHL		BX,5			; 将BX由512字节单位转换为16字节单位
+		MOV		ES,BX			; 相当于ES += AL * 0x20;
+		POP		BX
+		SUB		BX,AX
+		JZ		.ret
+		ADD		CL,AL			; 将CL加上AL
+		CMP		CL,18			; 将CL与18比较
+		JBE		readfast		; CL <= 18 跳转至readfast
+		MOV		CL,1
+		ADD		DH,1
+		CMP		DH,2
+		JB		readfast		; DH < 2 跳转至readfast
+		MOV		DH,0
+		ADD		CH,1
+		JMP		readfast
+.ret:
+		RET
 
 		RESB	0x7dfe-$		; 填充0
 

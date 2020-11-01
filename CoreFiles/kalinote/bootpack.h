@@ -6,7 +6,7 @@ struct BOOTINFO {	/* 0x0ff0-0x0fff */
 	char vmode;	/*显卡模式*/
     char reserve;
 	short scrnx, scrny;	/*画面分辨率*/
-	char *vram;
+	int *vram;
 };
 #define ADR_BOOTINFO	0x00000ff0
 #define ADR_DISKIMG		0x00100000			//文件位置
@@ -45,30 +45,30 @@ void asm_end_app(void);						//结束应用程序
 //graphic.c(画面显示)
 void init_palette(void);																			//初始化调色板函数
 void set_palette(int start, int end, unsigned char *rgb);											//设置调色板
-void boxfill8(unsigned char *vram, int xsize, unsigned char c, int x0, int y0, int x1, int y1);		//绘制方块
-void init_screen8(char *vram, int x, int y);														//初始化屏幕
-void putfont8(char *vram, int xsize, int x, int y, char c, char *font);								//绘制字体
-void putfonts8_asc(char *vram, int xsize, int x, int y, char c, unsigned char *s);					//绘制字符串
-void init_mouse_cursor8(char *mouse, char bc);														//初始化鼠标指针
-void putblock8_8(char *vram, int vxsize, int pxsize,
-	int pysize, int px0, int py0, char *buf, int bxsize);											//鼠标背景色处理
+void boxfill8(unsigned int *vram, int xsize, unsigned int c, int x0, int y0, int x1, int y1);		//绘制方块
+void init_screen8(int *vram, int x, int y, int bc);													//初始化屏幕
+void putfont8(int *vram, int xsize, int x, int y, int c, char *font);								//绘制字体
+void putfonts8_asc(int *vram, int xsize, int x, int y, int c, unsigned char *s);					//绘制字符串
+void init_mouse_cursor8(int *mouse, int bc);														//初始化鼠标指针
+void putblock8_8(int *vram, int vxsize, int pxsize,
+	int pysize, int px0, int py0, int *buf, int bxsize);											//鼠标背景色处理
 // 15种颜色常数定义
-#define COL_BLACK		0
-#define COL_BRED		1
-#define COL_BGREEN		2
-#define COL_BYELLOW		3
-#define COL_BBLUE		4
-#define COL_BPURPLE		5
-#define COL_LBBLUE		6
-#define COL_WHITE		7
-#define COL_BGREY		8
-#define COL_DRED		9
-#define COL_DGREEN		10
-#define COL_DYELLOW		11
-#define COL_DBLUE		12
-#define COL_DPURPLE		13
-#define COL_LDBLUE		14
-#define COL_DGREY		15
+#define COL_BLACK		0x00000000
+#define COL_BRED		0x00ff0000
+#define COL_BGREEN		0x0000ff00
+#define COL_BYELLOW		0x00ffff00
+#define COL_BBLUE		0x000000ff
+#define COL_BPURPLE		0x00ff00ff
+#define COL_LBBLUE		0x0000ffff
+#define COL_WHITE		0x00ffffff
+#define COL_BGREY		0x00c6c6c6
+#define COL_DRED		0x00840000
+#define COL_DGREEN		0x00008400
+#define COL_DYELLOW		0x00848400
+#define COL_DBLUE		0x00000084
+#define COL_DPURPLE		0x00840084
+#define COL_LDBLUE		0x00008484
+#define COL_DGREY		0x00848484
 
 //dsctbl.c(画面渲染)
 struct SEGMENT_DESCRIPTOR {
@@ -160,20 +160,20 @@ int memman_free_4k(struct MEMMAN *man, unsigned int addr, unsigned int size);			
 //sheet.c(画面图层处理)
 #define MAX_SHEETS		256
 struct SHEET {
-	unsigned char *buf;
+	unsigned int *buf;
 	int bxsize, bysize, vx0, vy0, col_inv, height, flags;
 	struct SHTCTL *ctl;
 	struct TASK *task;
 };
 struct SHTCTL {
-	unsigned char *vram, *map;
+	unsigned int *vram, *map;
 	int xsize, ysize, top;
 	struct SHEET *sheets[MAX_SHEETS];
 	struct SHEET sheets0[MAX_SHEETS];
 };
-struct SHTCTL *shtctl_init(struct MEMMAN *memman, unsigned char *vram, int xsize, int ysize);		//初始化层
+struct SHTCTL *shtctl_init(struct MEMMAN *memman, unsigned int *vram, int xsize, int ysize);		//初始化层
 struct SHEET *sheet_alloc(struct SHTCTL *ctl);														//获得未使用的新图层
-void sheet_setbuf(struct SHEET *sht, unsigned char *buf, int xsize, int ysize, int col_inv);		//设置缓冲区大小
+void sheet_setbuf(struct SHEET *sht, unsigned int *buf, int xsize, int ysize, int col_inv);			//设置缓冲区大小
 void sheet_updown(struct SHEET *sht, int height);													//调整sheet高度
 void sheet_refresh(struct SHEET *sht, int bx0, int by0, int bx1, int by1);							//刷新图层(区域)
 void sheet_slide(struct SHEET *sht, int vx0, int vy0);												//移动图层
@@ -247,14 +247,14 @@ void task_run(struct TASK *task, int level, int priority);											//运行程序
 void task_switch(void);																				//切换程序
 void task_sleep(struct TASK *task);																	//程序睡眠
 
-/* window.c */
-void make_window8(unsigned char *buf, int xsize, int ysize, char *title, char act);					// 生成一个窗口
+/* window.c(窗口绘制) */
+void make_window8(unsigned int *buf, int xsize, int ysize, char *title, char act);					// 生成一个窗口
 void putfonts8_asc_sht(struct SHEET *sht, int x, int y, int c, int b, char *s, int l);				// 先涂背景色，在写字符串
 void make_textbox8(struct SHEET *sht, int x0, int y0, int sx, int sy, int c);						// 生成编辑框
-void make_wtitle8(unsigned char *buf, int xsize, char *title, char act);							// 生成一个标题栏
+void make_wtitle8(unsigned int *buf, int xsize, char *title, char act);							// 生成一个标题栏
 void change_wtitle8(struct SHEET *sht, char act);													// 改变窗口标题栏颜色
 
-/* console.c */
+/* console.c(命令台) */
 struct CONSOLE {
 	struct SHEET *sht;
 	int cur_x, cur_y, cur_c;
@@ -285,7 +285,7 @@ int *inthandler0d(int *esp);																		// 0d号中断，用于处理异常程序
 int *inthandler0c(int *esp);																		// 0c号中断，用于处理栈异常
 void kal_api_linewin(struct SHEET *sht, int x0, int y0, int x1, int y1, int col);					// 绘制一条直线
 
-/* file.c */
+/* file.c(文件处理) */
 struct FILEINFO {
 	//文件结构(详见第367页)
 	unsigned char name[8], ext[3], type;
@@ -296,7 +296,22 @@ struct FILEINFO {
 void file_readfat(int *fat, unsigned char *img);													// 解码FAT
 void file_loadfile(int clustno, int size, char *buf, int *fat, char *img);							// 加载文件
 struct FILEINFO *file_search(char *name, struct FILEINFO *finfo, int max);
+char *file_loadfile2(int clustno, int *psize, int *fat);											// 加载kca压缩文件
+
+/* jpeg.c(读取jpg图片) */
+struct DLL_STRPICENV{
+	int work[64 * 1024 / 4];
+};
+struct RGB{
+	unsigned char b,g,r,t;
+};
+int info_JPEG(struct DLL_STRPICENV*env,int *info,int size,unsigned char *fp);
+int decode0_JPEG(struct DLL_STRPICENV*env,int size,unsigned char *fp,int b_type,unsigned char *buf,int skip);
 
 /* bootpack.c */
 struct SHEET *open_console(struct SHTCTL *shtctl, unsigned int memtotal);							// 开启一个命令窗口
 struct TASK *open_constask(struct SHEET *sht, unsigned int memtotal);								// 开启一个任务
+
+/* kca.c */
+int kca_getsize(unsigned char *p);
+int kca_decomp(unsigned char *p, char *q, int size);

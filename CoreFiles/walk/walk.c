@@ -3,15 +3,15 @@
 
 void KaliMain(void)
 {
-	char *buf;
+	int *buf;
 	int win, i, x, y;
 	api_initmalloc();
-	buf = api_malloc(160 * 100);
+	buf = api_malloc(160 * 100 * 4);
 	win = api_openwin(buf, 160, 100, -1, "walk");
 	api_boxfilwin(win, 4, 24, 155, 95, 0 /* ºÚ */);
 	x = 76;
 	y = 56;
-	api_putstrwin(win, x, y, 3 /* »Æ */, 1, "*");
+	api_putstrwin(win, x, y, 0x00ffff00 /* »Æ */, 1, "*");
 	for (;;) {
 		i = api_getkey(1);
 		api_putstrwin(win, x, y, 0 /* ºÚ */, 1, "*"); /* ÓÃºÚÉ«²Á³ý */
@@ -20,7 +20,7 @@ void KaliMain(void)
 		if (i == '8' && y >  24) { y -= 8; }
 		if (i == '2' && y <  80) { y += 8; }
 		if (i == 0x0a) { break; } /* Enter½áÊø */
-		api_putstrwin(win, x, y, 3 /* »Æ */, 1, "*");
+		api_putstrwin(win, x, y, 0x00ffff00 /* »Æ */, 1, "*");
 	}	
 	api_closewin(win);
 	api_end();

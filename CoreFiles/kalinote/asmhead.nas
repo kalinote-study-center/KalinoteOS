@@ -3,7 +3,7 @@
 
 [INSTRSET "i486p"]
 
-VBEMODE	EQU		0x105			; 1024x768x8bit色彩
+VBEMODE	EQU		0x118			; 1024x768x32bit色彩
 BOTPAK	EQU		0x00280000		; bootpack安装位置
 DSKCAC	EQU		0x00100000		; 磁盘缓存位置
 DSKCAC0	EQU		0x00008000		; 磁盘缓存位置（实时模式）
@@ -14,6 +14,9 @@ DSKCAC0	EQU		0x00008000		; 磁盘缓存位置（实时模式）
 ;	0x103 :  800 x  600 x 8bit
 ;	0x105 : 1024 x  768 x 8bit
 ;	0x107 : 1280 x 1024 x 8bit(qemu无法使用,VMware可以)
+;	0x0112	:	640x480	x32bit	;这三个是32位色模式
+;	0x0115	:	800x600	x32bit
+;	0x0118	:	1024x768x32bit
 ;	更多色彩模式代码去VESA查
 
 ; BOOT_INFO
@@ -44,23 +47,23 @@ VRAM	EQU		0x0ff8			; 图像缓冲区开始地址
 		MOV		CX,VBEMODE
 		MOV		AX,0x4f01
 		INT		0x10
-		CMP		AX,0x004f
-		JNE		scrn320
+;		CMP		AX,0x004f
+;		JNE		scrn320
 
 ; 画面模式信息确认
-		CMP		BYTE [ES:DI+0x19],8
-		JNE		scrn320
-		CMP		BYTE [ES:DI+0x1b],4
-		JNE		scrn320
-		MOV		AX,[ES:DI+0x00]
-		AND		AX,0x0080
-		JZ		scrn320			; 模式属性的bit7是0，所以放弃
+;		CMP		BYTE [ES:DI+0x19],8
+;		JNE		scrn320
+;		CMP		BYTE [ES:DI+0x1b],4
+;		JNE		scrn320
+;		MOV		AX,[ES:DI+0x00]
+;		AND		AX,0x0080
+;		JZ		scrn320			; 模式属性的bit7是0，所以放弃
 
 ; 画面模式的切换
 		MOV		BX,VBEMODE+0x4000
 		MOV		AX,0x4f02
 		INT		0x10
-		MOV		BYTE [VMODE],8	; 记录画面模式
+		MOV		BYTE [VMODE],32	; 记录画面模式
 		MOV		AX,[ES:DI+0x12]
 		MOV		[SCRNX],AX
 		MOV		AX,[ES:DI+0x14]
@@ -70,10 +73,10 @@ VRAM	EQU		0x0ff8			; 图像缓冲区开始地址
 		JMP		keystatus
 
 scrn320:
-		MOV		AL,0x13			; VGA图形、1024x768x8bit色彩
+		MOV		AL,0x13			; VGA图形、1024x768x32bit色彩
 		MOV		AH,0x00
 		INT		0x10
-		MOV		BYTE [VMODE],8	; 记录画面模式
+		MOV		BYTE [VMODE],32	; 记录画面模式
 		MOV		WORD [SCRNX],1024
 		MOV		WORD [SCRNY],768
 		MOV		DWORD [VRAM],0x000a0000

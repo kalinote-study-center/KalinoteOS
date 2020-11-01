@@ -1,6 +1,6 @@
 /*此文件负责图形绘制*/
-
 #include "bootpack.h"
+#include <stdio.h>
 
 void init_palette(void){
 	/*调色板函数，预置15中基本颜色，可以自行添加 - 此处原内容在第75页*/
@@ -55,7 +55,7 @@ void set_palette(int start, int end, unsigned char *rgb){
 	return;
 }
 
-void boxfill8(unsigned char *vram, int xsize, unsigned char c, int x0, int y0, int x1, int y1){
+void boxfill8(unsigned int *vram, int xsize, unsigned int c, int x0, int y0, int x1, int y1){
 	/*绘制方块 - 此处原内容在第84页*/
 	int x, y;
 	for (y = y0; y <= y1; y++) {
@@ -65,16 +65,35 @@ void boxfill8(unsigned char *vram, int xsize, unsigned char c, int x0, int y0, i
 	return;
 }
 
-void init_screen8(char *vram, int x, int y){
+void init_screen8(int *vram, int x, int y, int bc){
 	/*初始化屏幕*/
+	char s[100];
 	boxfill8(vram, x, COL_LDBLUE, 0, 0, x - 1, y - 1);		//绘制一个纯色背景当桌面
+	boxfill8(vram, x, COL_BGREY,  0,     y - 28, x -  1, y - 28);
+	boxfill8(vram, x, COL_WHITE,  0,     y - 27, x -  1, y - 27);
+	boxfill8(vram, x, COL_BGREY,  0,     y - 26, x -  1, y -  1);
+
+	boxfill8(vram, x, COL_WHITE,  3,     y - 24, 59,     y - 24);
+	boxfill8(vram, x, COL_WHITE,  2,     y - 24,  2,     y -  4);
+	boxfill8(vram, x, COL_DGREY,  3,     y -  4, 59,     y -  4);
+	boxfill8(vram, x, COL_DGREY, 59,     y - 23, 59,     y -  5);
+	boxfill8(vram, x, COL_BLACK,  2,     y -  3, 59,     y -  3);
+	boxfill8(vram, x, COL_BLACK, 60,     y - 24, 60,     y -  3);
+
+	boxfill8(vram, x, COL_DGREY, x - 47, y - 24, x -  4, y - 24);
+	boxfill8(vram, x, COL_DGREY, x - 47, y - 23, x - 47, y -  4);
+	boxfill8(vram, x, COL_WHITE, x - 47, y -  3, x -  4, y -  3);
+	boxfill8(vram, x, COL_WHITE, x -  3, y - 24, x -  3, y -  3);
+	sprintf(s,"DrawMode = 0x%05x", bc);
+	putfonts8_asc(vram, x, 8, 16, COL_WHITE, s);
+	return;
 }
 
-void putfont8(char *vram, int xsize, int x, int y, char c, char *font)
-{
+void putfont8(int *vram, int xsize, int x, int y, int c, char *font){
 	/*绘制字体 - 此处原内容在第93页*/
 	int i;
-	char *p, d /* data */;
+	int *p;
+	char d;	/* data */;
 	for (i = 0; i < 16; i++) {
 		p = vram + (y + i) * xsize + x;
 		d = font[i];
@@ -90,10 +109,10 @@ void putfont8(char *vram, int xsize, int x, int y, char c, char *font)
 	return;
 }
 
-void putfont32(char *vram, int xsize, int x, int y, char c, char *font1, char *font2){
+void putfont32(int *vram, int xsize, int x, int y, int c, char *font1, char *font2){
 	/* 中文字库的渲染方式和日文不同，中文为上下组合，日文为左右组合 */
 	int i,k,j,f;
-	char *p;
+	int *p;
 	j=0;
 	p=vram+(y+j)*xsize+x;
 	j++;
@@ -134,7 +153,7 @@ void putfont32(char *vram, int xsize, int x, int y, char c, char *font1, char *f
 	return;
 }
 
-void putfonts8_asc(char *vram, int xsize, int x, int y, char c, unsigned char *s)
+void putfonts8_asc(int *vram, int xsize, int x, int y, int c, unsigned char *s)
 {
 	/*绘制字符串(ASCLL编码) - 此处原内容在第96页*/
 	extern char fonts[4096];
@@ -223,7 +242,7 @@ void putfonts8_asc(char *vram, int xsize, int x, int y, char c, unsigned char *s
 	return;
 }
 
-void init_mouse_cursor8(char *mouse, char bc){
+void init_mouse_cursor8(int *mouse, int bc){
 	/* 准备鼠标指针(16x16) - 此处原内容在第99页*/
 	static char cursor[16][16] = {
 		"*...............",
@@ -261,8 +280,8 @@ void init_mouse_cursor8(char *mouse, char bc){
 	return;
 }
 
-void putblock8_8(char *vram, int vxsize, int pxsize,
-	int pysize, int px0, int py0, char *buf, int bxsize){
+void putblock8_8(int *vram, int vxsize, int pxsize,
+	int pysize, int px0, int py0, int *buf, int bxsize){
 		/*鼠标背景色处理*/
 	int x, y;
 	for (y = 0; y < pysize; y++) {

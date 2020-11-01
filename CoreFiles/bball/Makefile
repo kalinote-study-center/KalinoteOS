@@ -1,5 +1,5 @@
-APP      = a
-STACK    = 1k
+APP      = bball
+STACK    = 208k
 MALLOC   = 0k
 
 include ../app_make.txt
