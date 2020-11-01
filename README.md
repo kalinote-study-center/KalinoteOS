@@ -461,3 +461,6 @@
 - 删除了几个应用
 - 实现了32位真彩色(0x00000000~0x00ffffff RGB)
 - 因为实现了32位色彩，所有buf的类型都从char转换成了int
+
+## 20110103
+- 现在VMware和Hyper-V都无法启动KalinoteOS，估计是ipl50.nas的问题

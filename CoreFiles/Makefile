@@ -55,6 +55,7 @@ kalinote.img : kalinote/ipl50.bin kalinote/kalinote.sys Makefile \
 run :
 	$(MAKE) kalinote.img
 	$(COPY) kalinote.img ..\z_tools\qemu\kalinoteos.bin
+	$(COPY) kalinote.img ..\z_tools\qemu\kalinoteos.vfd
 	$(MAKE) -C ../z_tools/qemu
 
 install :
@@ -84,9 +85,12 @@ full :
 	$(MAKE) -C bball
 	$(MAKE) -C calc
 	$(MAKE) kalinote.img
+	$(COPY) kalinote.img ..\z_tools\qemu\kalinoteos.bin
+	$(COPY) kalinote.img ..\z_tools\qemu\kalinoteos.vfd
 
 run_full :
 	$(MAKE) full
+	$(COPY) kalinote.img ..\z_tools\qemu\kalinoteos.bin
 	$(COPY) kalinote.img ..\z_tools\qemu\kalinoteos.bin
 	$(MAKE) -C ../z_tools/qemu
 
