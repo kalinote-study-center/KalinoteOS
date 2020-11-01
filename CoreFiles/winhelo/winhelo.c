@@ -1,7 +1,7 @@
 /* 生成一个窗口的应用程序的演示代码 */
 #include "apilib.h"
 
-int buf[150 * 50 * 4];
+int buf[150 * 50];
 
 void KaliMain(void){
 	int *buf;

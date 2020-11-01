@@ -14,31 +14,28 @@ default :
 
 # 文件生成规则
 
-kalinote.img : kalinote/ipl50.bin kalinote/kalinote.sys Makefile \
-		hello3/hello3.kal hello4/hello4.kal color/color.kal \
+kalinote.img : kalinote/ipl40.bin kalinote/kalinote.sys Makefile \
+		hello4/hello4.kal color/color.kal \
 		winhelo/winhelo.kal star/star.kal counter/counter.kal \
-		lines/lines.kal walk/walk.kal noodle/noodle.kal typeipl/typeipl.kal \
+		lines/lines.kal noodle/noodle.kal \
 		beepdown/beepdown.kal beepup/beepup.kal sosu/sosu.kal \
 		cat/cat.kal iroha/iroha.kal chklang/chklang.kal \
 		notrec/notrec.kal bball/bball.kal calc/calc.kal
 	$(EDIMG)   imgin:../z_tools/fdimg0at.tek \
-		wbinimg src:kalinote/ipl50.bin len:512 from:0 to:0 \
+		wbinimg src:kalinote/ipl40.bin len:512 from:0 to:0 \
 		copy from:kalinote/kalinote.sys to:@: \
-		copy from:kalinote/ipl50.nas to:@: \
+		copy from:kalinote/ipl40.nas to:@: \
 		copy from:make.bat to:@: \
-		copy from:hello3/hello3.kal to:@: \
 		copy from:hello4/hello4.kal to:@: \
 		copy from:winhelo/winhelo.kal to:@: \
 		copy from:star/star.kal to:@: \
 		copy from:lines/lines.kal to:@: \
-		copy from:walk/walk.kal to:@: \
 		copy from:noodle/noodle.kal to:@: \
 		copy from:beepdown/beepdown.kal to:@: \
 		copy from:beepup/beepup.kal to:@: \
 		copy from:color/color.kal to:@: \
 		copy from:counter/counter.kal to:@: \
 		copy from:sosu/sosu.kal to:@: \
-		copy from:typeipl/typeipl.kal to:@: \
 		copy from:cat/cat.kal to:@: \
 		copy from:iroha/iroha.kal to:@: \
 		copy from:chklang/chklang.kal to:@: \
@@ -65,19 +62,16 @@ install :
 full :
 	$(MAKE) -C kalinote
 	$(MAKE) -C apilib
-	$(MAKE) -C hello3
 	$(MAKE) -C hello4
 	$(MAKE) -C winhelo
 	$(MAKE) -C star
 	$(MAKE) -C lines
-	$(MAKE) -C walk
 	$(MAKE) -C noodle
 	$(MAKE) -C beepdown
 	$(MAKE) -C beepup
 	$(MAKE) -C color
 	$(MAKE) -C counter
 	$(MAKE) -C sosu
-	$(MAKE) -C typeipl
 	$(MAKE) -C cat
 	$(MAKE) -C iroha
 	$(MAKE) -C chklang
@@ -112,19 +106,16 @@ src_only :
 clean_full :
 	$(MAKE) -C kalinote		clean
 	$(MAKE) -C apilib		clean
-	$(MAKE) -C hello3		clean
 	$(MAKE) -C hello4		clean
 	$(MAKE) -C winhelo		clean
 	$(MAKE) -C star			clean
 	$(MAKE) -C lines		clean
-	$(MAKE) -C walk			clean
 	$(MAKE) -C noodle		clean
 	$(MAKE) -C beepdown		clean
 	$(MAKE) -C beepup		clean
 	$(MAKE) -C color		clean
 	$(MAKE) -C counter		clean
 	$(MAKE) -C sosu			clean
-	$(MAKE) -C typeipl		clean
 	$(MAKE) -C iroha		clean
 	$(MAKE) -C cat			clean
 	$(MAKE) -C chklang		clean
@@ -135,19 +126,16 @@ clean_full :
 src_only_full :
 	$(MAKE) -C kalinote		src_only
 	$(MAKE) -C apilib		src_only
-	$(MAKE) -C hello3		src_only
 	$(MAKE) -C hello4		src_only
 	$(MAKE) -C winhelo		src_only
 	$(MAKE) -C star			src_only
 	$(MAKE) -C lines		src_only
-	$(MAKE) -C walk			src_only
 	$(MAKE) -C noodle		src_only
 	$(MAKE) -C beepdown		src_only
 	$(MAKE) -C beepup		src_only
 	$(MAKE) -C color		src_only
 	$(MAKE) -C counter		src_only
 	$(MAKE) -C sosu			src_only
-	$(MAKE) -C typeipl		src_only
 	$(MAKE) -C cat			src_only
 	$(MAKE) -C iroha		src_only
 	$(MAKE) -C chklang		src_only

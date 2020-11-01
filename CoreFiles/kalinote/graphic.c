@@ -2,6 +2,8 @@
 #include "bootpack.h"
 #include <stdio.h>
 
+int read_wallpaper_32 (unsigned char *filename, int x, int y, int *fat, unsigned int *vram);
+
 void init_palette(void){
 	/*调色板函数，预置15中基本颜色，可以自行添加 - 此处原内容在第75页*/
 	static unsigned char table_rgb[16 * 3] = {
@@ -67,8 +69,13 @@ void boxfill8(unsigned int *vram, int xsize, unsigned int c, int x0, int y0, int
 
 void init_screen8(int *vram, int x, int y, int bc){
 	/*初始化屏幕*/
+	int *fat;
+	boxfill8(vram, x, COL_LDBLUE, 0, 0, x - 1, y - 1);		//绘制一个纯色背景当底板
 	char s[100];
-	boxfill8(vram, x, COL_LDBLUE, 0, 0, x - 1, y - 1);		//绘制一个纯色背景当桌面
+	struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;
+	fat = (int *) memman_alloc_4k(memman, 4 * 1024 * 768);
+	file_readfat(fat, (unsigned char *) (ADR_DISKIMG + 0x000200));
+	read_wallpaper_32("back.jpg", x, y, fat, vram);
 	boxfill8(vram, x, COL_BGREY,  0,     y - 28, x -  1, y - 28);
 	boxfill8(vram, x, COL_WHITE,  0,     y - 27, x -  1, y - 27);
 	boxfill8(vram, x, COL_BGREY,  0,     y - 26, x -  1, y -  1);
@@ -290,4 +297,40 @@ void putblock8_8(int *vram, int vxsize, int pxsize,
 		}
 	}
 	return;
+}
+
+int read_wallpaper_32 (unsigned char *filename, int x, int y, int *fat, unsigned int *vram) {
+	/* 32位色彩模式下读取壁纸 */
+	int i, j, x0, y0, fsize, info[4];
+	unsigned char *filebuf, r, g, b;
+	struct RGB *picbuf;
+	struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;
+	struct FILEINFO *finfo;
+	struct DLL_STRPICENV *env;
+	finfo = file_search("back.jpg", (struct FILEINFO *)(ADR_DISKIMG + 0x002600), 224);
+	if (finfo == 0) {
+		/* 读取文件失败 */
+		return -1;
+	}
+	fsize = finfo->size;
+	filebuf = (unsigned char *) memman_alloc_4k(memman, fsize);
+	filebuf = file_loadfile2(finfo->clustno, &fsize, fat);
+	env = (struct DLL_STRPICENV *) memman_alloc_4k(memman, sizeof(struct DLL_STRPICENV));
+	info_JPEG(env, info, fsize, filebuf);
+	picbuf = (struct RGB *) memman_alloc_4k(memman, info[2] * info[3] * sizeof(struct RGB) * 4);
+	decode0_JPEG(env, fsize, filebuf, 4, (unsigned char *) picbuf, 0);
+	x0 = (int) ((x - info[2]) / 2);
+	y0 = (int) ((y - info[3]) / 2);
+	for (i = 0; i < info[3]; i++) {
+		for (j = 0; j < info[2]; j++) {
+			r = picbuf[i * info[2] + j].r;
+			g = picbuf[i * info[2] + j].g;
+			b = picbuf[i * info[2] + j].b;
+			vram[(y0 + i) * x + (x0 + j)] = b | g << 8 | r << 16 | 0x00 << 24;
+		}
+	}
+	memman_free_4k(memman, (int) filebuf, fsize);
+	memman_free_4k(memman, (int) picbuf, info[2] * info[3] * sizeof(struct RGB) * 4);
+	memman_free_4k(memman, (int) env, sizeof(struct DLL_STRPICENV));
+	return 0;
 }

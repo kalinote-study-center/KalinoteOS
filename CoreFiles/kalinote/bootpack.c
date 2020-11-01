@@ -109,13 +109,16 @@ void KaliMain(void){
 	fifo32_put(&keycmd, key_leds);
 	
 	/* 载入HZK字库 */
-	chinese = (unsigned char *) memman_alloc_4k(memman, 0x5d5d * 32);
+	//chinese = (unsigned char *) memman_alloc_4k(memman, 0x5d5d * 32);
 	fat_ch = (int *) memman_alloc_4k(memman, 4 * 2880);
 	file_readfat(fat_ch, (unsigned char *) (ADR_DISKIMG + 0x000200));
 	finfo_ch = file_search("HZK16.fnt", (struct FILEINFO *) (ADR_DISKIMG + 0x002600), 224);
 	if (finfo_ch != 0) {
-		file_loadfile(finfo_ch->clustno, finfo_ch->size, chinese, fat_ch, (char *) (ADR_DISKIMG + 0x003e00));
+		//file_loadfile(finfo_ch->clustno, finfo_ch->size, chinese, fat_ch, (char *) (ADR_DISKIMG + 0x003e00));
+		i = finfo_ch->size;
+		chinese = file_loadfile2(finfo_ch->clustno, &i, fat_ch);
 	} else {
+		chinese = (unsigned char *) memman_alloc_4k(memman, 0x5d5d * 32);
 		for (i = 0; i < 16 * 256; i++) {
 			chinese[i] = fonts[i]; /* 没有字库，半角部分直接复制英文字库 */
 		}
@@ -127,13 +130,16 @@ void KaliMain(void){
 	memman_free_4k(memman, (int) fat_ch, 4 * 2880);
 	
 	/* 载入nihongo字库 */
-	nihongo = (unsigned char *) memman_alloc_4k(memman, 16 * 256 + 32 * 94 * 47);
+	//nihongo = (unsigned char *) memman_alloc_4k(memman, 16 * 256 + 32 * 94 * 47);
 	fat_jp = (int *) memman_alloc_4k(memman, 4 * 2880);
 	file_readfat(fat_jp, (unsigned char *) (ADR_DISKIMG + 0x000200));
 	finfo_jp = file_search("nihongo.fnt", (struct FILEINFO *) (ADR_DISKIMG + 0x002600), 224);
 	if (finfo_jp != 0) {
-		file_loadfile(finfo_jp->clustno, finfo_jp->size, nihongo, fat_jp, (char *) (ADR_DISKIMG + 0x003e00));
+		//file_loadfile(finfo_jp->clustno, finfo_jp->size, nihongo, fat_jp, (char *) (ADR_DISKIMG + 0x003e00));
+		i = finfo_jp->size;
+		nihongo = file_loadfile2(finfo_jp->clustno, &i, fat_jp);
 	} else {
+		nihongo = (unsigned char *) memman_alloc_4k(memman, 16 * 256 + 32 * 94 * 47);
 		for (i = 0; i < 16 * 256; i++) {
 			nihongo[i] = fonts[i]; /* 没有字库，半角部分直接复制英文字库*/
 		}

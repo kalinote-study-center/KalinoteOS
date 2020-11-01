@@ -32,10 +32,10 @@ $(APP).bim : $(APP).obj $(APILIBPATH)apilib.lib Makefile ../app_make.txt
 $(APP).kal : $(APP).bim Makefile ../app_make.txt
 	$(BIM2KAL) $(APP).bim $(APP).kal $(MALLOC)
 
-kalinote.img : ../kalinote/ipl50.bin ../kalinote/kalinote.sys $(APP).kal \
+kalinote.img : ../kalinote/ipl40.bin ../kalinote/kalinote.sys $(APP).kal \
 		Makefile ../app_make.txt
 	$(EDIMG)   imgin:../../z_tools/fdimg0at.tek \
-		wbinimg src:../kalinote/ipl50.bin len:512 from:0 to:0 \
+		wbinimg src:../kalinote/ipl40.bin len:512 from:0 to:0 \
 		copy from:../kalinote/kalinote.sys to:@: \
 		copy from:$(APP).kal to:@: \
 		copy from:../langs/HZK16.fnt to:@: \
@@ -52,6 +52,12 @@ kalinote.img : ../kalinote/ipl50.bin ../kalinote/kalinote.sys $(APP).kal \
 
 %.obj : %.nas Makefile ../app_make.txt
 	$(NASK) $*.nas $*.obj $*.lst
+
+%.org : %.bim Makefile ../app_make.txt
+	$(BIM2KAL) $*.bim $*.org $(MALLOC)
+
+%.kal : %.org Makefile ../app_make.txt
+	$(BIM2BIN) -osacmp in:$*.org out:$*.kal
 
 # √¸¡Ó
 
@@ -74,6 +80,7 @@ clean :
 	-$(DEL) *.obj
 	-$(DEL) *.map
 	-$(DEL) *.bim
+	-$(DEL) *.org
 	-$(DEL) kalinote.img
 
 src_only :

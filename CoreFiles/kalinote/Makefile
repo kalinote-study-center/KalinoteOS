@@ -23,13 +23,13 @@ DEL      = del
 # 默认动作
 
 default :
-	$(MAKE) ipl50.bin
+	$(MAKE) ipl40.bin
 	$(MAKE) kalinote.sys
 
 # 文件生成规则
 
-ipl50.bin : ipl50.nas Makefile
-	$(NASK) ipl50.nas ipl50.bin ipl50.lst
+ipl40.bin : ipl40.nas Makefile
+	$(NASK) ipl40.nas ipl40.bin ipl40.lst
 
 asmhead.bin : asmhead.nas Makefile
 	$(NASK) asmhead.nas asmhead.bin asmhead.lst
@@ -75,5 +75,5 @@ clean :
 
 src_only :
 	$(MAKE) clean
-	-$(DEL) ipl50.bin
+	-$(DEL) ipl40.bin
 	-$(DEL) kalinote.sys
