@@ -1,6 +1,6 @@
 OBJS_BOOTPACK = bootpack.obj naskfunc.obj fonts.obj graphic.obj dsctbl.obj \
 		int.obj fifo.obj keyboard.obj mouse.obj memory.obj sheet.obj timer.obj \
-		mtask.obj window.obj console.obj file.obj
+		mtask.obj window.obj console.obj file.obj kca.obj
 
 TOOLPATH = ../../z_tools/
 INCPATH  = ../../z_tools/kalinote/

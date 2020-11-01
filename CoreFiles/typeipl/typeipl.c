@@ -5,7 +5,7 @@ void KaliMain(void)
 {
 	int fh;
 	char c;
-	fh = api_fopen("ipl10.nas");
+	fh = api_fopen("ipl50.nas");
 	if (fh != 0) {
 		for (;;) {
 			if (api_fread(&c, 1, fh) == 0) {

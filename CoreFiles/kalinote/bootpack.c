@@ -6,7 +6,7 @@
 
 void keywin_off(struct SHEET *key_win);														//控制窗口标题栏颜色和光标激活状态
 void keywin_on(struct SHEET *key_win);														//控制窗口标题栏颜色和光标激活状态
-struct SHEET *open_console(struct SHTCTL *shtctl, unsigned int memtotal);					//新建命令行窗口
+//struct SHEET *open_console(struct SHTCTL *shtctl, unsigned int memtotal);					//新建命令行窗口
 void close_console(struct SHEET *sht);														//关闭命令窗口
 void close_constask(struct TASK *task);														//结束任务
 
