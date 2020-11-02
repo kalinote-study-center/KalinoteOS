@@ -35,17 +35,50 @@ void make_wtitle8(unsigned int *buf, int xsize, char *title, char act){
 		"O$$$$$$$$$$$$$$@",
 		"@@@@@@@@@@@@@@@@"
 	};
+	static char minimizebtn[14][16] = {
+		"OOOOOOOOOOOOOOO@",
+		"OQQQQQQQQQQQQQ$@",
+		"OQQQQQQQQQQQQQ$@",
+		"OQQQQQQQQQQQQQ$@",
+		"OQQQQQQQQQQQQQ$@",
+		"OQQQQQQQQQQQQQ$@",
+		"OQQ@@@@@@@@@QQ$@",
+		"OQQ@@@@@@@@@QQ$@",
+		"OQQQQQQQQQQQQQ$@",
+		"OQQQQQQQQQQQQQ$@",
+		"OQQQQQQQQQQQQQ$@",
+		"OQQQQQQQQQQQQQ$@",
+		"O$$$$$$$$$$$$$$@",
+		"@@@@@@@@@@@@@@@@"
+	};
 	int x, y;
 	int c, tc, tbc;
 	if (act != 0) {
 		tc = COL_WHITE;
-		tbc = COL_DBLUE;
+		tbc = 0x00ffc1c1;
 	} else {
 		tc = COL_BGREY;
-		tbc = COL_DGREY;
+		tbc = 0x00cd9b9b;
 	}
 	boxfill8(buf, xsize, tbc, 3, 3, xsize - 4, 20);
 	putfonts8_asc(buf, xsize, 24, 4, tc, title);
+	/* 最小化窗口按钮 */
+	for (y = 0; y < 14; y++) {
+		for (x = 0; x < 16; x++) {
+			c = minimizebtn[y][x];
+			if (c == '@') {
+				c = COL_BLACK;
+			} else if (c == '$') {
+				c = COL_DGREY;
+			} else if (c == 'Q') {
+				c = COL_BGREY;
+			} else {
+				c = COL_WHITE;
+			}
+			buf[(5 + y) * xsize + (xsize - 40 + x)] = c;
+		}
+	}
+	/* 关闭窗口按钮 */
 	for (y = 0; y < 14; y++) {
 		for (x = 0; x < 16; x++) {
 			c = closebtn[y][x];
@@ -97,14 +130,14 @@ void change_wtitle8(struct SHEET *sht, char act){
 	int c, tc_new, tbc_new, tc_old, tbc_old, *buf = sht->buf;
 	if (act != 0) {
 		tc_new  = COL_WHITE;
-		tbc_new = COL_DBLUE;
+		tbc_new = 0x00ffc1c1;
 		tc_old  = COL_BGREY;
-		tbc_old = COL_DGREY;
+		tbc_old = 0x00cd9b9b;
 	} else {
 		tc_new  = COL_BGREY;
-		tbc_new = COL_DGREY;
+		tbc_new = 0x00cd9b9b;
 		tc_old  = COL_WHITE;
-		tbc_old = COL_DBLUE;
+		tbc_old = 0x00ffc1c1;
 	}
 	for (y = 3; y <= 20; y++) {
 		for (x = 3; x <= xsize - 4; x++) {
