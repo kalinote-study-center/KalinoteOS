@@ -98,7 +98,8 @@ void console_task(struct SHEET *sheet, unsigned int memtotal){
 					cons_putchar(&cons, '>', 1);
 				} else {
 					/* 一般字符 */
-					if (cons.cur_x < 240) {
+					//if (cons.cur_x < 240) {
+					if (cons.cur_x < 512) {
 						/* 显示一个字符后将光标后移一位 */
 						cmdline[cons.cur_x / 8 - 2] = i - 256;
 						cons_putchar(&cons, i - 256, 1);
@@ -127,7 +128,8 @@ void cons_putchar(struct CONSOLE *cons, int chr, char move){
 				putfonts8_asc_sht(cons->sht, cons->cur_x, cons->cur_y, COL_WHITE, COL_BLACK, " ", 1);
 			}
 			cons->cur_x += 8;
-			if (cons->cur_x == 8 + 240) {
+			//if (cons->cur_x == 8 + 240) {
+			if (cons->cur_x == 8 + 512) {
 				cons_newline(cons);
 			}
 			if (((cons->cur_x - 8) & 0x1f) == 0) {
@@ -145,7 +147,8 @@ void cons_putchar(struct CONSOLE *cons, int chr, char move){
 		if (move != 0) {
 			/* move为0时光标不后移 */
 			cons->cur_x += 8;
-			if (cons->cur_x == 8 + 240) {
+			//if (cons->cur_x == 8 + 240) {
+			if (cons->cur_x == 8 + 512) {
 				cons_newline(cons);
 			}
 		}
@@ -157,22 +160,22 @@ void cons_newline(struct CONSOLE *cons){
 	int x, y;
 	struct SHEET *sheet = cons->sht;
 	struct TASK *task = task_now();
-	if (cons->cur_y < 28 + 112) {
+	if (cons->cur_y < 28 + 432) {
 		cons->cur_y += 16; /* 换行 */
 	} else {
 		/* 滚动 */
 		if (sheet != 0) {
-			for (y = 28; y < 28 + 112; y++) {
-				for (x = 8; x < 8 + 240; x++) {
+			for (y = 28; y < 28 + 432; y++) {
+				for (x = 8; x < 8 + 512; x++) {
 					sheet->buf[x + y * sheet->bxsize] = sheet->buf[x + (y + 16) * sheet->bxsize];
 				}
 			}
-			for (y = 28 + 112; y < 28 + 128; y++) {
-				for (x = 8; x < 8 + 240; x++) {
+			for (y = 28 + 432; y < 28 + 448; y++) {
+				for (x = 8; x < 8 + 512; x++) {
 					sheet->buf[x + y * sheet->bxsize] = COL_BLACK;
 				}
 			}
-			sheet_refresh(sheet, 8, 28, 8 + 240, 28 + 128);
+			sheet_refresh(sheet, 8, 28, 8 + 512, 28 + 448);
 		}
 	}
 	cons->cur_x = 8;
@@ -237,12 +240,15 @@ void cmd_mem(struct CONSOLE *cons, unsigned int memtotal){
 void cmd_cls(struct CONSOLE *cons){
 	int x, y;
 	struct SHEET *sheet = cons->sht;
-	for (y = 28; y < 28 + 128; y++) {
-		for (x = 8; x < 8 + 240; x++) {
+	//for (y = 28; y < 28 + 128; y++) {
+	for (y = 28; y < 28 + 448; y++) {
+		//for (x = 8; x < 8 + 240; x++) {
+		for (x = 8; x < 8 + 512; x++) {
 			sheet->buf[x + y * sheet->bxsize] = COL_BLACK;
 		}
 	}
-	sheet_refresh(sheet, 8, 28, 8 + 240, 28 + 128);
+	//sheet_refresh(sheet, 8, 28, 8 + 240, 28 + 128);
+	sheet_refresh(sheet, 8, 28, 8 + 512, 28 + 448);
 	cons->cur_y = 28;
 	return;
 }
@@ -250,20 +256,32 @@ void cmd_cls(struct CONSOLE *cons){
 void cmd_dir(struct CONSOLE *cons){
 	struct FILEINFO *finfo = (struct FILEINFO *) (ADR_DISKIMG + 0x002600);
 	int i, j;
-	char s[30];
+	char s[50];
+	struct TASK *task = task_now();
+	if (task->langmode == 1) {
+		cons_putstr0(cons, "文件名			类型  			 大小\n\n");
+	} else {
+		cons_putstr0(cons, "FILENAME		TYPE  			 SIZE\n\n");
+	}
+	
 	for (i = 0; i < 224; i++) {
 		if (finfo[i].name[0] == 0x00) {
 			break;
 		}
 		if (finfo[i].name[0] != 0xe5) {
 			if ((finfo[i].type & 0x18) == 0) {
-				sprintf(s, "filename.ext   %7d\n", finfo[i].size);
+				if (task->langmode == 1) {
+					sprintf(s, "filename      ext 文件     %7d 字节\n", finfo[i].size);
+				} else {
+					sprintf(s, "filename      ext file     %7d Byte\n", finfo[i].size);
+				}
 				for (j = 0; j < 8; j++) {
+					// 文件名
 					s[j] = finfo[i].name[j];
 				}
-				s[ 9] = finfo[i].ext[0];
-				s[10] = finfo[i].ext[1];
-				s[11] = finfo[i].ext[2];
+				s[14] = finfo[i].ext[0];
+				s[15] = finfo[i].ext[1];
+				s[16] = finfo[i].ext[2];
 				cons_putstr0(cons, s);
 			}
 		}
