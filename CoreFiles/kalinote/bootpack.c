@@ -17,6 +17,7 @@ void KaliMain(void){
 	struct BOOTINFO *binfo = (struct BOOTINFO *) ADR_BOOTINFO;
 	struct SHTCTL *shtctl;
 	char s[40];
+	struct TIMER *timer;
 	struct FIFO32 fifo, keycmd;
 	int fifobuf[128], keycmd_buf[32];
 	int mx, my, i, new_mx = -1, new_my = 0, new_wx = 0x7fffffff, new_wy = 0;
@@ -150,7 +151,13 @@ void KaliMain(void){
 	*((int *) 0x0ef9) = (int) nihongo;
 	memman_free_4k(memman, (int) fat_jp, 4 * 2880);
 	
+	/* 时钟更新定时器 */
+	timer = timer_alloc();
+	timer_init(timer, &fifo, 1);
+	timer_settime(timer, 100);	/* 每秒更新一次时间 */
+	
 	for(;;){
+
 		if (fifo32_status(&keycmd) > 0 && keycmd_wait < 0) {
 			/* 如果存在向键盘控制器发送的数据，则发送它 */
 			keycmd_wait = fifo32_get(&keycmd);
@@ -183,7 +190,15 @@ void KaliMain(void){
 					keywin_on(key_win);
 				}
 			}
-			if (256 <= i && i <= 511) { /* 键盘数据 */
+			if (i == 1) {
+				/* 更新时间 */
+				/*右下角时间显示*/
+				timer_init(timer, &fifo, 1);
+				sprintf(s,"%02d:%02d:%02d",get_hour_hex(), get_min_hex(), get_sec_hex());
+				putfonts8_asc_sht(sht_back, binfo->scrnx - 70, binfo->scrny - 20, COL_BLACK, COL_BGREY, s, 8);
+				timer_settime(timer, 100);
+				sheet_refresh(sht_back, binfo->scrnx - 70, binfo->scrny - 20, binfo->scrnx - 70 + 8 * 8, binfo->scrny - 50 + 16);
+			} else if (256 <= i && i <= 511) { /* 键盘数据 */
 				if (i < 0x80 + 256) { /* 将按键编码转换为字符编码 */
 					if (key_shift == 0) {
 						s[0] = keytable0[i - 256];
