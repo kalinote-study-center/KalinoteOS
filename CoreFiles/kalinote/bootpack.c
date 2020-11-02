@@ -196,8 +196,11 @@ void KaliMain(void){
 				timer_init(timer, &fifo, 1);
 				sprintf(s,"%02d:%02d:%02d",get_hour_hex(), get_min_hex(), get_sec_hex());
 				putfonts8_asc_sht(sht_back, binfo->scrnx - 70, binfo->scrny - 20, COL_BLACK, COL_BGREY, s, 8);
+				/* 日期 */
+				sprintf(s,"%d/%d/%d",get_year(), get_mon_hex(), get_day_of_month());
+				putfonts8_asc_sht(sht_back, binfo->scrnx - 160, binfo->scrny - 20, COL_BLACK, COL_BGREY, s, 10);
 				timer_settime(timer, 100);
-				sheet_refresh(sht_back, binfo->scrnx - 70, binfo->scrny - 20, binfo->scrnx - 70 + 8 * 8, binfo->scrny - 50 + 16);
+				sheet_refresh(sht_back, binfo->scrnx - 160, binfo->scrny - 20, binfo->scrnx - 70 + 8 * 8, binfo->scrny - 50 + 16);
 			} else if (256 <= i && i <= 511) { /* 键盘数据 */
 				if (i < 0x80 + 256) { /* 将按键编码转换为字符编码 */
 					if (key_shift == 0) {

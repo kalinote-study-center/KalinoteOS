@@ -87,12 +87,12 @@ void init_screen8(int *vram, int x, int y, int bc){
 	boxfill8(vram, x, COL_BLACK,  2,     y -  3, 59,     y -  3);
 	boxfill8(vram, x, COL_BLACK, 60,     y - 24, 60,     y -  3);
 
-	boxfill8(vram, x, COL_DGREY, x - 47, y - 24, x -  4, y - 24);
-	boxfill8(vram, x, COL_DGREY, x - 47, y - 23, x - 47, y -  4);
-	boxfill8(vram, x, COL_WHITE, x - 47, y -  3, x -  4, y -  3);
+	boxfill8(vram, x, COL_DGREY, x - 75, y - 24, x -  4, y - 24);
+	boxfill8(vram, x, COL_DGREY, x - 75, y - 23, x - 75, y -  4);
+	boxfill8(vram, x, COL_WHITE, x - 75, y -  3, x -  4, y -  3);
 	boxfill8(vram, x, COL_WHITE, x -  3, y - 24, x -  3, y -  3);
 	sprintf(s,"DrawMode = 0x%05x", bc);
-	putfonts8_asc(vram, x, 8, 16, COL_WHITE, s);
+	putfonts8_asc(vram, x, 8, 16, COL_BRED, s);
 	return;
 }
 
