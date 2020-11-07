@@ -251,8 +251,9 @@ void task_sleep(struct TASK *task);																	//程序睡眠
 void make_window8(unsigned int *buf, int xsize, int ysize, char *title, char act);					// 生成一个窗口
 void putfonts8_asc_sht(struct SHEET *sht, int x, int y, int c, int b, char *s, int l);				// 先涂背景色，在写字符串
 void make_textbox8(struct SHEET *sht, int x0, int y0, int sx, int sy, int c);						// 生成编辑框
-void make_wtitle8(unsigned int *buf, int xsize, char *title, char act);							// 生成一个标题栏
+void make_wtitle8(unsigned int *buf, int xsize, char *title, char act);								// 生成一个标题栏
 void change_wtitle8(struct SHEET *sht, char act);													// 改变窗口标题栏颜色
+void make_icon(unsigned int *buf, int xsize, char icon_pic[16][16], char type);						// 显示一个logo
 
 /* console.c(命令台) */
 struct CONSOLE {

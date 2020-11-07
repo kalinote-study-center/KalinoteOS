@@ -335,7 +335,7 @@ void KaliMain(void){
 											mmx2 = sht->vx0;
 											new_wy = sht->vy0;
 										}
-										if (sht->bxsize - 21 <= x && x < sht->bxsize - 5 && 5 <= y && y < 19) {
+										if (sht->bxsize - 21 <= x && x < sht->bxsize - 5 && 5 <= y && y < 19) {	/* 判断是否点击在指定区域 */
 											/* 按下X按钮 */
 											if ((sht->flags & 0x10) != 0) {		/* 是否为应用程序窗口 */
 												task = sht->task;
@@ -429,12 +429,14 @@ struct TASK *open_constask(struct SHEET *sht, unsigned int memtotal){
 struct SHEET *open_console(struct SHTCTL *shtctl, unsigned int memtotal){
 	struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;
 	struct SHEET *sht = sheet_alloc(shtctl);
+	char icon[16][16];
 	//unsigned int *buf = (unsigned int *) memman_alloc_4k(memman, 256 * 165 * 4);
 	unsigned int *buf = (unsigned int *) memman_alloc_4k(memman, 525 * 479 * 4);
 	//sheet_setbuf(sht, buf, 256, 165, -1); /* 无透明色 */
 	sheet_setbuf(sht, buf, 525, 479, -1); /* 无透明色 */
 	make_window8(buf, 525, 479, "console", 0);
 	make_textbox8(sht, 3, 24, 519, 452, COL_BLACK);
+	make_icon(buf, 525, icon, 1);
 	sht->task = open_constask(sht, memtotal);
 	sht->flags |= 0x20;	/* 有光标 */
 	return sht;

@@ -6,16 +6,16 @@ CYLS	EQU		40				; 读取40个柱面
 
 		ORG		0x7c00			; 程序起始装载地址
 
-; 以下是标准FAT32格式载体用代码
+; 以下是标准FAT12格式载体用代码
 
 		JMP		entry
 		DB		0x90
-		DB		"KALINIPL"		; 启动区名称(8字?)
+		DB		"KALINIPL"		; 启动区名称(8字节)
 		DW		512				; 每个扇区大小为512
 		DB		1				; 每个簇大小为一个扇区
 		DW		1				; FAT起始位置
 		DB		2				; FAT个数
-		DW		224				; 根目的大小
+		DW		224				; 根目录的大小
 		DW		2880			; 磁盘大小
 		DB		0xf0			; 磁盘种类
 		DW		9				; FAT长度

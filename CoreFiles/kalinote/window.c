@@ -17,6 +17,108 @@ void make_window8(unsigned int *buf, int xsize, int ysize, char *title, char act
 	return;
 }
 
+void make_icon(unsigned int *buf, int xsize, char icon_pic[16][16], char type){
+	/*
+	* 绘制窗口和任务栏(暂时没有)的logo
+	* type参数为窗口类型，如果是0则不显示icon
+	* icon_pic为0则使用默认
+	* 具体的窗口类型代码后面再来定义
+	*/
+	int x, y, c, i;
+	char is_emp = 0;
+	static char icon_cmd[16][16] = {
+		"0000000000000000",
+		"0000000000000000",
+		"0000000000000000",
+		"000AAAAAAAAAA000",
+		"000AAAAAAAAAA000",
+		"000AAAAAAAAAA000",
+		"000AAAAAAAAAA000",
+		"000AAAAAAAAAA000",
+		"000AAAAAAAAAA000",
+		"000AAAAAAAAAA000",
+		"000AAAAAAAAAA000",
+		"000AAAAAAAAAA000",
+		"000AAAAAAAAAA000",
+		"0000000000000000",
+		"0000000000000000",
+		"0000000000000000",
+	};
+	
+	if ( sizeof(icon_pic) != 16 ){
+		is_emp = 1;
+	} else {
+		for (i = 0; i <= 16; i++) {
+			if (sizeof(icon_pic[i]) != 16) {
+				is_emp = 1;
+			}
+		}
+	}
+
+	if (is_emp == 1) {
+		if (type == 1){
+			icon_pic = icon_cmd;
+		}
+	}
+
+	for (y = 0; y < 16; y++) {
+		for (x = 0; x < 16; x++) {
+			c = icon_pic[y][x];
+			if (c == '0') {
+				/* 黑色 */
+				c = 0x000000;
+			} else if (c == '1') {
+				/* 蓝色 */
+				c = 0x0000ff;
+			} else if (c == '2') {
+				/* 绿色 */
+				c = 0x00ff00;
+			} else if (c == '3') {
+				/* 浅绿色 */
+				c = 0x53ff53;
+			} else if (c == '4') {
+				/* 红色 */
+				c = 0xff0000;
+			} else if (c == '5') {
+				/* 紫色 */
+				c = 0x800080;
+			} else if (c == '6') {
+				/* 黄色 */
+				c = 0xffff00;
+			} else if (c == '7') {
+				/* 白色 */
+				c = 0xffffff;
+			} else if (c == '8') {
+				/* 灰色 */
+				c = 0xcccccc;
+			} else if (c == '9') {
+				/* 淡蓝色 */
+				c = 0x00ffff;
+			} else if (c == 'A') {
+				/* 淡绿色 */
+				c = 0x90ee90;
+			} else if (c == 'B') {
+				/* 淡浅绿色 */
+				c = 0xbbffbb;
+			} else if (c == 'C') {
+				/* 淡红色 */
+				c = 0xff5151;
+			} else if (c == 'D') {
+				/* 淡紫色 */
+				c = 0xda70d6;
+			} else if (c == 'E') {
+				/* 淡黄色 */
+				c = 0xe3cf57;
+			} else if (c == 'F') {
+				/* 淡白色 */
+				c = 0xffffff;
+			}
+			buf[(5 + y) * xsize + (x + 5)] = c;
+		}
+	}
+	return;
+}
+
 void make_wtitle8(unsigned int *buf, int xsize, char *title, char act){
 	/* 窗口标题栏 */
 	static char closebtn[14][16] = {
@@ -71,7 +173,7 @@ void make_wtitle8(unsigned int *buf, int xsize, char *title, char act){
 			} else if (c == '$') {
 				c = COL_DGREY;
 			} else if (c == 'Q') {
-				c = COL_BGREY;
+				c = COL_WHITE;
 			} else {
 				c = COL_WHITE;
 			}
@@ -87,7 +189,7 @@ void make_wtitle8(unsigned int *buf, int xsize, char *title, char act){
 			} else if (c == '$') {
 				c = COL_DGREY;
 			} else if (c == 'Q') {
-				c = COL_BGREY;
+				c = COL_WHITE;
 			} else {
 				c = COL_WHITE;
 			}
