@@ -19,7 +19,7 @@ kalinote.img : kalinote/ipl40.bin kalinote/kalinote.sys Makefile \
 		winhelo/winhelo.kal star/star.kal counter/counter.kal \
 		lines/lines.kal noodle/noodle.kal \
 		beepdown/beepdown.kal beepup/beepup.kal sosu/sosu.kal \
-		cat/cat.kal iroha/iroha.kal chklang/chklang.kal \
+		cat/cat.kal chklang/chklang.kal \
 		notrec/notrec.kal bball/bball.kal calc/calc.kal \
 		a2048/a2048.kal testwin/testwin.kal
 	$(EDIMG)   imgin:../z_tools/fdimg0at.tek \
@@ -38,7 +38,6 @@ kalinote.img : kalinote/ipl40.bin kalinote/kalinote.sys Makefile \
 		copy from:counter/counter.kal to:@: \
 		copy from:sosu/sosu.kal to:@: \
 		copy from:cat/cat.kal to:@: \
-		copy from:iroha/iroha.kal to:@: \
 		copy from:chklang/chklang.kal to:@: \
 		copy from:langs/HZK16.fnt to:@: \
 		copy from:langs/nihongo.fnt to:@: \
