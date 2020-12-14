@@ -220,6 +220,7 @@ void cons_runcmd(char *cmdline, struct CONSOLE *cons, int *fat, unsigned int mem
 	} else if (strncmp(cmdline, "langmode ", 9) == 0) {
 		cmd_langmode(cons, cmdline);
 	} else if (cmdline[0] != 0) {
+		/* 执行cmd_app(),如果不是一个应用，会返回0 */
 		if (cmd_app(cons, fat, cmdline) == 0) {
 			/* 不是内部或外部命令 */
 			cons_putstr0(cons, "Not a command.\n\n");

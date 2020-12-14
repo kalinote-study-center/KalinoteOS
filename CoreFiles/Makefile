@@ -76,7 +76,6 @@ full :
 	$(MAKE) -C counter
 	$(MAKE) -C sosu
 	$(MAKE) -C cat
-	$(MAKE) -C iroha
 	$(MAKE) -C chklang
 	$(MAKE) -C notrec
 	$(MAKE) -C bball
@@ -122,7 +121,6 @@ clean_full :
 	$(MAKE) -C color		clean
 	$(MAKE) -C counter		clean
 	$(MAKE) -C sosu			clean
-	$(MAKE) -C iroha		clean
 	$(MAKE) -C cat			clean
 	$(MAKE) -C chklang		clean
 	$(MAKE) -C notrec		clean
@@ -146,7 +144,6 @@ src_only_full :
 	$(MAKE) -C counter		src_only
 	$(MAKE) -C sosu			src_only
 	$(MAKE) -C cat			src_only
-	$(MAKE) -C iroha		src_only
 	$(MAKE) -C chklang		src_only
 	$(MAKE) -C notrec		src_only
 	$(MAKE) -C bball		src_only

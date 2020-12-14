@@ -70,7 +70,8 @@ unsigned int memman_alloc(struct MEMMAN *man, unsigned int size){
 				for (; i < man->frees; i++) {
 					man->free[i] = man->free[i + 1]; /* 带入结构体 */
 				}
-			}
+			}.
+			/* 返回一段空内存位置 */
 			return a;
 		}
 	}
