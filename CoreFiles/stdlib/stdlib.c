@@ -3,6 +3,11 @@
 #include "../stdlib.h"
 #include <stdio.h>
 #include <stdarg.h>
+#include <string.h>
+
+#define MAX_BUF 1024
+
+long int strtol(const char *nptr,char **endptr,int base);
 
 /* malloc.h(stdlib.h) */
 void free(void *p){
@@ -17,7 +22,7 @@ void free(void *p){
 }
 
 void *malloc(int size){
-	char *p = api_malloc(size + 16);
+	int *p = api_malloc(size + 16);
 	if(p != 0){
 		*((int *) p) = size;
 		p+=16;
@@ -43,8 +48,8 @@ int putchar(int c){
 	return c;
 }
 
-int scanf(const char *format, ...)(
-    int count = 0, base;
+int scanf(const char *format, ...){
+    int count = 0, base = 0;
     char *temp, buffer[MAX_BUF];
     va_list ap;
     va_start(ap, format);
@@ -109,7 +114,7 @@ int scanf(const char *format, ...)(
 	}
 	va_end(ap);
     return (count);
-)
+}
 
 int getchar(){
 	int c = api_getkey(1);
@@ -118,7 +123,7 @@ int getchar(){
 }
 
 int puts(const char *str){
-	api_putstr0(str);
+	api_putstr0((char *)str);
 	putchar('\n');
 	return strlen(str);
 }
@@ -150,3 +155,13 @@ int isspace(char c){
 int isdigit(char c){
 	return '0' <= c && c <= '9';
 }
+
+/* string.h */
+/*
+int strchr(const char *str, char c){
+	for (; *str; str++)
+		if (*str == c)
+			return 1;
+	return 0;
+}
+*/

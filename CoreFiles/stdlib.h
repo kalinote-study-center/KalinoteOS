@@ -1,5 +1,6 @@
 /* 兼容性标准函数 */
-
+/* string.h */
+//int strchr(const char *str, char c);
 /* malloc.h(stdlib.h) */
 void *malloc(int size);
 void free(void *p);
