@@ -274,7 +274,7 @@ void cmd_dir(struct CONSOLE *cons){
 		}
 		if (finfo[i].name[0] != 0xe5) {
 			/* 未被删除的文件(finfo[i].name[0]=0xe5时代表文件被删除) */
-			if ((finfo[i].type & 0x18) == 0) {
+			if ((finfo[i].type & 0xdf) == 0) {
 				if (task->langmode == 1) {
 					sprintf(s, "filename      ext 文件     %7d 字节		普通文件\n", finfo[i].size);
 				} else {
@@ -284,13 +284,55 @@ void cmd_dir(struct CONSOLE *cons){
 					// 文件名
 					s[j] = finfo[i].name[j];
 				}
+				/* 扩展名 */
 				s[14] = finfo[i].ext[0];
 				s[15] = finfo[i].ext[1];
 				s[16] = finfo[i].ext[2];
 				cons_putstr0(cons, s);
 			} else if ((finfo[i].type & 0xfe) == 0) {
 				/* 只读文件 */
-				
+				if (task->langmode == 1) {
+					sprintf(s, "filename      ext 文件     %7d 字节		只读文件\n", finfo[i].size);
+				} else {
+					sprintf(s, "filename      ext file     %7d Byte		ReadOnly\n", finfo[i].size);
+				}
+				for (j = 0; j < 8; j++) {
+					// 文件名
+					s[j] = finfo[i].name[j];
+				}
+				/* 扩展名 */
+				s[14] = finfo[i].ext[0];
+				s[15] = finfo[i].ext[1];
+				s[16] = finfo[i].ext[2];
+				cons_putstr0(cons, s);
+			} else if ((finfo[i].type & 0xfb) == 0) {
+				/* 系统文件 */
+				if (task->langmode == 1) {
+					sprintf(s, "filename      ext 文件     %7d 字节		系统文件\n", finfo[i].size);
+				} else {
+					sprintf(s, "filename      ext file     %7d Byte		SystemFile\n", finfo[i].size);
+				}
+				for (j = 0; j < 8; j++) {
+					// 文件名
+					s[j] = finfo[i].name[j];
+				}
+				/* 扩展名 */
+				s[14] = finfo[i].ext[0];
+				s[15] = finfo[i].ext[1];
+				s[16] = finfo[i].ext[2];
+				cons_putstr0(cons, s);
+			} else if ((finfo[i].type & 0xef) == 0) {
+				/* 目录 */
+				if (task->langmode == 1) {
+					sprintf(s, "filename        文件       %7d 字节		  目录\n", finfo[i].size);
+				} else {
+					sprintf(s, "filename        file       %7d Byte		Directory\n", finfo[i].size);
+				}
+				for (j = 0; j < 8; j++) {
+					// 文件名
+					s[j] = finfo[i].name[j];
+				}
+				cons_putstr0(cons, s);
 			}
 		}
 	}
