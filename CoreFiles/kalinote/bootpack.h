@@ -43,34 +43,6 @@ void start_app(int eip, int cs,
 void asm_end_app(void);						//结束应用程序
 void asm_shutdown(void);					//关机功能
 
-//graphic.c(画面显示)
-void init_palette(void);																			//初始化调色板函数
-void set_palette(int start, int end, unsigned char *rgb);											//设置调色板
-void boxfill8(unsigned int *vram, int xsize, unsigned int c, int x0, int y0, int x1, int y1);		//绘制方块
-void init_screen8(int *vram, int x, int y, int bc);													//初始化屏幕
-void putfont8(int *vram, int xsize, int x, int y, int c, char *font);								//绘制字体
-void putfonts8_asc(int *vram, int xsize, int x, int y, int c, unsigned char *s);					//绘制字符串
-void init_mouse_cursor8(int *mouse, int bc);														//初始化鼠标指针
-void putblock8_8(int *vram, int vxsize, int pxsize,
-	int pysize, int px0, int py0, int *buf, int bxsize);											//鼠标背景色处理
-// 15种颜色常数定义，此系统支持RGB全彩色，所以可以使用0xRGB(普通的RGB表示方法)来表示颜色
-#define COL_BLACK		0x00000000
-#define COL_BRED		0x00ff0000
-#define COL_BGREEN		0x0000ff00
-#define COL_BYELLOW		0x00ffff00
-#define COL_BBLUE		0x000000ff
-#define COL_BPURPLE		0x00ff00ff
-#define COL_LBBLUE		0x0000ffff
-#define COL_WHITE		0x00ffffff
-#define COL_BGREY		0x00c6c6c6
-#define COL_DRED		0x00840000
-#define COL_DGREEN		0x00008400
-#define COL_DYELLOW		0x00848400
-#define COL_DBLUE		0x00000084
-#define COL_DPURPLE		0x00840084
-#define COL_LDBLUE		0x00008484
-#define COL_DGREY		0x00848484
-
 //dsctbl.c(GDT,IDT)
 struct SEGMENT_DESCRIPTOR {
 	short limit_low, base_low;
@@ -179,6 +151,35 @@ void sheet_updown(struct SHEET *sht, int height);													//调整sheet高度
 void sheet_refresh(struct SHEET *sht, int bx0, int by0, int bx1, int by1);							//刷新图层(区域)
 void sheet_slide(struct SHEET *sht, int vx0, int vy0);												//移动图层
 void sheet_free(struct SHEET *sht);																	//释放已使用的图层内存
+
+//graphic.c(画面显示)
+void init_palette(void);																			//初始化调色板函数
+void set_palette(int start, int end, unsigned char *rgb);											//设置调色板
+void boxfill8(unsigned int *vram, int xsize, unsigned int c, int x0, int y0, int x1, int y1);		//绘制方块
+void init_screen8(int *vram, int x, int y, int bc);													//初始化屏幕
+void putfont8(int *vram, int xsize, int x, int y, int c, char *font);								//绘制字体
+void putfonts8_asc(int *vram, int xsize, int x, int y, int c, unsigned char *s);					//绘制字符串
+void init_mouse_cursor8(int *mouse, int bc);														//初始化鼠标指针
+void putblock8_8(int *vram, int vxsize, int pxsize,
+	int pysize, int px0, int py0, int *buf, int bxsize);											//鼠标背景色处理
+void init_taskbar(int *vram, int x, int y);															//初始化任务栏
+// 15种颜色常数定义，此系统支持RGB全彩色，所以可以使用0xRGB(普通的RGB表示方法)来表示颜色
+#define COL_BLACK		0x00000000
+#define COL_BRED		0x00ff0000
+#define COL_BGREEN		0x0000ff00
+#define COL_BYELLOW		0x00ffff00
+#define COL_BBLUE		0x000000ff
+#define COL_BPURPLE		0x00ff00ff
+#define COL_LBBLUE		0x0000ffff
+#define COL_WHITE		0x00ffffff
+#define COL_BGREY		0x00c6c6c6
+#define COL_DRED		0x00840000
+#define COL_DGREEN		0x00008400
+#define COL_DYELLOW		0x00848400
+#define COL_DBLUE		0x00000084
+#define COL_DPURPLE		0x00840084
+#define COL_LDBLUE		0x00008484
+#define COL_DGREY		0x00848484
 
 //timer.c(定时器)
 #define MAX_TIMER		500
@@ -345,3 +346,5 @@ unsigned int get_day_of_month();					// 取当前日期
 unsigned int get_day_of_week();						// 取当前星期
 unsigned int get_mon_hex();							// 取当前月份
 unsigned int get_year();							// 取当前年份
+
+/* ide.c(ide硬盘驱动) */

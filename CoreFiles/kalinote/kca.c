@@ -1,4 +1,4 @@
-/* 暥審??(崻悩kca廋夵) */
+/* kca文件解压缩程序 */
 
 #include "bootpack.h"
 #include <setjmp.h>

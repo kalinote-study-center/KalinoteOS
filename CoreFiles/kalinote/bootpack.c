@@ -65,7 +65,8 @@ void KaliMain(void){
 	init_keyboard(&fifo, 256);										// 初始化键盘FIFO缓冲区
 	enable_mouse(&fifo, 512, &mdec);								// 初始化鼠标FIFO缓冲区
 	io_out8(PIC0_IMR, 0xf8); 										// 允许PIT、PIC1和键盘(11111000)
-	io_out8(PIC1_IMR, 0xef); 										// 允许鼠标(11101111)
+	io_out8(PIC1_IMR, 0xaf); 										// 允许鼠标和硬盘(10101111)
+	
 	fifo32_init(&keycmd, 32, keycmd_buf, 0);
 	*((int *) 0x0fec) = (int) &fifo;
 	
@@ -88,6 +89,9 @@ void KaliMain(void){
 	buf_back  = (unsigned int *) memman_alloc_4k(memman, binfo->scrnx * binfo->scrny * 4);
 	sheet_setbuf(sht_back, buf_back, binfo->scrnx, binfo->scrny, -1);
 	init_screen8(buf_back, binfo->scrnx, binfo->scrny, binfo->vmode);
+
+	/* sht_taskbar */
+	init_taskbar(buf_back, binfo->scrnx, binfo->scrny);
 
 	/* sht_cons */
 	key_win = open_console(shtctl, memtotal);
