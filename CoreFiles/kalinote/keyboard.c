@@ -12,7 +12,7 @@ void inthandler21(int *esp){
 	* 不过模拟器里面可以用
 	*/
 	int data;
-	io_out8(PIC0_OCW2, 0x61);	/* 通知PIC：IRQ-01受理完毕 */
+	io_out8(PIC0_OCW2, 0x61);	/* 通知PIC：IRQ-01受理完毕，将0x60+IRQ号码输出给OCW2以通知PIC收到IQR的中断通知，然后PIC继续监视IRQ1中断 */
 	data = io_in8(PORT_KEYDAT);
 	fifo32_put(keyfifo, data + keydata0);
 	return;

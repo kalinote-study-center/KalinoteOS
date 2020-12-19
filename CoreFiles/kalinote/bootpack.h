@@ -99,19 +99,19 @@ void set_gatedesc(struct GATE_DESCRIPTOR *gd, int offset, int selector, int ar);
 
 //int.c(中断控制)
 void init_pic(void);							// 初始化中断
-void inthandler27(int *esp);					// 27号中断
-#define PIC0_ICW1		0x0020
+void inthandler27(int *esp);					// 27号中断，具体作用可以去代码里看
+#define PIC0_ICW1		0x0020					// 主PIC的初始化控制数据，1号，固定值
 #define PIC0_OCW2		0x0020
-#define PIC0_IMR		0x0021
-#define PIC0_ICW2		0x0021
-#define PIC0_ICW3		0x0021
-#define PIC0_ICW4		0x0021
-#define PIC1_ICW1		0x00a0
+#define PIC0_IMR		0x0021					// 主PIC的中断屏蔽寄存器地址
+#define PIC0_ICW2		0x0021					// 主PIC的初始化控制数据，2号，这个值可以用来设定PIC中断号，不过为了避免混乱，暂时不改
+#define PIC0_ICW3		0x0021					// 主PIC的初始化控制数据，3号，固定值
+#define PIC0_ICW4		0x0021					// 主PIC的初始化控制数据，4号，固定值
+#define PIC1_ICW1		0x00a0					// 从PIC的初始化控制数据，1号，固定值
 #define PIC1_OCW2		0x00a0
-#define PIC1_IMR		0x00a1
-#define PIC1_ICW2		0x00a1
-#define PIC1_ICW3		0x00a1
-#define PIC1_ICW4		0x00a1
+#define PIC1_IMR		0x00a1					// 从PIC的中断屏蔽寄存器地址
+#define PIC1_ICW2		0x00a1					// 从PIC的初始化控制数据，2号，这个值可以用来设定PIC中断号，不过为了避免混乱，暂时不改
+#define PIC1_ICW3		0x00a1					// 从PIC的初始化控制数据，3号，固定值
+#define PIC1_ICW4		0x00a1					// 从PIC的初始化控制数据，4号，固定值
 
 //fifo.c(FIFO缓冲区)
 struct FIFO32 {

@@ -1,5 +1,6 @@
 ; naskfunc
 ; TAB=4
+; 这个文件的存在是为了解决C语言不能解决的问题
 
 [FORMAT "WCOFF"]				; 制作目标文件的模式
 [INSTRSET "i486p"]				; 给486用的指令
@@ -134,13 +135,13 @@ _asm_inthandler20:
 _asm_inthandler21:
 		PUSH	ES
 		PUSH	DS
-		PUSHAD
+		PUSHAD								; 这一句的功能相当于PUSH EAX,ECX,EDX,EBX,ESP,EBP,ESI,EDI，下面的POPAD同理，只是顺序相反
 		MOV		EAX,ESP
 		PUSH	EAX
 		MOV		AX,SS
 		MOV		DS,AX
 		MOV		ES,AX
-		CALL	_inthandler21
+		CALL	_inthandler21				; 这里调用了C语言写的 void inthandler21(int *esp); (keyboard.c)
 		POP		EAX
 		POPAD
 		POP		DS

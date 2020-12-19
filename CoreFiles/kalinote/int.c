@@ -4,8 +4,13 @@
 
 void init_pic(void){
 	/*PIC初始化*/
+	/* 每个常量代表什么意思可以去bootpack.h看 */
 	io_out8(PIC0_IMR,  0xff  ); /* 禁止所有中断 */
 	io_out8(PIC1_IMR,  0xff  ); /* 禁止所有中断 */
+	/* 
+	* 关于上面两行代码，0xff=11111111，每一位控制一个IRQ信号，全部为1表示屏蔽所有
+	* 初始化前屏蔽所有中断是为了防止初始化时产生电气干扰
+	*/
 
 	io_out8(PIC0_ICW1, 0x11  ); /* 边沿触发模式(edge trigger mode) */
 	io_out8(PIC0_ICW2, 0x20  ); /* IRQ0-7由INT20-27接收 */
