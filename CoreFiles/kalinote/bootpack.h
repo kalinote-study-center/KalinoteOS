@@ -9,7 +9,7 @@ struct BOOTINFO {	/* 0x0ff0-0x0fff */
 	int *vram;
 };
 #define ADR_BOOTINFO	0x00000ff0
-#define ADR_DISKIMG		0x00100000			//文件位置
+#define ADR_DISKIMG		0x00100000			//文件位置(软盘，内存中)
 
 //naskfunc.nas中的函数(汇编编写)
 void io_hlt(void);							//暂停处理器
@@ -17,8 +17,8 @@ void io_hlt(void);							//暂停处理器
 void io_cli(void);							//禁止中断
 void io_sti(void);							//允许中断
 void io_stihlt(void);						//允许中断并暂停处理器
-int io_in8(int port);						//传输数据用的
-void io_out8(int port, int data);			//传输数据用的
+int io_in8(int port);						//传输数据用的，汇编IN指令，用于端口操作
+void io_out8(int port, int data);			//传输数据用的，汇编OUT指令，用于端口操作
 int io_load_eflags(void);					//读取最初的eflags值
 void io_store_eflags(int eflags);			//将值存入eflags寄存器
 void load_gdtr(int limit, int addr);		//加载GDTR寄存器
@@ -41,6 +41,7 @@ void asm_kal_api(void);						//KalinoteOS 系统API
 void start_app(int eip, int cs,
 	int esp, int ds, int *tss_esp0);		//启动应用程序
 void asm_end_app(void);						//结束应用程序
+void asm_shutdown(void);					//关机功能
 
 //graphic.c(画面显示)
 void init_palette(void);																			//初始化调色板函数
@@ -52,7 +53,7 @@ void putfonts8_asc(int *vram, int xsize, int x, int y, int c, unsigned char *s);
 void init_mouse_cursor8(int *mouse, int bc);														//初始化鼠标指针
 void putblock8_8(int *vram, int vxsize, int pxsize,
 	int pysize, int px0, int py0, int *buf, int bxsize);											//鼠标背景色处理
-// 15种颜色常数定义
+// 15种颜色常数定义，此系统支持RGB全彩色，所以可以使用0xRGB(普通的RGB表示方法)来表示颜色
 #define COL_BLACK		0x00000000
 #define COL_BRED		0x00ff0000
 #define COL_BGREEN		0x0000ff00
@@ -70,7 +71,7 @@ void putblock8_8(int *vram, int vxsize, int pxsize,
 #define COL_LDBLUE		0x00008484
 #define COL_DGREY		0x00848484
 
-//dsctbl.c(画面渲染)
+//dsctbl.c(GDT,IDT)
 struct SEGMENT_DESCRIPTOR {
 	short limit_low, base_low;
 	char base_mid, access_right;
@@ -81,9 +82,9 @@ struct GATE_DESCRIPTOR {
 	char dw_count, access_right;
 	short offset_high;
 };
-void init_gdtidt(void);
-void set_segmdesc(struct SEGMENT_DESCRIPTOR *sd, unsigned int limit, int base, int ar);
-void set_gatedesc(struct GATE_DESCRIPTOR *gd, int offset, int selector, int ar);
+void init_gdtidt(void);																				// 初始化GDT和IDT
+void set_segmdesc(struct SEGMENT_DESCRIPTOR *sd, unsigned int limit, int base, int ar);				// 设置段描述符
+void set_gatedesc(struct GATE_DESCRIPTOR *gd, int offset, int selector, int ar);					// 设置门描述符
 #define ADR_IDT			0x0026f800
 #define LIMIT_IDT		0x000007ff
 #define ADR_GDT			0x00270000
@@ -97,8 +98,8 @@ void set_gatedesc(struct GATE_DESCRIPTOR *gd, int offset, int selector, int ar);
 #define AR_INTGATE32	0x008e
 
 //int.c(中断控制)
-void init_pic(void);
-void inthandler27(int *esp);					//27号中断
+void init_pic(void);							// 初始化中断
+void inthandler27(int *esp);					// 27号中断
 #define PIC0_ICW1		0x0020
 #define PIC0_OCW2		0x0020
 #define PIC0_IMR		0x0021
@@ -194,8 +195,8 @@ struct TIMERCTL {
 	struct TIMER timers0[MAX_TIMER];
 };
 extern struct TIMERCTL timerctl;
-void init_pit(void);																				//初始化可编程间隔化定时器(PIT)
 struct TIMER *timer_alloc(void);
+void init_pit(void);																				//初始化可编程间隔化定时器(PIT)
 void timer_free(struct TIMER *timer);																//释放定时器
 void timer_init(struct TIMER *timer, struct FIFO32 *fifo, int data);								//初始化定时器
 void timer_settime(struct TIMER *timer, unsigned int timeout);										//设置定时器
@@ -280,6 +281,7 @@ void cmd_exit(struct CONSOLE *cons, int *fat);														// CMD：关闭命令窗口
 void cmd_start(struct CONSOLE *cons, char *cmdline, int memtotal);									// CMD：在新的命令行中启动一个程序
 void cmd_run(struct CONSOLE *cons, char *cmdline, int memtotal);									// CMD：在当前命令窗口执行命令，且不占用命令窗口
 void cmd_langmode(struct CONSOLE *cons, char *cmdline);												// CMD：切换语言模式
+void cmd_shutdown(void);																			// CMD：关机
 int cmd_app(struct CONSOLE *cons, int *fat, char *cmdline);											// 外部应用程序
 int *kal_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int eax);				// 通过edx查找API
 int *inthandler0d(int *esp);																		// 0d号中断，用于处理异常程序
@@ -294,9 +296,9 @@ struct FILEINFO {
 	unsigned short time, date, clustno;
 	unsigned int size;
 };
+struct FILEINFO *file_search(char *name, struct FILEINFO *finfo, int max);
 void file_readfat(int *fat, unsigned char *img);													// 解码FAT
 void file_loadfile(int clustno, int size, char *buf, int *fat, char *img);							// 加载文件
-struct FILEINFO *file_search(char *name, struct FILEINFO *finfo, int max);
 char *file_loadfile2(int clustno, int *psize, int *fat);											// 加载kca压缩文件
 
 /* jpeg.c(读取jpg图片) */
@@ -306,14 +308,14 @@ struct DLL_STRPICENV{
 struct RGB{
 	unsigned char b,g,r,t;
 };
-int info_JPEG(struct DLL_STRPICENV*env,int *info,int size,unsigned char *fp);
-int decode0_JPEG(struct DLL_STRPICENV*env,int size,unsigned char *fp,int b_type,unsigned char *buf,int skip);
+int info_JPEG(struct DLL_STRPICENV*env,int *info,int size,unsigned char *fp);												// 获取JPG图片信息
+int decode0_JPEG(struct DLL_STRPICENV*env,int size,unsigned char *fp,int b_type,unsigned char *buf,int skip);				// JPG图片解码
 
 /* bootpack.c */
 struct SHEET *open_console(struct SHTCTL *shtctl, unsigned int memtotal);							// 开启一个命令窗口
 struct TASK *open_constask(struct SHEET *sht, unsigned int memtotal);								// 开启一个任务
 
-/* kca.c */
+/* kca.c(解压KCA压缩文件) */
 int kca_getsize(unsigned char *p);
 int kca_decomp(unsigned char *p, char *q, int size);
 
@@ -334,14 +336,12 @@ int kca_decomp(unsigned char *p, char *q, int size);
 #define CMOS_DEV_TYPE	0x12
 #define CMOS_CUR_CEN	0x32
 #define BCD_HEX(n)	((n >> 4) * 10) + (n & 0xf)
-
 #define BCD_ASCII_first(n)	(((n<<4)>>4)+0x30)
 #define BCD_ASCII_S(n)	((n<<4)+0x30)
-
-unsigned int get_hour_hex();
-unsigned int get_min_hex();
-unsigned int get_sec_hex();
-unsigned int get_day_of_month();
-unsigned int get_day_of_week();
-unsigned int get_mon_hex();
-unsigned int get_year();
+unsigned int get_hour_hex();						// 取当前时间(小时)
+unsigned int get_min_hex();							// 取当前时间(分钟)
+unsigned int get_sec_hex();							// 取当前时间(秒)
+unsigned int get_day_of_month();					// 取当前日期
+unsigned int get_day_of_week();						// 取当前星期
+unsigned int get_mon_hex();							// 取当前月份
+unsigned int get_year();							// 取当前年份

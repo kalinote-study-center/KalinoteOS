@@ -87,10 +87,10 @@ keystatus:
 		INT		0x16 			; keyboard BIOS
 		MOV		[LEDS],AL
 
-；PIC关闭所有中断
-；根据AT兼容机的规格，如果要初始化PIC，
-；必须在CLI之前进行，否则有事会挂起
-；随后进行PIC初始化
+; PIC关闭所有中断
+; 根据AT兼容机的规格，如果要初始化PIC，
+; 必须在CLI之前进行，否则有事会挂起
+; 随后进行PIC初始化
 
 		MOV		AL,0xff
 		OUT		0x21,AL

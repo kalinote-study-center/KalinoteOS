@@ -56,6 +56,7 @@ void KaliMain(void){
 		0,   0,   0,   '_', 0,   0,   0,   0,   0,   0,   0,   0,   0,   '|', 0,   0
 	};
 
+	/* 初始化 */
 	init_gdtidt();													// 初始化GDT和IDT
 	init_pic();														// 初始化中断控制器
 	io_sti(); 														// IDT/PIC初始化结束，解除CPU的中断禁止
@@ -68,6 +69,7 @@ void KaliMain(void){
 	fifo32_init(&keycmd, 32, keycmd_buf, 0);
 	*((int *) 0x0fec) = (int) &fifo;
 	
+	/* 内存处理 */
 	memtotal = memtest(0x00400000, 0xbfffffff);
 	memman_init(memman);
 	memman_free(memman, 0x00001000, 0x0009e000); /* 0x00001000 - 0x0009efff */

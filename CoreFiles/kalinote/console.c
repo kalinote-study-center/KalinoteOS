@@ -219,6 +219,8 @@ void cons_runcmd(char *cmdline, struct CONSOLE *cons, int *fat, unsigned int mem
 		cmd_run(cons, cmdline, memtotal);
 	} else if (strncmp(cmdline, "langmode ", 9) == 0) {
 		cmd_langmode(cons, cmdline);
+	} else if (strcmp(cmdline, "shutdown") == 0) {
+		cmd_shutdown();
 	} else if (cmdline[0] != 0) {
 		/* 执行cmd_app(),如果不是一个应用，会返回0 */
 		if (cmd_app(cons, fat, cmdline) == 0) {
@@ -260,21 +262,23 @@ void cmd_dir(struct CONSOLE *cons){
 	char s[50];
 	struct TASK *task = task_now();
 	if (task->langmode == 1) {
-		cons_putstr0(cons, "文件名			类型  			 大小\n\n");
+		cons_putstr0(cons, "文件名			类型  			 大小		  属性\n\n");
 	} else {
-		cons_putstr0(cons, "FILENAME		TYPE  			 SIZE\n\n");
+		cons_putstr0(cons, "FILENAME		TYPE  			 SIZE		PROPERTIES\n\n");
 	}
 	
 	for (i = 0; i < 224; i++) {
 		if (finfo[i].name[0] == 0x00) {
+			/* 没有文件信息 */
 			break;
 		}
 		if (finfo[i].name[0] != 0xe5) {
+			/* 未被删除的文件(finfo[i].name[0]=0xe5时代表文件被删除) */
 			if ((finfo[i].type & 0x18) == 0) {
 				if (task->langmode == 1) {
-					sprintf(s, "filename      ext 文件     %7d 字节\n", finfo[i].size);
+					sprintf(s, "filename      ext 文件     %7d 字节		普通文件\n", finfo[i].size);
 				} else {
-					sprintf(s, "filename      ext file     %7d Byte\n", finfo[i].size);
+					sprintf(s, "filename      ext file     %7d Byte		NormalFile\n", finfo[i].size);
 				}
 				for (j = 0; j < 8; j++) {
 					// 文件名
@@ -284,6 +288,9 @@ void cmd_dir(struct CONSOLE *cons){
 				s[15] = finfo[i].ext[1];
 				s[16] = finfo[i].ext[2];
 				cons_putstr0(cons, s);
+			} else if ((finfo[i].type & 0xfe) == 0) {
+				/* 只读文件 */
+				
 			}
 		}
 	}
@@ -383,6 +390,11 @@ void cmd_langmode(struct CONSOLE *cons, char *cmdline){
 	}
 	cons_newline(cons);
 	return;
+}
+
+void cmd_shutdown(void){
+	/* 关机 */
+	asm_shutdown();
 }
 
 int cmd_app(struct CONSOLE *cons, int *fat, char *cmdline){

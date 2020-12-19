@@ -3,7 +3,7 @@
 #include "../stdlib.h"
 #include <stdio.h>
 #include <stdarg.h>
-#include <string.h>
+//#include <string.h>
 
 #define MAX_BUF 1024
 
@@ -157,11 +157,9 @@ int isdigit(char c){
 }
 
 /* string.h */
-/*
 int strchr(const char *str, char c){
 	for (; *str; str++)
 		if (*str == c)
 			return 1;
 	return 0;
 }
-*/
