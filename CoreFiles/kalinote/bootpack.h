@@ -460,3 +460,12 @@ struct boot_sector {
 #define CMD_WRITE_SECTOR   0x30						// 写扇区指令
 /* 定义可读写的最大扇区数(调试使用) */
 #define MAX_LBA ((1024*1024*1024/512) - 1)			// 只支持1024MB硬盘
+void select_disk(struct disk* hd);					// 选择要读写的硬盘
+void select_sector(struct disk* hd,
+	unsigned int lba, unsigned char sec_cnt);		// 向硬盘控制器写入起始扇区地址及要读写的扇区数
+void cmd_out(struct ide_channel* channel,
+	unsigned char cmd);								// 向通道channel发命令cmd
+void read_from_sector(struct disk* hd,
+	void* buf, unsigned char sec_cnt);				// 硬盘读入sec_cnt个扇区的数据到buf
+void write2sector(struct disk* hd, void* buf,
+	unsigned char sec_cnt);							// 将buf中sec_cnt扇区的数据写入硬盘
