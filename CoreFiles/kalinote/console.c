@@ -26,7 +26,7 @@ void console_task(struct SHEET *sheet, unsigned int memtotal){
 		timer_init(cons.timer, &task->fifo, 1);
 		timer_settime(cons.timer, 50);
 	}
-	file_readfat(fat, (unsigned char *) (ADR_DISKIMG + 0x000200));
+	file_readfat(fat, (unsigned char *) (ADR_DISKIMG + 0x000200)); /* 解码FAT，(ADR_DISKIMG + 0x000200)是FAT表在内存中的位置 */
 	for (i = 0; i < 8; i++) {
 		fhandle[i].buf = 0;	/* 未使用标记符 */
 	}
@@ -294,7 +294,7 @@ void cmd_dir(struct CONSOLE *cons){
 				if (task->langmode == 1) {
 					sprintf(s, "filename      ext 文件     %7d 字节		只读文件\n", finfo[i].size);
 				} else {
-					sprintf(s, "filename      ext file     %7d Byte		ReadOnly\n", finfo[i].size);
+					sprintf(s, "filename      ext file     %7d Byte		 ReadOnly\n", finfo[i].size);
 				}
 				for (j = 0; j < 8; j++) {
 					// 文件名
@@ -324,9 +324,9 @@ void cmd_dir(struct CONSOLE *cons){
 			} else if ((finfo[i].type & 0xef) == 0) {
 				/* 目录 */
 				if (task->langmode == 1) {
-					sprintf(s, "filename        文件       %7d 字节		  目录\n", finfo[i].size);
+					sprintf(s, "filename        目录       %7d 字节		  目录\n", finfo[i].size);
 				} else {
-					sprintf(s, "filename        file       %7d Byte		Directory\n", finfo[i].size);
+					sprintf(s, "filename     Directory     %7d Byte		Directory\n", finfo[i].size);
 				}
 				for (j = 0; j < 8; j++) {
 					// 文件名
@@ -348,14 +348,14 @@ void cmd_type(struct CONSOLE *cons, int *fat, char *cmdline){
 	if (finfo != 0) {
 		/* 找到文件的情况 */
 		p = (char *) memman_alloc_4k(memman, finfo->size);
-		file_loadfile(finfo->clustno, finfo->size, p, fat, (char *) (ADR_DISKIMG + 0x003e00));
+		file_loadfile(finfo->clustno, finfo->size, p, fat, (char *) (ADR_DISKIMG + 0x003e00));	/* 磁盘映像中的地址 = clustno * 512 +0x003e00 */
 		for (i = 0; i < finfo->size; i++) {
 			cons_putchar(cons, p[i], 1);
 		}
 		memman_free_4k(memman, (int) p, finfo->size);
 	} else {
 		/* 没有找到文件的情况 */
-		putfonts8_asc_sht(cons->sht, 8, cons->cur_y, COL_WHITE, COL_BLACK, "File not found.", 15);
+		putfonts8_asc_sht(cons->sht, 8, cons->cur_y, COL_WHITE, COL_BLACK, "File not found.", 25);
 		cons_newline(cons);
 	}
 	cons_newline(cons);

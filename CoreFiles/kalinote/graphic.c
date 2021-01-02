@@ -4,58 +4,60 @@
 
 int read_wallpaper_32 (unsigned char *filename, int x, int y, int *fat, unsigned int *vram);
 
-void init_palette(void){
-	/*调色板函数，预置15中基本颜色，可以自行添加 - 此处原内容在第75页*/
-	static unsigned char table_rgb[16 * 3] = {
-		0x00, 0x00, 0x00,	/*  0:黑 */
-		0xff, 0x00, 0x00,	/*  1:亮红 */
-		0x00, 0xff, 0x00,	/*  2:亮绿 */
-		0xff, 0xff, 0x00,	/*  3:亮黄 */
-		0x00, 0x00, 0xff,	/*  4:亮蓝 */
-		0xff, 0x00, 0xff,	/*  5:亮紫 */
-		0x00, 0xff, 0xff,	/*  6:浅亮蓝 */
-		0xff, 0xff, 0xff,	/*  7:白 */
-		0xc6, 0xc6, 0xc6,	/*  8:亮灰 */
-		0x84, 0x00, 0x00,	/*  9:暗红 */
-		0x00, 0x84, 0x00,	/* 10:暗绿 */
-		0x84, 0x84, 0x00,	/* 11:暗黄 */
-		0x00, 0x00, 0x84,	/* 12:暗青 */
-		0x84, 0x00, 0x84,	/* 13:暗紫 */
-		0x00, 0x84, 0x84,	/* 14:浅暗蓝 */
-		0x84, 0x84, 0x84	/* 15:暗灰 */
-	};
-	unsigned char table2[216 * 3];
-	int r, g, b;
-	set_palette(0, 15, table_rgb);
-	for (b = 0; b < 6; b++) {
-		for (g = 0; g < 6; g++) {
-			for (r = 0; r < 6; r++) {
-				table2[(r + g * 6 + b * 36) * 3 + 0] = r * 51;
-				table2[(r + g * 6 + b * 36) * 3 + 1] = g * 51;
-				table2[(r + g * 6 + b * 36) * 3 + 2] = b * 51;
-			}
-		}
-	}
-	set_palette(16, 231, table2);
-	return;
-	// C语言中的static char只能用于数据，相当于汇编中的DB
-}
+// void init_palette(void){
+	// /* 调色板函数，预置15中基本颜色，可以自行添加 - 此处原内容在第75页 */
+	// /* 使用32位色彩模式后不再需要初始化调色板 */
+	// static unsigned char table_rgb[16 * 3] = {
+		// 0x00, 0x00, 0x00,	/*  0:黑 */
+		// 0xff, 0x00, 0x00,	/*  1:亮红 */
+		// 0x00, 0xff, 0x00,	/*  2:亮绿 */
+		// 0xff, 0xff, 0x00,	/*  3:亮黄 */
+		// 0x00, 0x00, 0xff,	/*  4:亮蓝 */
+		// 0xff, 0x00, 0xff,	/*  5:亮紫 */
+		// 0x00, 0xff, 0xff,	/*  6:浅亮蓝 */
+		// 0xff, 0xff, 0xff,	/*  7:白 */
+		// 0xc6, 0xc6, 0xc6,	/*  8:亮灰 */
+		// 0x84, 0x00, 0x00,	/*  9:暗红 */
+		// 0x00, 0x84, 0x00,	/* 10:暗绿 */
+		// 0x84, 0x84, 0x00,	/* 11:暗黄 */
+		// 0x00, 0x00, 0x84,	/* 12:暗青 */
+		// 0x84, 0x00, 0x84,	/* 13:暗紫 */
+		// 0x00, 0x84, 0x84,	/* 14:浅暗蓝 */
+		// 0x84, 0x84, 0x84	/* 15:暗灰 */
+	// };
+	// unsigned char table2[216 * 3];
+	// int r, g, b;
+	// set_palette(0, 15, table_rgb);
+	// for (b = 0; b < 6; b++) {
+		// for (g = 0; g < 6; g++) {
+			// for (r = 0; r < 6; r++) {
+				// table2[(r + g * 6 + b * 36) * 3 + 0] = r * 51;
+				// table2[(r + g * 6 + b * 36) * 3 + 1] = g * 51;
+				// table2[(r + g * 6 + b * 36) * 3 + 2] = b * 51;
+			// }
+		// }
+	// }
+	// set_palette(16, 231, table2);
+	// return;
+	// /* C语言中的static char只能用于数据，相当于汇编中的DB */
+// }
 
-void set_palette(int start, int end, unsigned char *rgb){
-	/*调色板功能 - 此处原内容在第75页*/
-	int i, eflags;
-	eflags = io_load_eflags();	/* 记录中断许可标志的值 */
-	io_cli(); 					/* 将中断许可标志置为0，禁止中断 */
-	io_out8(0x03c8, start);
-	for (i = start; i <= end; i++) {
-		io_out8(0x03c9, rgb[0] / 4);
-		io_out8(0x03c9, rgb[1] / 4);
-		io_out8(0x03c9, rgb[2] / 4);
-		rgb += 3;
-	}
-	io_store_eflags(eflags);	/* 复原中断许可标志 */
-	return;
-}
+// void set_palette(int start, int end, unsigned char *rgb){
+	// /*调色板功能 - 此处原内容在第75页*/
+	// /* 使用32位色彩模式后不再需要初始化调色板 */
+	// int i, eflags;
+	// eflags = io_load_eflags();	/* 记录中断许可标志的值 */
+	// io_cli(); 					/* 将中断许可标志置为0，禁止中断 */
+	// io_out8(0x03c8, start);
+	// for (i = start; i <= end; i++) {
+		// io_out8(0x03c9, rgb[0] / 4);
+		// io_out8(0x03c9, rgb[1] / 4);
+		// io_out8(0x03c9, rgb[2] / 4);
+		// rgb += 3;
+	// }
+	// io_store_eflags(eflags);	/* 复原中断许可标志 */
+	// return;
+// }
 
 void boxfill8(unsigned int *vram, int xsize, unsigned int c, int x0, int y0, int x1, int y1){
 	/*绘制方块 - 此处原内容在第84页*/
@@ -312,7 +314,7 @@ int read_wallpaper_32 (unsigned char *filename, int x, int y, int *fat, unsigned
 	struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;
 	struct FILEINFO *finfo;
 	struct DLL_STRPICENV *env;
-	finfo = file_search("back.jpg", (struct FILEINFO *)(ADR_DISKIMG + 0x002600), 224);
+	finfo = file_search("back.jpg", (struct FILEINFO *)(ADR_DISKIMG + 0x002600), 224);  /* 查找壁纸文件 */
 	if (finfo == 0) {
 		/* 读取文件失败 */
 		return -1;

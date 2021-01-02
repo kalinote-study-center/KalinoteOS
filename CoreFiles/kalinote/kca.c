@@ -3,7 +3,6 @@
 #include "bootpack.h"
 #include <setjmp.h>
 #include <string.h>
-#define NULL		0
 
 typedef unsigned char UCHAR;
 typedef unsigned int UINT32;
@@ -276,7 +275,7 @@ static int kca_lzrestore_kca5(int srcsiz, UCHAR *src, int outsiz, UCHAR *outbuf)
 	}
 	wrksiz = 0x180 * sizeof (UINT32) + (0x840 + (0x300 << (lc + lp))) * sizeof (kca_TPRB); 
 	work = (int *) memman_alloc_4k((struct MEMMAN *) MEMMAN_ADDR, wrksiz);
-	if (work == NULL)
+	if (work == 0)			// 这里原来定义了一个NULL，但是定义重复(list.c也定义了NULL)
 		return -1;
 	flags = kca_decmain5(work, src, outsiz, outbuf, lc, pb, lp, flags);
 	memman_free_4k((struct MEMMAN *) MEMMAN_ADDR, (int) work, wrksiz);

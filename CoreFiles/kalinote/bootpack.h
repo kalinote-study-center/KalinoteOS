@@ -10,6 +10,8 @@ struct BOOTINFO {	/* 0x0ff0-0x0fff */
 };
 #define ADR_BOOTINFO	0x00000ff0
 #define ADR_DISKIMG		0x00100000			//文件位置(软盘，内存中)
+#undef	NULL
+#define NULL ((void*)0)
 
 //naskfunc.nas中的函数(汇编编写)
 void io_hlt(void);							//暂停处理器
@@ -153,8 +155,8 @@ void sheet_slide(struct SHEET *sht, int vx0, int vy0);												//移动图层
 void sheet_free(struct SHEET *sht);																	//释放已使用的图层内存
 
 //graphic.c(画面显示)
-void init_palette(void);																			//初始化调色板函数
-void set_palette(int start, int end, unsigned char *rgb);											//设置调色板
+//void init_palette(void);																			//初始化调色板函数
+//void set_palette(int start, int end, unsigned char *rgb);											//设置调色板
 void boxfill8(unsigned int *vram, int xsize, unsigned int c, int x0, int y0, int x1, int y1);		//绘制方块
 void init_screen8(int *vram, int x, int y, int bc);													//初始化屏幕
 void putfont8(int *vram, int xsize, int x, int y, int c, char *font);								//绘制字体
@@ -294,7 +296,7 @@ struct FILEINFO {
 	//文件结构(详见第367页)
 	unsigned char name[8], ext[3], type;
 	char reserve[10];
-	unsigned short time, date, clustno;
+	unsigned short time, date, clustno;																// 磁盘映像中的地址 = clustno * 512 +0x003e00
 	unsigned int size;
 };
 struct FILEINFO *file_search(char *name, struct FILEINFO *finfo, int max);
@@ -347,4 +349,114 @@ unsigned int get_day_of_week();						// 取当前星期
 unsigned int get_mon_hex();							// 取当前月份
 unsigned int get_year();							// 取当前年份
 
+/* bitmap(位图，系统真象439页) */
+struct bitmap {
+	/* bitmap */
+	unsigned int btmp_bytes_len;
+	unsigned char* bits;					    	// 在遍历位图时,整体上以字节为单位,细节上是以位为单位,所以此处位图的指针必须是单字节
+};
+
+/* list.c(链表结构,用来实现队列) */
+struct list_elem {
+	struct list_elem* prev;							// 前躯结点
+	struct list_elem* next;							// 后继结点
+};
+struct list {
+	struct list_elem head;							// head是队首,是固定不变的，不是第1个元素,第1个元素为head.next
+	struct list_elem tail;							// tail是队尾,同样是固定不变的
+};
+void list_init (struct list* list);					// 初始化双链表
+
+/* lock(进程锁，系统真象439页) */
+struct semaphore {
+	/* 信号量结构 */
+	unsigned char  value;
+	struct   list waiters;
+};
+struct lock {
+	/* 锁结构 */
+	struct   TASK* holder;							// 锁的持有者
+	struct   semaphore semaphore;					// 用二元信号量实现锁
+	unsigned int holder_repeat_nr;					// 锁的持有者重复申请锁的次数
+};
+void sema_init(struct semaphore* psema, unsigned char value);			// 初始化信号量
+void lock_init(struct lock* plock);										// 初始化锁plock
+
 /* ide.c(ide硬盘驱动) */
+struct partition {
+	/* 分区结构 */
+	unsigned int start_lba;							// 起始扇区
+	unsigned int sec_cnt;							// 扇区数
+	struct disk* my_disk;							// 分区所属的硬盘
+	//struct list_elem part_tag;					// 用于队列中的标记
+	char name[8];									// 分区名称
+	struct super_block* sb;							// 本分区的超级块
+	/* 下面用到的bitmap和list，本操作系统暂未实现，以后有时间再说 */
+	struct bitmap block_bitmap;						// 块位图
+	struct bitmap inode_bitmap;						// i结点位图
+	// struct list open_inodes;						// 本分区打开的i结点队列
+};
+struct disk{
+	/* 硬盘结构 */
+	char name[8];									// 硬盘名称(8个字符)
+	struct ide_channel* my_channel;					// 此块硬盘归属于哪个ide通道
+	unsigned int dev_no;							// 主盘(0)还是从盘(1)
+	struct partition prim_parts[4];					// 主分区(最多4个)
+	struct partition logic_parts[8];				// 逻辑分区(设定最多8个)
+};
+struct ide_channel{
+	/* ata(ide)通道结构 */
+	char name[8];									// 本ata通道名称, 如ata0,也被叫做ide0. 可以参考bochs配置文件中关于硬盘的配置。
+	unsigned int port_base;							// 本通道的起始端口号
+	unsigned int irq_no;							// 本通道所用的中断号
+	struct lock lock;
+	char expecting_intr;							// 向硬盘发完命令后等待来自硬盘的中断
+	struct semaphore disk_done;						// 硬盘处理完成.线程用这个信号量来阻塞自己，由硬盘完成后产生的中断将线程唤醒
+	struct disk devices[2];							// 一个通道上连接两个硬盘，一主一从
+};
+struct partition_table_entry {
+	/* 构建一个16字节大小的结构体,用来存分区表项 */
+	unsigned char  bootable;		// 是否可引导	
+	unsigned char  start_head;		// 起始磁头号
+	unsigned char  start_sec;		// 起始扇区号
+	unsigned char  start_chs;		// 起始柱面号
+	unsigned char  fs_type;			// 分区类型
+	unsigned char  end_head;		// 结束磁头号
+	unsigned char  end_sec;			// 结束扇区号
+	unsigned char  end_chs;			// 结束柱面号
+	/* 更需要关注的是下面这两项 */
+	unsigned int start_lba;			// 本分区起始扇区的lba地址
+	unsigned int sec_cnt;			// 本分区的扇区数目
+};
+struct boot_sector {
+	/* 引导扇区,mbr或ebr所在的扇区 */
+	unsigned char  other[446];									// 引导代码
+	struct   partition_table_entry partition_table[4];			// 分区表中有4项,共64字节
+	unsigned short signature;									// 启动扇区的结束标志是0x55,0xaa,
+};
+/* 定义硬盘各寄存器的端口号 */
+#define reg_data(channel)			(channel->port_base + 0)
+#define reg_error(channel)			(channel->port_base + 1)
+#define reg_sect_cnt(channel)		(channel->port_base + 2)
+#define reg_lba_l(channel)			(channel->port_base + 3)
+#define reg_lba_m(channel)			(channel->port_base + 4)
+#define reg_lba_h(channel)			(channel->port_base + 5)
+#define reg_dev(channel)			(channel->port_base + 6)
+#define reg_status(channel)			(channel->port_base + 7)
+#define reg_cmd(channel)			(reg_status(channel))
+#define reg_alt_status(channel)		(channel->port_base + 0x206)
+#define reg_ctl(channel)			reg_alt_status(channel)
+/* reg_status寄存器的一些关键位 */
+#define BIT_STAT_BSY		0x80					// 硬盘忙
+#define BIT_STAT_DRDY		0x40					// 驱动器准备好	 
+#define BIT_STAT_DRQ		0x8						// 数据传输准备好了
+/* device寄存器的一些关键位 */
+#define BIT_DEV_MBS	0xa0							// 第7位和第5位固定为1
+#define BIT_DEV_LBA	0x40
+#define BIT_DEV_DEV	0x10
+/* 一些硬盘操作的指令 */
+#define CMD_IDENTIFY	   0xec						// identify指令
+#define CMD_READ_SECTOR	   0x20						// 读扇区指令
+#define CMD_WRITE_SECTOR   0x30						// 写扇区指令
+/* 定义可读写的最大扇区数(调试使用) */
+#define MAX_LBA ((1024*1024*1024/512) - 1)			// 只支持1024MB硬盘

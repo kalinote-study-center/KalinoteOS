@@ -100,8 +100,14 @@ run_os :
 	$(MAKE) -C kalinote
 	$(MAKE) run
 
+os:
+	$(MAKE) kalinote.img
+	$(COPY) kalinote.img ..\z_tools\qemu\kalinoteos.bin
+	$(COPY) kalinote.img ..\z_tools\qemu\kalinoteos.vfd
+	$(MAKE) -C kalinote
+
 clean :
-# ∫Œ§‚§∑§ §§
+# √ª”√
 
 src_only :
 	$(MAKE) clean
