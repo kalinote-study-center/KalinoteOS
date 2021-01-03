@@ -163,7 +163,6 @@ void KaliMain(void){
 	timer_settime(timer, 100);	/* 每秒更新一次时间 */
 	
 	for(;;){
-
 		if (fifo32_status(&keycmd) > 0 && keycmd_wait < 0) {
 			/* 如果存在向键盘控制器发送的数据，则发送它 */
 			keycmd_wait = fifo32_get(&keycmd);
@@ -199,7 +198,7 @@ void KaliMain(void){
 			if (i == 1) {
 				/* 更新时间 */
 				/*右下角时间显示*/
-				timer_init(timer, &fifo, 1);
+				timer_init(timer, &fifo, 1);		/* 设置一个定时器，下一秒再次提醒 */
 				sprintf(s,"%02d:%02d:%02d",get_hour_hex(), get_min_hex(), get_sec_hex());
 				putfonts8_asc_sht(sht_back, binfo->scrnx - 70, binfo->scrny - 20, COL_BLACK, COL_BGREY, s, 8);
 				/* 日期 */

@@ -41,6 +41,8 @@ void ide_init(){
 		*/
 		
 		sema_init(&channel->disk_done, 0);
+		
+		/* 这里需要注册中断 */
 		channel_no++;							// 下一个channel
 	}
 	
@@ -92,8 +94,10 @@ void read_from_sector(struct disk* hd, void* buf, unsigned char sec_cnt) {
 	}
 	/************************************************************************
 	*                             这里考虑数据长度                          *
+	*   这里原来(操作系统真象)使用的是outsw，可以指定读出长度，但是io_out暂 *
+	* 时没有这个功能，所以后面可能还需要进一步的修改，下同。                *
 	************************************************************************/
-	buf = io_in8(reg_data(hd->my_channel));			// 读出来的数据在地址为buf的内存里
+	buf = (void*)io_in8(reg_data(hd->my_channel));			// 读出来的数据在地址为buf的内存里
 }
 
 void write2sector(struct disk* hd, void* buf, unsigned char sec_cnt) {
@@ -109,4 +113,107 @@ void write2sector(struct disk* hd, void* buf, unsigned char sec_cnt) {
 	*                             这里考虑数据长度                          *
 	************************************************************************/
 	io_out8(reg_data(hd->my_channel), (int)buf);
+}
+
+
+char busy_wait(struct disk* hd) {
+	/* 等待30秒 */
+	struct ide_channel* channel = hd->my_channel;
+	unsigned short time_limit = 30 * 1000;	     // 可以等待30000毫秒
+	while (time_limit -= 10 >= 0) {
+		if (!(io_in8(reg_status(channel)) & BIT_STAT_BSY)) {
+			return (io_in8(reg_status(channel)) & BIT_STAT_DRQ);
+		} else {
+			//mtime_sleep(10);		     // 睡眠10毫秒(暂未实现)
+		}
+	}
+	return 0;
+}
+
+void ide_read(struct disk* hd, unsigned int lba, void* buf, unsigned int sec_cnt) {
+	/* 从硬盘读取sec_cnt个扇区到buf */
+	unsigned int secs_op, secs_done = 0;  		// secs_op:每次操作的扇区数，secs_done:已完成扇区数
+	char error[64];
+
+	lock_acquire (&hd->my_channel->lock);		// 这一句暂时没有功能
+	
+/* 1. 先选择操作的硬盘 */
+	select_disk(hd);
+
+	while(secs_done < sec_cnt) {
+		if ((secs_done + 256) <= sec_cnt) {
+			secs_op = 256;
+		} else {
+			secs_op = sec_cnt - secs_done;
+		}
+		
+/* 2. 写入待读入的扇区数和起始扇区号 */
+		select_sector(hd, lba + secs_done, secs_op);
+		
+/* 3. 执行的命令写入reg_cmd寄存器 */
+		cmd_out(hd->my_channel, CMD_READ_SECTOR);			// 准备开始读数据
+		
+		/******************************   阻塞自己的时机  **********************************
+		* 在硬盘已经开始工作(开始在内部读数据或写数据)后才能阻塞自己,现在硬盘已经开始忙了, *
+		* 将自己阻塞,等待硬盘完成读操作后通过中断处理程序唤醒自己                          *
+		***********************************************************************************/
+		sema_down(&hd->my_channel->disk_done);				// 这一句暂时没有功能
+		
+/* 4. 检测硬盘状态是否可读 */
+		/* 醒来后开始执行下面代码*/
+		if(!busy_wait(hd)) {								// busy_wait暂时还没有实现
+			/* 如果失败 */
+			sprintf(error, "%s read sector %d failed!!!!!!\n", hd->name, lba);
+		}
+
+/* 5. 把数据从硬盘的缓冲区中读出 */
+		read_from_sector(hd, (void*)((unsigned int)buf + secs_done * 512), secs_op);
+		secs_done += secs_op;
+	}
+	/* 醒来后开始释放锁*/
+	lock_release(&hd->my_channel->lock);
+}
+
+void ide_write(struct disk* hd, unsigned int lba, void* buf, unsigned int sec_cnt) {
+	/* 将buf中sec_cnt扇区数据写入硬盘 */
+	unsigned int secs_op, secs_done = 0;  		// secs_op:每次操作的扇区数，secs_done:已完成扇区数
+	char error[64];
+	
+	lock_acquire (&hd->my_channel->lock);			// 这一句暂时没有功能
+	
+/* 1. 先选择操作的硬盘 */
+	select_disk(hd);
+	
+	while(secs_done < sec_cnt) {
+		if ((secs_done + 256) <= sec_cnt) {
+			secs_op = 256;
+		} else {
+			secs_op = sec_cnt - secs_done;
+		}
+		
+/* 2. 写入待读入的扇区数和起始扇区号 */
+		select_sector(hd, lba + secs_done, secs_op);
+		
+/* 3. 执行的命令写入reg_cmd寄存器 */
+		cmd_out(hd->my_channel, CMD_WRITE_SECTOR);			// 准备开始写数据
+		
+/* 4. 检测硬盘状态是否可读 */
+		/* 醒来后开始执行下面代码*/
+		if(!busy_wait(hd)) {								// busy_wait暂时还没有实现
+			/* 如果失败 */
+			sprintf(error, "%s write sector %d failed!!!!!!\n", hd->name, lba);
+		}
+/* 5 将数据写入硬盘 */
+		write2sector(hd, (void*)((unsigned int)buf + secs_done * 512), secs_op);
+
+		/* 在硬盘响应期间阻塞自己 */
+		sema_down(&hd->my_channel->disk_done);
+		secs_done += secs_op;
+	}
+	/* 醒来后开始释放锁*/
+	lock_release(&hd->my_channel->lock);
+}
+
+void inthandler(int *esp){
+	/* 硬盘中断处理程序 */
 }

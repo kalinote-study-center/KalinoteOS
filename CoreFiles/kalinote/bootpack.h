@@ -19,8 +19,12 @@ void io_hlt(void);							//暂停处理器
 void io_cli(void);							//禁止中断
 void io_sti(void);							//允许中断
 void io_stihlt(void);						//允许中断并暂停处理器
-int io_in8(int port);						//传输数据用的，汇编IN指令，用于端口操作
-void io_out8(int port, int data);			//传输数据用的，汇编OUT指令，用于端口操作
+int io_in8(int port);						//传输数据用的，汇编IN指令，用于端口操作(8位)
+void io_out8(int port, int data);			//传输数据用的，汇编OUT指令，用于端口操作(8位)
+int io_in16(int port);						//传输数据用的，汇编IN指令，用于端口操作(16位)
+void io_out16(int port, int data);			//传输数据用的，汇编OUT指令，用于端口操作(16位)
+int io_in32(int port);						//传输数据用的，汇编IN指令，用于端口操作(32位)
+void io_out32(int port, int data);			//传输数据用的，汇编OUT指令，用于端口操作(32位)
 int io_load_eflags(void);					//读取最初的eflags值
 void io_store_eflags(int eflags);			//将值存入eflags寄存器
 void load_gdtr(int limit, int addr);		//加载GDTR寄存器
@@ -349,7 +353,7 @@ unsigned int get_day_of_week();						// 取当前星期
 unsigned int get_mon_hex();							// 取当前月份
 unsigned int get_year();							// 取当前年份
 
-/* bitmap(位图，系统真象439页) */
+/* bitmap(位图，系统真象377页) */
 struct bitmap {
 	/* bitmap */
 	unsigned int btmp_bytes_len;
@@ -367,7 +371,7 @@ struct list {
 };
 void list_init (struct list* list);					// 初始化双链表
 
-/* lock(进程锁，系统真象439页) */
+/* lock.c(进程锁，系统真象439页) */
 struct semaphore {
 	/* 信号量结构 */
 	unsigned char  value;
@@ -381,6 +385,10 @@ struct lock {
 };
 void sema_init(struct semaphore* psema, unsigned char value);			// 初始化信号量
 void lock_init(struct lock* plock);										// 初始化锁plock
+void lock_acquire(struct lock* plock);									// 获取锁plock(暂未实现)
+void sema_down(struct semaphore* psema);								// 信号量down操作(暂未实现)
+void sema_up(struct semaphore* psema);									// 信号量up操作(暂未实现)
+void lock_release(struct lock* plock);									// 释放锁plock(暂未实现)
 
 /* ide.c(ide硬盘驱动) */
 struct partition {
@@ -460,6 +468,7 @@ struct boot_sector {
 #define CMD_WRITE_SECTOR   0x30						// 写扇区指令
 /* 定义可读写的最大扇区数(调试使用) */
 #define MAX_LBA ((1024*1024*1024/512) - 1)			// 只支持1024MB硬盘
+void ide_init();									// 硬盘数据结构初始化
 void select_disk(struct disk* hd);					// 选择要读写的硬盘
 void select_sector(struct disk* hd,
 	unsigned int lba, unsigned char sec_cnt);		// 向硬盘控制器写入起始扇区地址及要读写的扇区数
@@ -469,3 +478,5 @@ void read_from_sector(struct disk* hd,
 	void* buf, unsigned char sec_cnt);				// 硬盘读入sec_cnt个扇区的数据到buf
 void write2sector(struct disk* hd, void* buf,
 	unsigned char sec_cnt);							// 将buf中sec_cnt扇区的数据写入硬盘
+void ide_read(struct disk* hd, unsigned int lba,
+	void* buf, unsigned int sec_cnt);				// 从硬盘读取sec_cnt个扇区到buf
