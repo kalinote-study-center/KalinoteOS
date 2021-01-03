@@ -155,6 +155,9 @@ void KaliMain(void){
 	timer_settime(timer, 100);	/* 每秒更新一次时间 */
 	
 	for(;;){
+		/***************************************************************
+		*         从这里开始，操作系统初始化完毕，开始正常工作         *
+		***************************************************************/
 		if (fifo32_status(&keycmd) > 0 && keycmd_wait < 0) {
 			/* 如果存在向键盘控制器发送的数据，则发送它 */
 			keycmd_wait = fifo32_get(&keycmd);
@@ -306,8 +309,9 @@ void KaliMain(void){
 					new_mx = mx;
 					new_my = my;
 					/* 鼠标位置 */
-					sprintf(s, "(%3d, %3d)", mx, my);
-					putfonts8_asc_sht(sht_back, 0, 0, COL_WHITE, COL_LDBLUE, s, 10);
+					//sprintf(s, "(%3d, %3d)", mx, my);
+					//putfonts8_asc_sht(sht_back, 0, 0, COL_WHITE, COL_LDBLUE, s, 10);
+					/* 启用鼠标位置显示会导致画面卡顿 */
 					sheet_slide(sht_mouse, mx, my); /* 包含sheet_refresh */
 					if ((mdec.btn & 0x01) != 0) {
 						/* 按下左键 */

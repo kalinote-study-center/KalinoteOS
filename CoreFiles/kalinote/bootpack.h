@@ -93,9 +93,9 @@ void inthandler27(int *esp);					// 27号中断，具体作用可以去代码里看
 
 //fifo.c(FIFO缓冲区)
 struct FIFO32 {
-	int *buf;
-	int p, q, size, free, flags;
-	struct TASK *task;
+	int *buf;									// 缓冲区地址
+	int p, q, size, free, flags;				// p是下一次数据写入地址，q是下一次数据读入地址，size是缓冲区大小，free是缓冲区空闲字节数，flags是溢出标志
+	struct TASK *task;							// 有数据写入时需要唤醒的任务
 };
 void fifo32_init(struct FIFO32 *fifo, int size, int *buf, struct TASK *task);						//初始化FIFO缓冲区
 int fifo32_put(struct FIFO32 *fifo, int data);														//向FIFO传数据并保存
@@ -111,7 +111,7 @@ void inthandler2c(int *esp);																		//鼠标监听中断
 void enable_mouse(struct FIFO32 *fifo, int data0, struct MOUSE_DEC *mdec);							//激活鼠标
 int mouse_decode(struct MOUSE_DEC *mdec, unsigned char dat);										//获取鼠标的三个字节信息，并解码
 
-//keyboard.c(键盘控制)
+//keyb .c(键盘控制)
 void inthandler21(int *esp);																		//键盘监听中断
 void wait_KBC_sendready(void);																		//等待键盘控制电路准备完毕
 void init_keyboard(struct FIFO32 *fifo, int data0);													//初始化键盘控制电路
