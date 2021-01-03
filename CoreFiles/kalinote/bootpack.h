@@ -319,8 +319,13 @@ int info_JPEG(struct DLL_STRPICENV*env,int *info,int size,unsigned char *fp);			
 int decode0_JPEG(struct DLL_STRPICENV*env,int size,unsigned char *fp,int b_type,unsigned char *buf,int skip);				// JPG图片解码
 
 /* bootpack.c */
+#define KEYCMD_LED		0xed
 struct SHEET *open_console(struct SHTCTL *shtctl, unsigned int memtotal);							// 开启一个命令窗口
 struct TASK *open_constask(struct SHEET *sht, unsigned int memtotal);								// 开启一个任务
+void keywin_off(struct SHEET *key_win);																// 控制窗口标题栏颜色和光标激活状态
+void keywin_on(struct SHEET *key_win);																// 控制窗口标题栏颜色和光标激活状态
+void close_console(struct SHEET *sht);																// 关闭命令窗口
+void close_constask(struct TASK *task);																// 结束任务
 
 /* kca.c(解压KCA压缩文件) */
 int kca_getsize(unsigned char *p);
