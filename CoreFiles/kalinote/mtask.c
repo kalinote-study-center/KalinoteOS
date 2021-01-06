@@ -6,11 +6,13 @@ struct TASKCTL *taskctl;
 struct TIMER *task_timer;
 
 struct TASK *task_now(void){
+	/* 返回现在正在活动中的struct TASK地址 */
 	struct TASKLEVEL *tl = &taskctl->level[taskctl->now_lv];
 	return tl->tasks[tl->now];
 }
 
 void task_add(struct TASK *task){
+	/* 向struct TASKLEVEL中添加一个进程 */
 	struct TASKLEVEL *tl = &taskctl->level[task->level];
 	tl->tasks[tl->running] = task;
 	tl->running++;
@@ -19,6 +21,7 @@ void task_add(struct TASK *task){
 }
 
 void task_remove(struct TASK *task){
+	/* 向struct TASKLEVEL中删除一个进程 */
 	int i;
 	struct TASKLEVEL *tl = &taskctl->level[task->level];
 
@@ -49,6 +52,7 @@ void task_remove(struct TASK *task){
 }
 
 void task_switchsub(void){
+	/* 用于进程切换时改变进程level */
 	int i;
 	/* 寻找最上层的level */
 	for (i = 0; i < MAX_TASKLEVELS; i++) {
@@ -69,6 +73,7 @@ void task_idle(void){
 }
 
 struct TASK *task_init(struct MEMMAN *memman){
+	/* 任务初始化 */
 	int i;
 	struct TASK *task, *idle;
 	struct SEGMENT_DESCRIPTOR *gdt = (struct SEGMENT_DESCRIPTOR *) ADR_GDT;
@@ -88,8 +93,8 @@ struct TASK *task_init(struct MEMMAN *memman){
 	
 	task = task_alloc();
 	task->flags = 2;	/* 活动中标志 */
-	task->priority = 2; /* 0.02秒 */
-	task->level = 0;	/* 最高等级 */
+	task->priority = 2; /* 优先级2(0.02秒进行任务切换) */
+	task->level = 0;	/* 最高等级(后面还可以通过task_run重新设置level) */
 	task_add(task);
 	task_switchsub();	/* level设定 */
 	load_tr(task->sel);
@@ -111,6 +116,7 @@ struct TASK *task_init(struct MEMMAN *memman){
 }
 
 struct TASK *task_alloc(void){
+	/* 初始化任务结构 */
 	int i;
 	struct TASK *task;
 	for (i = 0; i < MAX_TASKS; i++) {
@@ -129,7 +135,7 @@ struct TASK *task_alloc(void){
 			task->tss.ds = 0;
 			task->tss.fs = 0;
 			task->tss.gs = 0;
-			task->tss.iomap = 0x40000000;
+			task->tss.iomap = 0x40000000;		/* 固定值 */
 			task->tss.ss0 = 0;
 			return task;
 		}
@@ -138,11 +144,19 @@ struct TASK *task_alloc(void){
 }
 
 void task_run(struct TASK *task, int level, int priority){
+	/* 运行任务 */
 	if (level < 0) {
 		level = task->level; /* 不改变level */
 	}
 	if (priority > 0) {
-		task->priority = priority;
+		/* 
+		* 这里判定了传入的priority是否大于0，如果大于0则可以更改优先级
+		* 如果小于等于0就不改变进程优先级
+		* 同时使用task_now()也可以对于正在运行的进程仅修改优先级
+		* 优先级工作原理是设定进程切换时间，以10ms为单位，如果优先级为1则是10ms进行进程切换
+		* 如果是2则是20ms进行进程切换，以此类推
+		*/
+		task->priority = priority;  /* 设置进程优先级 */
 	}
 
 	if (task->flags == 2 && task->level != level) { /* 改变活动中的level */
@@ -159,6 +173,7 @@ void task_run(struct TASK *task, int level, int priority){
 }
 
 void task_switch(void){
+	/* 切换任务 */
 	struct TASKLEVEL *tl = &taskctl->level[taskctl->now_lv];
 	struct TASK *new_task, *now_task = tl->tasks[tl->now];
 	tl->now++;
@@ -166,6 +181,7 @@ void task_switch(void){
 		tl->now = 0;
 	}
 	if (taskctl->lv_change != 0) {
+		/* level改变 */
 		task_switchsub();
 		tl = &taskctl->level[taskctl->now_lv];
 	}

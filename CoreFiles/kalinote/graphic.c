@@ -172,7 +172,7 @@ void putfonts8_asc(int *vram, int xsize, int x, int y, int c, unsigned char *s)
 	/*绘制字符串(ASCLL编码) - 此处原内容在第96页*/
 	extern char fonts[4096];
 	struct TASK *task = task_now();
-	char *hzk = (char *) *((int *) 0x0fe8), *font;
+	char *hzk = (char *) *((int *) 0x10fe8), *font;
 	char *nihongo = (char *) *((int *) 0xef9);
 	int k, t;
 	

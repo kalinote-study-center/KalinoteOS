@@ -13,6 +13,7 @@ void console_task(struct SHEET *sheet, unsigned int memtotal){
 	struct FILEHANDLE fhandle[8];
 	char cmdline[30];
 	unsigned char *hzk = (char *) *((int *) 0x0fe8);
+	struct SYSINFO *sysinfo = (struct SYSINFO *) *((int *) 0x10000);
 
 	cons.sht = sheet;
 	cons.cur_x =  8;
@@ -39,7 +40,20 @@ void console_task(struct SHEET *sheet, unsigned int memtotal){
 	}
 	task->langbyte1 = 0;
 
-	cons_putchar(&cons, '>', 1);			//命令提示符
+	/*
+	* 这里关于系统模式切换还需要改进
+	*/
+	if (sysinfo->sysmode == 0) {
+		/* 普通模式 */
+		cons_putchar(&cons, '>', 1);			//命令提示符
+	} else if (sysinfo->sysmode == 1) {
+		/* 调试模式 */
+		cons_putchar(&cons, 10001, 1);
+	} else {
+		/* 未知系统模式 */
+		cons_putchar(&cons, 10002, 1);
+	}
+	
 
 	for (;;) {
 		io_cli();
@@ -79,6 +93,9 @@ void console_task(struct SHEET *sheet, unsigned int memtotal){
 			if (256 <= i && i <= 511) { /* 键盘数据(通过任务A) */
 				if (i == 8 + 256) {
 					/* backspace */
+					/*
+					*****************************这里还需要修改*****************************
+					*/
 					if (cons.cur_x > 16) {
 						/* 用空格键把光标消去后，前移一次光标 */
 						cons_putchar(&cons, ' ', 0);
@@ -88,20 +105,47 @@ void console_task(struct SHEET *sheet, unsigned int memtotal){
 					/* Enter */
 					/* 用空格将光标擦除 */
 					cons_putchar(&cons, ' ', 0);
-					cmdline[cons.cur_x / 8 - 2] = 0;
+					if (sysinfo->sysmode == 0) {
+						/* 普通模式 */
+						cmdline[cons.cur_x / 8 - 2] = 0;		//命令提示符
+					} else if (sysinfo->sysmode == 1) {
+						/* 调试模式 */
+						cmdline[cons.cur_x / 8 - 8] = 0;
+					} else {
+						/* 未知系统模式 */
+						cmdline[cons.cur_x / 8 - 16] = 0;
+					}
 					cons_newline(&cons);
 					cons_runcmd(cmdline, &cons, fat, memtotal);	/* 运行命令 */
 					if (sheet == 0) {
 						cmd_exit(&cons, fat);
 					}
 					/* 显示提示符 */
-					cons_putchar(&cons, '>', 1);
+					if (sysinfo->sysmode == 0) {
+						/* 普通模式 */
+						cons_putchar(&cons, '>', 1);			//命令提示符
+					} else if (sysinfo->sysmode == 1) {
+						/* 调试模式 */
+						cons_putchar(&cons, 10001, 1);
+					} else {
+						/* 未知系统模式 */
+						cons_putchar(&cons, 10002, 1);
+					}
 				} else {
 					/* 一般字符 */
 					//if (cons.cur_x < 240) {
 					if (cons.cur_x < 512) {
 						/* 显示一个字符后将光标后移一位 */
-						cmdline[cons.cur_x / 8 - 2] = i - 256;
+						if (sysinfo->sysmode == 0) {
+							/* 普通模式 */
+							cmdline[cons.cur_x / 8 - 2] = i - 256;		//命令提示符
+						} else if (sysinfo->sysmode == 1) {
+							/* 调试模式 */
+							cmdline[cons.cur_x / 8 - 8] = i - 256;
+						} else {
+							/* 未知系统模式 */
+							cmdline[cons.cur_x / 8 - 16] = i - 256;
+						}
 						cons_putchar(&cons, i - 256, 1);
 					}
 				}
@@ -119,6 +163,9 @@ void console_task(struct SHEET *sheet, unsigned int memtotal){
 }
 
 void cons_putchar(struct CONSOLE *cons, int chr, char move){
+	/*
+	* 这里关于系统模式切换还需要改进
+	*/
 	char s[2];
 	s[0] = chr;
 	s[1] = 0;
@@ -140,7 +187,29 @@ void cons_putchar(struct CONSOLE *cons, int chr, char move){
 		cons_newline(cons);
 	} else if (s[0] == 0x0d) {	/* 回车 */
 		/* 这里暂时不进行任何操作 */
-	} else {	/* 一般字符 */
+	} else if (chr == 10001) {	/* 系统调试模式 */
+		if (cons->sht != 0) {
+			putfonts8_asc_sht(cons->sht, cons->cur_x, cons->cur_y, COL_WHITE, COL_BLACK, "DEBUG >", 7);
+		}
+		if (move != 0) {
+			/* move为0时光标不后移 */
+			cons->cur_x += 8 * 7;
+			if (cons->cur_x == 56 + 464) {
+				cons_newline(cons);
+			}
+		}
+	} else if (chr == 10002) {	/* 系统未知模式 */
+		if (cons->sht != 0) {
+			putfonts8_asc_sht(cons->sht, cons->cur_x, cons->cur_y, COL_WHITE, COL_BLACK, "UNKNOWSYSMODE >", 15);
+		}
+		if (move != 0) {
+			/* move为0时光标不后移 */
+			cons->cur_x += 8 * 15;
+			if (cons->cur_x == 120 + 400) {
+				cons_newline(cons);
+			}
+		}
+	} else {	/* 一般字符，系统为正常模式 */
 		if (cons->sht != 0) {
 			putfonts8_asc_sht(cons->sht, cons->cur_x, cons->cur_y, COL_WHITE, COL_BLACK, s, 1);
 		}
@@ -160,6 +229,7 @@ void cons_newline(struct CONSOLE *cons){
 	int x, y;
 	struct SHEET *sheet = cons->sht;
 	struct TASK *task = task_now();
+	struct SYSINFO *sysinfo = (struct SYSINFO *) *((int *) 0x10000);
 	if (cons->cur_y < 28 + 432) {
 		cons->cur_y += 16; /* 换行 */
 	} else {
@@ -178,10 +248,23 @@ void cons_newline(struct CONSOLE *cons){
 			sheet_refresh(sheet, 8, 28, 8 + 512, 28 + 448);
 		}
 	}
-	cons->cur_x = 8;
+	
+	if (sysinfo->sysmode == 0) {
+		/* 普通模式 */
+		cons->cur_x = 8;
+	} else if (sysinfo->sysmode == 1) {
+		/* 调试模式 */
+		//cons->cur_x = 8 * 7;
+		cons->cur_x = 8;
+	} else {
+		/* 未知系统模式 */
+		//cons->cur_x = 8 * 15;
+		cons->cur_x = 8;
+	}
 	if (task->langmode == 1 && task->langbyte1 != 0) {
 		cons->cur_x = 16;
 	}
+	
 	return;
 }
 
@@ -221,11 +304,17 @@ void cons_runcmd(char *cmdline, struct CONSOLE *cons, int *fat, unsigned int mem
 		cmd_langmode(cons, cmdline);
 	} else if (strcmp(cmdline, "shutdown") == 0) {
 		cmd_shutdown();
+	} else if (strncmp(cmdline, "sysmode ",8) == 0) {
+		cmd_sysmode(cons, cmdline);
+	} else if (strncmp(cmdline, "echo ",5) == 0) {
+		cmd_echo(cons, cmdline);
 	} else if (cmdline[0] != 0) {
 		/* 执行cmd_app(),如果不是一个应用，会返回0 */
 		if (cmd_app(cons, fat, cmdline) == 0) {
 			/* 不是内部或外部命令 */
-			cons_putstr0(cons, "Not a command.\n\n");
+			cons_putstr0(cons, "\"");
+			cons_putstr0(cons, cmdline);
+			cons_putstr0(cons, "\" is not a command.\n\n");
 		}
 	}
 	return;
@@ -233,6 +322,7 @@ void cons_runcmd(char *cmdline, struct CONSOLE *cons, int *fat, unsigned int mem
 
 
 void cmd_mem(struct CONSOLE *cons, unsigned int memtotal){
+	/* 查询系统内存使用情况 */
 	struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;
 	char s[60];
 	sprintf(s, "total   %dMB\nfree %dKB\n\n", memtotal / (1024 * 1024), memman_total(memman) / 1024);
@@ -241,6 +331,7 @@ void cmd_mem(struct CONSOLE *cons, unsigned int memtotal){
 }
 
 void cmd_cls(struct CONSOLE *cons){
+	/* 清屏 */
 	int x, y;
 	struct SHEET *sheet = cons->sht;
 	//for (y = 28; y < 28 + 128; y++) {
@@ -257,6 +348,7 @@ void cmd_cls(struct CONSOLE *cons){
 }
 
 void cmd_dir(struct CONSOLE *cons){
+	/* 输出文件及目录 */
 	struct FILEINFO *finfo = (struct FILEINFO *) (ADR_DISKIMG + 0x002600);
 	int i, j;
 	char s[50];
@@ -341,6 +433,7 @@ void cmd_dir(struct CONSOLE *cons){
 }
 
 void cmd_type(struct CONSOLE *cons, int *fat, char *cmdline){
+	/* 输出文件内容 */
 	struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;
 	struct FILEINFO *finfo = file_search(cmdline + 5, (struct FILEINFO *) (ADR_DISKIMG + 0x002600), 224);
 	char *p;
@@ -363,6 +456,7 @@ void cmd_type(struct CONSOLE *cons, int *fat, char *cmdline){
 }
 
 void cmd_exit(struct CONSOLE *cons, int *fat){
+	/* 退出程序 */
 	struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;
 	struct TASK *task = task_now();
 	struct SHTCTL *shtctl = (struct SHTCTL *) *((int *) 0x0fe4);
@@ -384,6 +478,7 @@ void cmd_exit(struct CONSOLE *cons, int *fat){
 }
 
 void cmd_start(struct CONSOLE *cons, char *cmdline, int memtotal){
+	/* 在新的命令窗口启动一个应用程序 */
 	struct SHTCTL *shtctl = (struct SHTCTL *) *((int *) 0x0fe4);
 	struct SHEET *sht = open_console(shtctl, memtotal);
 	struct FIFO32 *fifo = &sht->task->fifo;
@@ -400,6 +495,7 @@ void cmd_start(struct CONSOLE *cons, char *cmdline, int memtotal){
 }
 
 void cmd_run(struct CONSOLE *cons, char *cmdline, int memtotal){
+	/* 启动一个应用程序并且不打开命令窗口 */
 	struct TASK *task = open_constask(0, memtotal);
 	struct FIFO32 *fifo = &task->fifo;
 	int i;
@@ -414,6 +510,7 @@ void cmd_run(struct CONSOLE *cons, char *cmdline, int memtotal){
 }
 
 void cmd_langmode(struct CONSOLE *cons, char *cmdline){
+	/* 切换系统语言模式 */
 	struct TASK *task = task_now();
 	unsigned char mode = cmdline[9] - '0';
 	if (mode <= 3) {
@@ -437,6 +534,49 @@ void cmd_langmode(struct CONSOLE *cons, char *cmdline){
 void cmd_shutdown(void){
 	/* 关机 */
 	asm_shutdown();
+}
+
+void cmd_sysmode(struct CONSOLE *cons, char *cmdline) {
+	/* 切换系统模式 */
+	struct SYSINFO *sysinfo = (struct SYSINFO *) *((int *) 0x10000);
+	struct TASK *task = task_now();
+	char mode = cmdline[8] - '0';
+	char s[64];
+	sysinfo->sysmode = mode;
+	if (sysinfo->sysmode == 0) {
+		if (task->langmode == 1) {
+			/* 中文模式 */
+			cons_putstr0(cons,"系统切换到正常模式\n");
+		} else {
+			/* 英文或日文模式 */
+			cons_putstr0(cons,"System switch to normal mode\n");
+		}
+	} else if (sysinfo->sysmode == 1) {
+		if (task->langmode == 1) {
+			/* 中文模式 */
+			cons_putstr0(cons,"系统切换到调试模式\n");
+		} else {
+			/* 英文或日文模式 */
+			cons_putstr0(cons,"System switch to debug mode\n");
+		}
+	} else {
+		if (task->langmode == 1) {
+			/* 中文模式 */
+			sprintf(s,"该系统模式未定义，模式码：%d\n",sysinfo->sysmode);
+			cons_putstr0(cons,s);
+		} else {
+			/* 英文或日文模式 */
+			sprintf(s,"This system mode is not defined,mode code:%d\n",sysinfo->sysmode);
+			cons_putstr0(cons,s);
+		}
+	}
+}
+
+void cmd_echo(struct CONSOLE *cons, char *cmdline) {
+	/* 系统输出 */
+	char *s = (char *)0x2f000;
+	sprintf(s,"%s\n", cmdline + 5);
+	cons_putstr0(cons,s);
 }
 
 int cmd_app(struct CONSOLE *cons, int *fat, char *cmdline){
@@ -830,5 +970,75 @@ void kal_api_linewin(struct SHEET *sht, int x0, int y0, int x1, int y1, int col)
 		y += dy;
 	}
 
+	return;
+}
+
+void keywin_off(struct SHEET *key_win){
+	change_wtitle8(key_win, 0);
+	if ((key_win->flags & 0x20) != 0) {
+		fifo32_put(&key_win->task->fifo, 3); /* 命令行窗口光标OFF */
+	}
+	return;
+}
+
+void keywin_on(struct SHEET *key_win){
+	change_wtitle8(key_win, 1);
+	if ((key_win->flags & 0x20) != 0) {
+		fifo32_put(&key_win->task->fifo, 2); /* 命令行窗口光标ON */
+	}
+	return;
+}
+
+struct TASK *open_constask(struct SHEET *sht, unsigned int memtotal){
+	struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;
+	struct TASK *task = task_alloc();
+	int *cons_fifo = (int *) memman_alloc_4k(memman, 128 * 4);
+	task->cons_stack = memman_alloc_4k(memman, 64 * 1024);
+	task->tss.esp = task->cons_stack + 64 * 1024 - 12;
+	task->tss.eip = (int) &console_task;
+	task->tss.es = 1 * 8;
+	task->tss.cs = 2 * 8;
+	task->tss.ss = 1 * 8;
+	task->tss.ds = 1 * 8;
+	task->tss.fs = 1 * 8;
+	task->tss.gs = 1 * 8;
+	*((int *) (task->tss.esp + 4)) = (int) sht;
+	*((int *) (task->tss.esp + 8)) = memtotal;
+	task_run(task, 2, 2); /* level=2, priority=2 */
+	fifo32_init(&task->fifo, 128, cons_fifo, task);
+	return task;
+}
+
+struct SHEET *open_console(struct SHTCTL *shtctl, unsigned int memtotal){
+	struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;
+	struct SHEET *sht = sheet_alloc(shtctl);
+	char icon[16][16];
+	//unsigned int *buf = (unsigned int *) memman_alloc_4k(memman, 256 * 165 * 4);
+	unsigned int *buf = (unsigned int *) memman_alloc_4k(memman, 525 * 479 * 4);
+	//sheet_setbuf(sht, buf, 256, 165, -1); /* 无透明色 */
+	sheet_setbuf(sht, buf, 525, 479, -1); /* 无透明色 */
+	make_window8(buf, 525, 479, "console", 0);
+	make_textbox8(sht, 3, 24, 519, 452, COL_BLACK);
+	make_icon(buf, 525, icon, 1);
+	sht->task = open_constask(sht, memtotal);
+	sht->flags |= 0x20;	/* 有光标 */
+	return sht;
+}
+
+void close_constask(struct TASK *task){
+	struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;
+	task_sleep(task);
+	memman_free_4k(memman, task->cons_stack, 64 * 1024);
+	memman_free_4k(memman, (int) task->fifo.buf, 128 * 4);
+	task->flags = 0; /* 用来替代task_free(task); */
+	return;
+}
+
+void close_console(struct SHEET *sht){
+	struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;
+	struct TASK *task = sht->task;
+	memman_free_4k(memman, (int) sht->buf, 256 * 165 * 4);
+	sheet_free(sht);
+	close_constask(task);
 	return;
 }

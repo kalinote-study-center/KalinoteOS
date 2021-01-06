@@ -7,26 +7,31 @@
 
 struct TIMERCTL timerctl;
 
-#define TIMER_FLAGS_ALLOC		1	/* 已配置状态 */
-#define TIMER_FLAGS_USING		2	/* 定时器运行中 */
-
 void init_pit(void){
 	/* 初始化可编程间隔化定时器(PIT) */
 	int i;
 	struct TIMER *t;
-	io_out8(PIT_CTRL, 0x34);
-	io_out8(PIT_CNT0, 0x9c);
-	io_out8(PIT_CNT0, 0x2e);
+	/* 改变PIT中断周期 */
+	io_out8(PIT_CTRL, 0x34); // 固定值
+	io_out8(PIT_CNT0, 0x9c); // 中断周期低8位
+	io_out8(PIT_CNT0, 0x2e); // 中断周期高8位
+	/* 上面发送的终端周期为0x2e9c，换算成十进制是11932，设定这个值的中断频率为100Hz，即每10ms发生一次中断，每秒产生100次中断 */
 	timerctl.count = 0;
 	for (i = 0; i < MAX_TIMER; i++) {
 		timerctl.timers0[i].flags = 0; /* 未使用 */
 	}
+	/* 哨兵程序，一直守在最后一个的timer */
 	t = timer_alloc(); /* 取得一个 */
 	t->timeout = 0xffffffff;
 	t->flags = TIMER_FLAGS_USING;
 	t->next = 0; /* 末尾 */
 	timerctl.t0 = t; /* 因为现在只有哨兵，所以他就在最前面 */
 	timerctl.next = 0xffffffff; /* 因为只有哨兵，所以下一个超时时刻就是哨兵的时刻 */
+	/*
+	* "哨兵"是在整个timer线性表中的最后一个，且永远不会超时
+	* 使用哨兵程序防止了"处于运行中的定时器只有一个"和"定时器插入到最后"这两种情况的发生
+	* 减少了定时器程序的不确定情况
+	*/
 	return;
 }
 
@@ -84,9 +89,10 @@ void timer_settime(struct TIMER *timer, unsigned int timeout){
 }
 
 void inthandler20(int *esp){
+	/* 时钟中断程序 */
 	struct TIMER *timer;
 	char ts = 0;
-	io_out8(PIC0_OCW2, 0x60);	/* 把IRQ-00信号接收完了的信息通知给中断(PIC) */
+	io_out8(PIC0_OCW2, 0x60);	/* 把IRQ-00信号接收完了的信息通知给中断(PIC)，0+0x60号端口 */
 	timerctl.count++;			//定时器计数
 	if (timerctl.next > timerctl.count) {
 		return; /* 还不到下一个时刻，所以结束 */
@@ -109,6 +115,7 @@ void inthandler20(int *esp){
 	timerctl.t0 = timer;
 	timerctl.next = timer->timeout;
 	if (ts != 0) {
+		/* 切换任务在所有中断程序执行完成以后，避免出现错误 */
 		task_switch();
 	}
 	return;

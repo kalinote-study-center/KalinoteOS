@@ -12,7 +12,7 @@ void fifo32_init(struct FIFO32 *fifo, int size, int *buf, struct TASK *task){
 	fifo->flags = 0; /* 溢出标志 */
 	fifo->p = 0; /* 下一个数据写入位置 */
 	fifo->q = 0; /* 下一个数据读出位置 */
-	fifo->task = task; /* 有数据写入时需要唤醒的任务 */
+	fifo->task = task; /* 有数据写入时需要唤醒的任务,某些任务(比如鼠标，键盘等)不需要实时处理的，可以先进入休眠，在fifo有数据进入时唤醒并处理 */
 	return;
 }
 
@@ -31,8 +31,9 @@ int fifo32_put(struct FIFO32 *fifo, int data){
 	}
 	fifo->free--; /* 可用空间-1 */
 	if (fifo->task != 0) {
+		/* 有标记需要唤醒的任务(无需唤醒任务功能时fifo->task为0) */
 		if (fifo->task->flags != 2) { /* 如果任务处于休眠状态 */
-			task_run(fifo->task, -1, 0); /* 将任务唤醒 */
+			task_run(fifo->task, -1, 0); /* 将任务唤醒(不改变level和优先级) */
 		}
 	}
 	return 0;

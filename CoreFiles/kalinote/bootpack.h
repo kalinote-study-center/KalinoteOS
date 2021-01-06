@@ -1,3 +1,8 @@
+//sysinfo(系统全局信息)
+struct SYSINFO {
+	char sysmode;
+};
+
 //asmhead.nas(bootpack.c的前面部分)
 struct BOOTINFO {	/* 0x0ff0-0x0fff */
 	/*启动信息 - 此处原内容在第89页*/
@@ -12,8 +17,6 @@ struct BOOTINFO {	/* 0x0ff0-0x0fff */
 #define ADR_DISKIMG		0x00100000			//文件位置(软盘，内存中)
 #undef	NULL
 #define NULL ((void*)0)
-
-//naskfunc.nas中的函数(汇编编写)
 void io_hlt(void);							//暂停处理器
 //void write_mem8(int addr, int data);		//写入内存(被指针取代)
 void io_cli(void);							//禁止中断
@@ -41,7 +44,7 @@ void asm_inthandler2c(void);				//2c号中断，注册在0x2c
 unsigned int memtest_sub(
 	unsigned int start,
 	unsigned int end);						//读取内存
-void farjmp(int eip, int cs);				//指令跳转
+void farjmp(int eip, int cs);				//指令跳转(用于任务切换)
 void farcall(int eip, int cs);				//转移到调用的子程序(指定偏移)
 void asm_kal_api(void);						//KalinoteOS 系统API
 void start_app(int eip, int cs,
@@ -94,7 +97,7 @@ void inthandler27(int *esp);					// 27号中断，具体作用可以去代码里看
 //fifo.c(FIFO缓冲区)
 struct FIFO32 {
 	int *buf;									// 缓冲区地址
-	int p, q, size, free, flags;				// p是下一次数据写入地址，q是下一次数据读入地址，size是缓冲区大小，free是缓冲区空闲字节数，flags是溢出标志
+	int p, q, size, free, flags;				// p是下一次数据写入地址，q是下一次数据读入地址，size是缓冲区大小，free是缓冲区空闲字节数，flags是溢出标志(为1时发生溢出)
 	struct TASK *task;							// 有数据写入时需要唤醒的任务
 };
 void fifo32_init(struct FIFO32 *fifo, int size, int *buf, struct TASK *task);						//初始化FIFO缓冲区
@@ -120,7 +123,7 @@ void init_keyboard(struct FIFO32 *fifo, int data0);													//初始化键盘控制
 
 //memory.c(内存管理)
 #define MEMMAN_FREES		4090	/* 大约32KB */
-#define MEMMAN_ADDR			0x003c0000
+#define MEMMAN_ADDR			0x003c0000		/* 内存管理表地址 */
 struct FREEINFO {	/* 可用信息 */
 	unsigned int addr, size;
 };
@@ -128,7 +131,7 @@ struct MEMMAN {		/* 内存管理 */
 	int frees, maxfrees, lostsize, losts;
 	struct FREEINFO free[MEMMAN_FREES];
 };
-unsigned int memtest(unsigned int start, unsigned int end);											//测试CPU类型
+unsigned int memtest(unsigned int start, unsigned int end);											//测试CPU类型，以及内存容量
 void memman_init(struct MEMMAN *man);																//初始化内存管理程序
 unsigned int memman_total(struct MEMMAN *man);														//获取剩余内存大小
 unsigned int memman_alloc(struct MEMMAN *man, unsigned int size);									//分配内存
@@ -190,8 +193,8 @@ void init_taskbar(int *vram, int x, int y);															//初始化任务栏
 //timer.c(定时器)
 #define MAX_TIMER		500
 struct TIMER {
-	struct TIMER *next;
-	unsigned int timeout;
+	struct TIMER *next;									// 下一个超时的时钟
+	unsigned int timeout;								// 超时时间
 	char flags, flags2;
 	struct FIFO32 *fifo;
 	int data;
@@ -201,30 +204,33 @@ struct TIMERCTL {
 	struct TIMER *t0;
 	struct TIMER timers0[MAX_TIMER];
 };
+#define TIMER_FLAGS_ALLOC		1																	// 已配置状态
+#define TIMER_FLAGS_USING		2																	// 定时器运行中
 extern struct TIMERCTL timerctl;
 struct TIMER *timer_alloc(void);
-void init_pit(void);																				//初始化可编程间隔化定时器(PIT)
-void timer_free(struct TIMER *timer);																//释放定时器
-void timer_init(struct TIMER *timer, struct FIFO32 *fifo, int data);								//初始化定时器
-void timer_settime(struct TIMER *timer, unsigned int timeout);										//设置定时器
-void inthandler20(int *esp);																		//20号中断
-int timer_cancel(struct TIMER *timer);																//取消定时器
-void timer_cancelall(struct FIFO32 *fifo);															//取消所有定时器
+void init_pit(void);																				// 初始化可编程间隔化定时器(PIT)
+void timer_free(struct TIMER *timer);																// 释放定时器
+void timer_init(struct TIMER *timer, struct FIFO32 *fifo, int data);								// 初始化定时器
+void timer_settime(struct TIMER *timer, unsigned int timeout);										// 设置定时器
+void inthandler20(int *esp);																		// 20号中断
+int timer_cancel(struct TIMER *timer);																// 取消定时器
+void timer_cancelall(struct FIFO32 *fifo);															// 取消所有定时器
 
 /* mtask.c(多任务) */
-#define MAX_TASKS		2500																		//最大任务数量
-#define TASK_GDT0		3																			//定义从GDT的几号开始分配给TSS
-#define MAX_TASKS_LV	100																			//最高任务等级
-#define MAX_TASKLEVELS	10																			//最高任务层(321页)
+#define MAX_TASKS		2500																		// 最大任务数量
+#define TASK_GDT0		3																			// 定义从GDT的几号开始分配给TSS
+#define MAX_TASKS_LV	250																			// 每层最多任务数
+#define MAX_TASKLEVELS	10																			// 最高任务层数(321页)
 struct TSS32 {
+	/* 任务状态段(104字节)，用于切换任务时保存寄存器数据，这个是32位版，如果以后系统会升级到64位则更新64位版 */
 	int backlink, esp0, ss0, esp1, ss1, esp2, ss2, cr3;
-	int eip, eflags, eax, ecx, edx, ebx, esp, ebp, esi, edi;
-	int es, cs, ss, ds, fs, gs;
+	int eip, eflags, eax, ecx, edx, ebx, esp, ebp, esi, edi;						// 32位寄存器
+	int es, cs, ss, ds, fs, gs;														// 16位寄存器
 	int ldtr, iomap;
 };
 struct TASK {
-	int sel, flags; /* sel用来存放GDT编号 */
-	int level, priority;
+	int sel, flags; 																// sel用来存放GDT编号
+	int level, priority;															// priority是进程优先级
 	struct FIFO32 fifo;
 	struct TSS32 tss;
 	struct SEGMENT_DESCRIPTOR ldt[2];
@@ -241,19 +247,21 @@ struct TASKLEVEL {
 	struct TASK *tasks[MAX_TASKS_LV];
 };
 struct TASKCTL {
-	int now_lv; /* 现在活动中的任务等级 */
-	char lv_change; /* 下次任务切换时是否需要改变level */
+	int now_lv; 			/* 现在活动中的任务等级 */
+	char lv_change; 		/* 下次任务切换时是否需要改变level */
 	struct TASKLEVEL level[MAX_TASKLEVELS];
 	struct TASK tasks0[MAX_TASKS];
 };
 extern struct TASKCTL *taskctl;
 extern struct TIMER *task_timer;
-struct TASK *task_init(struct MEMMAN *memman);
-struct TASK *task_alloc(void);
-struct TASK *task_now(void);
-void task_run(struct TASK *task, int level, int priority);											//运行程序
-void task_switch(void);																				//切换程序
-void task_sleep(struct TASK *task);																	//程序睡眠
+void task_add(struct TASK *task);																	// 向struct TASKLEVEL中添加一个进程
+void task_remove(struct TASK *task);																// 向struct TASKLEVEL中删除一个进程
+struct TASK *task_init(struct MEMMAN *memman);														// 初始化进程
+struct TASK *task_alloc(void);																		// 分配进程
+struct TASK *task_now(void);																		// 返回现在正在活动中的TASK结构体地址
+void task_run(struct TASK *task, int level, int priority);											// 运行程序
+void task_switch(void);																				// 切换程序
+void task_sleep(struct TASK *task);																	// 程序睡眠
 
 /* window.c(窗口绘制) */
 void make_window8(unsigned int *buf, int xsize, int ysize, char *title, char act);					// 生成一个窗口
@@ -289,11 +297,19 @@ void cmd_start(struct CONSOLE *cons, char *cmdline, int memtotal);									// CM
 void cmd_run(struct CONSOLE *cons, char *cmdline, int memtotal);									// CMD：在当前命令窗口执行命令，且不占用命令窗口
 void cmd_langmode(struct CONSOLE *cons, char *cmdline);												// CMD：切换语言模式
 void cmd_shutdown(void);																			// CMD：关机
+void cmd_sysmode(struct CONSOLE *cons, char *cmdline);												// CMD：切换系统模式
+void cmd_echo(struct CONSOLE *cons, char *cmdline);													// CMD：系统输出
 int cmd_app(struct CONSOLE *cons, int *fat, char *cmdline);											// 外部应用程序
 int *kal_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int eax);				// 通过edx查找API
 int *inthandler0d(int *esp);																		// 0d号中断，用于处理异常程序
 int *inthandler0c(int *esp);																		// 0c号中断，用于处理栈异常
 void kal_api_linewin(struct SHEET *sht, int x0, int y0, int x1, int y1, int col);					// 绘制一条直线
+struct SHEET *open_console(struct SHTCTL *shtctl, unsigned int memtotal);							// 开启一个命令窗口
+struct TASK *open_constask(struct SHEET *sht, unsigned int memtotal);								// 开启一个任务
+void keywin_off(struct SHEET *key_win);																// 控制窗口标题栏颜色和光标激活状态
+void keywin_on(struct SHEET *key_win);																// 控制窗口标题栏颜色和光标激活状态
+void close_console(struct SHEET *sht);																// 关闭命令窗口
+void close_constask(struct TASK *task);																// 结束任务
 
 /* file.c(文件处理) */
 struct FILEINFO {
@@ -320,12 +336,6 @@ int decode0_JPEG(struct DLL_STRPICENV*env,int size,unsigned char *fp,int b_type,
 
 /* bootpack.c */
 #define KEYCMD_LED		0xed
-struct SHEET *open_console(struct SHTCTL *shtctl, unsigned int memtotal);							// 开启一个命令窗口
-struct TASK *open_constask(struct SHEET *sht, unsigned int memtotal);								// 开启一个任务
-void keywin_off(struct SHEET *key_win);																// 控制窗口标题栏颜色和光标激活状态
-void keywin_on(struct SHEET *key_win);																// 控制窗口标题栏颜色和光标激活状态
-void close_console(struct SHEET *sht);																// 关闭命令窗口
-void close_constask(struct TASK *task);																// 结束任务
 
 /* kca.c(解压KCA压缩文件) */
 int kca_getsize(unsigned char *p);

@@ -27,6 +27,7 @@ void KaliMain(void){
 	struct FILEINFO *finfo_ch;
 	struct FILEINFO *finfo_jp;
 	extern char fonts[4096];
+	struct SYSINFO sysinfo;
 	static char keytable0[0x80] = {
 		0,   0,   '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', 0x08, 0,
 		'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', '[', ']', 0x0a, 0, 'A', 'S',
@@ -60,20 +61,20 @@ void KaliMain(void){
 	io_out8(PIC1_IMR, 0xaf); 										// 允许PS/2鼠标和硬盘(10101111)
 	
 	fifo32_init(&keycmd, 32, keycmd_buf, 0);
-	*((int *) 0x0fec) = (int) &fifo;
+	*((int *) 0x0fec) = (int) &fifo;		/* 把fifo缓冲区存到0x0fec */
 	
 	/* 内存处理 */
-	memtotal = memtest(0x00400000, 0xbfffffff);
+	memtotal = memtest(0x00400000, 0xffffffff); /* 测试可用内存，最大识别3972MB(除系统占用外) */
 	memman_init(memman);
-	memman_free(memman, 0x00001000, 0x0009e000); /* 0x00001000 - 0x0009efff */
-	memman_free(memman, 0x00400000, memtotal - 0x00400000);
+	memman_free(memman, 0x00001000, 0x0009e000); /* 将0x00001000 - 0x0009efff清空，这一部分是是模式读取软盘的内容，在进入保护模式后，这部分内容被移动到0x00100000以后 */
+	memman_free(memman, 0x00400000, memtotal - 0x00400000); /* 清空除了系统占用的所有保护模式扩展内存(0x00400000以后) */
 	
 	//init_palette();												// 初始化调色板
 	shtctl = shtctl_init(memman, binfo->vram, binfo->scrnx, binfo->scrny);
 	task_a = task_init(memman);
 	fifo.task = task_a;
-	task_run(task_a, 1, 2);
-	*((int *) 0x0fe4) = (int) shtctl;
+	task_run(task_a, 1, 2);					/* 系统主进程 */
+	*((int *) 0x0fe4) = (int) shtctl;		/* 把shtctl的值存到地址0xfe4的地方 */
 	task_a->langmode = 0;
 
 	/* sht_back */
@@ -125,7 +126,7 @@ void KaliMain(void){
 			chinese[i] = 0xff; /* 没有字库，全角部分以0xff填充 */
 		}
 	}
-	*((int *) 0x0fe8) = (int) chinese;
+	*((int *) 0x10fe8) = (int) chinese;
 	memman_free_4k(memman, (int) fat_ch, 4 * 2880);
 	
 	/* 载入nihongo字库 */
@@ -152,7 +153,11 @@ void KaliMain(void){
 	/* 时钟更新定时器 */
 	timer = timer_alloc();
 	timer_init(timer, &fifo, 1);
-	timer_settime(timer, 100);	/* 每秒更新一次时间 */
+	timer_settime(timer, 100);	/* 每1秒更新一次时间 */
+	
+	/* 初始化sysinfo */
+	*((int *) 0x10000) = (int) &sysinfo;	
+	sysinfo.sysmode = 0;
 	
 	for(;;){
 		/***************************************************************
@@ -180,7 +185,7 @@ void KaliMain(void){
 				io_sti();
 			}
 		} else {
-			i = fifo32_get(&fifo);
+			i = fifo32_get(&fifo); /* 从fifo中取出数据 */
 			io_sti();
 			if (key_win != 0 && key_win->flags == 0) {	/* 窗口被关闭 */
 				if (shtctl->top == 1) {	/* 只剩鼠标和背景时 */
@@ -193,6 +198,9 @@ void KaliMain(void){
 			if (i == 1) {
 				/* 更新时间 */
 				/*右下角时间显示*/
+				/*
+				* 这里还可以优化一下，可以把时分秒分别显示和刷新，避免不必要的画面刷新
+				*/
 				timer_init(timer, &fifo, 1);		/* 设置一个定时器，下一秒再次提醒 */
 				sprintf(s,"%02d:%02d:%02d",get_hour_hex(), get_min_hex(), get_sec_hex());
 				putfonts8_asc_sht(sht_back, binfo->scrnx - 70, binfo->scrny - 20, COL_BLACK, COL_BGREY, s, 8);
@@ -389,74 +397,4 @@ void KaliMain(void){
 			}
 		}
 	}
-}
-
-void keywin_off(struct SHEET *key_win){
-	change_wtitle8(key_win, 0);
-	if ((key_win->flags & 0x20) != 0) {
-		fifo32_put(&key_win->task->fifo, 3); /* 命令行窗口光标OFF */
-	}
-	return;
-}
-
-void keywin_on(struct SHEET *key_win){
-	change_wtitle8(key_win, 1);
-	if ((key_win->flags & 0x20) != 0) {
-		fifo32_put(&key_win->task->fifo, 2); /* 命令行窗口光标ON */
-	}
-	return;
-}
-
-struct TASK *open_constask(struct SHEET *sht, unsigned int memtotal){
-	struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;
-	struct TASK *task = task_alloc();
-	int *cons_fifo = (int *) memman_alloc_4k(memman, 128 * 4);
-	task->cons_stack = memman_alloc_4k(memman, 64 * 1024);
-	task->tss.esp = task->cons_stack + 64 * 1024 - 12;
-	task->tss.eip = (int) &console_task;
-	task->tss.es = 1 * 8;
-	task->tss.cs = 2 * 8;
-	task->tss.ss = 1 * 8;
-	task->tss.ds = 1 * 8;
-	task->tss.fs = 1 * 8;
-	task->tss.gs = 1 * 8;
-	*((int *) (task->tss.esp + 4)) = (int) sht;
-	*((int *) (task->tss.esp + 8)) = memtotal;
-	task_run(task, 2, 2); /* level=2, priority=2 */
-	fifo32_init(&task->fifo, 128, cons_fifo, task);
-	return task;
-}
-
-struct SHEET *open_console(struct SHTCTL *shtctl, unsigned int memtotal){
-	struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;
-	struct SHEET *sht = sheet_alloc(shtctl);
-	char icon[16][16];
-	//unsigned int *buf = (unsigned int *) memman_alloc_4k(memman, 256 * 165 * 4);
-	unsigned int *buf = (unsigned int *) memman_alloc_4k(memman, 525 * 479 * 4);
-	//sheet_setbuf(sht, buf, 256, 165, -1); /* 无透明色 */
-	sheet_setbuf(sht, buf, 525, 479, -1); /* 无透明色 */
-	make_window8(buf, 525, 479, "console", 0);
-	make_textbox8(sht, 3, 24, 519, 452, COL_BLACK);
-	make_icon(buf, 525, icon, 1);
-	sht->task = open_constask(sht, memtotal);
-	sht->flags |= 0x20;	/* 有光标 */
-	return sht;
-}
-
-void close_constask(struct TASK *task){
-	struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;
-	task_sleep(task);
-	memman_free_4k(memman, task->cons_stack, 64 * 1024);
-	memman_free_4k(memman, (int) task->fifo.buf, 128 * 4);
-	task->flags = 0; /* 用来替代task_free(task); */
-	return;
-}
-
-void close_console(struct SHEET *sht){
-	struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;
-	struct TASK *task = sht->task;
-	memman_free_4k(memman, (int) sht->buf, 256 * 165 * 4);
-	sheet_free(sht);
-	close_constask(task);
-	return;
 }

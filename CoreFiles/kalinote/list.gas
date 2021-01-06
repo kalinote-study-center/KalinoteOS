@@ -1,0 +1,16 @@
+	.file	"list.c"
+	.text
+	.balign 2
+.globl _list_init
+	.def	_list_init;	.scl	2;	.type	32;	.endef
+_list_init:
+	pushl	%ebp
+	movl	%esp, %ebp
+	movl	8(%ebp), %eax
+	leal	8(%eax), %edx
+	movl	$0, (%eax)
+	movl	%edx, 4(%eax)
+	movl	%eax, 8(%eax)
+	movl	$0, 12(%eax)
+	popl	%ebp
+	ret
