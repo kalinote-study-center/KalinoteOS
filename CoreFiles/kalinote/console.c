@@ -6,7 +6,7 @@
 
 void console_task(struct SHEET *sheet, unsigned int memtotal){
 	/* 命令行代码 */
-	struct TASK *task = task_now();
+	struct TASK *task = task_now(); 								 /* 获取到自身task地址 */
 	struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;
 	int i, *fat = (int *) memman_alloc_4k(memman, 4 * 2880);
 	struct CONSOLE cons;
@@ -34,6 +34,7 @@ void console_task(struct SHEET *sheet, unsigned int memtotal){
 	task->fhandle = fhandle;
 	task->fat = fat;
 	if (hzk[4096] != 0xff) {	/* 是否载入了字库？ */
+		/* 默认使用中文 */
 		task->langmode = 1;
 	} else {
 		task->langmode = 0;
@@ -58,6 +59,7 @@ void console_task(struct SHEET *sheet, unsigned int memtotal){
 	for (;;) {
 		io_cli();
 		if (fifo32_status(&task->fifo) == 0) {
+			/* FIFO缓冲区没有数据，任务休眠 */
 			task_sleep(task);
 			io_sti();
 		} else {
@@ -96,10 +98,27 @@ void console_task(struct SHEET *sheet, unsigned int memtotal){
 					/*
 					*****************************这里还需要修改*****************************
 					*/
-					if (cons.cur_x > 16) {
-						/* 用空格键把光标消去后，前移一次光标 */
-						cons_putchar(&cons, ' ', 0);
-						cons.cur_x -= 8;
+					if (sysinfo->sysmode == 0) {
+						/* 普通模式 */
+						if (cons.cur_x > 2 * 8) {
+							/* 用空格键把光标消去后，前移一次光标 */
+							cons_putchar(&cons, ' ', 0);
+							cons.cur_x -= 8;
+						}
+					} else if (sysinfo->sysmode == 1) {
+						/* 调试模式 */
+						if (cons.cur_x > 8 * 8) {
+							/* 用空格键把光标消去后，前移一次光标 */
+							cons_putchar(&cons, ' ', 0);
+							cons.cur_x -= 8;
+						}
+					} else {
+						/* 未知系统模式 */
+						if (cons.cur_x > 16 * 8) {
+							/* 用空格键把光标消去后，前移一次光标 */
+							cons_putchar(&cons, ' ', 0);
+							cons.cur_x -= 8;
+						}
 					}
 				} else if (i == 10 + 256) {
 					/* Enter */
@@ -116,7 +135,7 @@ void console_task(struct SHEET *sheet, unsigned int memtotal){
 						cmdline[cons.cur_x / 8 - 16] = 0;
 					}
 					cons_newline(&cons);
-					cons_runcmd(cmdline, &cons, fat, memtotal);	/* 运行命令 */
+					cons_runcmd(cmdline, &cons, fat, memtotal, sysinfo->sysmode);	/* 运行命令 */
 					if (sheet == 0) {
 						cmd_exit(&cons, fat);
 					}
@@ -285,7 +304,7 @@ void cons_putstr1(struct CONSOLE *cons, char *s, int l){
 	return;
 }
 
-void cons_runcmd(char *cmdline, struct CONSOLE *cons, int *fat, unsigned int memtotal){
+void cons_runcmd(char *cmdline, struct CONSOLE *cons, int *fat, unsigned int memtotal, char sysmode){
 	if (strcmp(cmdline, "mem") == 0) {
 		cmd_mem(cons, memtotal);
 	} else if (((strcmp(cmdline, "cls") == 0) || (strcmp(cmdline, "clear") == 0)) && cons->sht != 0) {
@@ -324,8 +343,15 @@ void cons_runcmd(char *cmdline, struct CONSOLE *cons, int *fat, unsigned int mem
 void cmd_mem(struct CONSOLE *cons, unsigned int memtotal){
 	/* 查询系统内存使用情况 */
 	struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;
-	char s[60];
-	sprintf(s, "total   %dMB\nfree %dKB\n\n", memtotal / (1024 * 1024), memman_total(memman) / 1024);
+	struct TASK *task = task_now();
+	char s[80];
+	if (task->langmode == 1) {
+		/* 中文模式 */
+		sprintf(s, "总计     %dMB\n可用  %dKB\n系统占用 %dKB\n\n", memtotal / (1024 * 1024), memman_total(memman) / 1024, SYS_MEMORY / 1024);
+	} else {
+		/* 其他模式 */
+		sprintf(s, "total    %dMB\nfree  %dKB\nsystem   %dKB\n\n", memtotal / (1024 * 1024), memman_total(memman) / 1024, SYS_MEMORY / 1024);
+	}
 	cons_putstr0(cons, s);
 	return;
 }
@@ -514,15 +540,16 @@ void cmd_langmode(struct CONSOLE *cons, char *cmdline){
 	struct TASK *task = task_now();
 	unsigned char mode = cmdline[9] - '0';
 	if (mode <= 3) {
-		task->langmode = mode;
-		if (task->langmode == 0) {
+		if (mode == 0) {
+			task->langmode = mode;
 			cons_putstr0(cons,"Switch to English ASCII mode\n");
-		} else if (task->langmode == 1) {
+		} else if (mode == 1) {
+			task->langmode = mode;
 			cons_putstr0(cons,"切换到中文模式\n");
-		} else if (task->langmode == 2) {
-			cons_putstr0(cons,"Switch to shift-JIS encoding Japanese\n");
-		} else if (task->langmode == 3) {
-			cons_putstr0(cons,"Switch to EUC encoding Japanese\n");
+		} else if (mode == 2) {
+			cons_putstr0(cons,"There is a fatal error in the Japanese display of the system, please wait for the repair\n");
+		} else if (mode == 3) {
+			cons_putstr0(cons,"There is a fatal error in the Japanese display of the system, please wait for the repair\n");
 		}
 	} else {
 		cons_putstr0(cons, "mode number error.\n");
@@ -974,17 +1001,23 @@ void kal_api_linewin(struct SHEET *sht, int x0, int y0, int x1, int y1, int col)
 }
 
 void keywin_off(struct SHEET *key_win){
-	change_wtitle8(key_win, 0);
-	if ((key_win->flags & 0x20) != 0) {
-		fifo32_put(&key_win->task->fifo, 3); /* 命令行窗口光标OFF */
+	if (key_win->height > 1) {
+		/* 只对高度在1以上的层有效(0是背景，1是任务栏) */
+		change_wtitle8(key_win, 0);
+		if ((key_win->flags & 0x20) != 0) {
+			fifo32_put(&key_win->task->fifo, 3); /* 命令行窗口光标OFF */
+		}
 	}
 	return;
 }
 
 void keywin_on(struct SHEET *key_win){
-	change_wtitle8(key_win, 1);
-	if ((key_win->flags & 0x20) != 0) {
-		fifo32_put(&key_win->task->fifo, 2); /* 命令行窗口光标ON */
+	if (key_win->height > 1){
+		/* 只对高度在1以上的层有效(0是背景，1是任务栏) */
+		change_wtitle8(key_win, 1);
+		if ((key_win->flags & 0x20) != 0) {
+			fifo32_put(&key_win->task->fifo, 2); /* 命令行窗口光标ON */
+		}
 	}
 	return;
 }
@@ -1012,14 +1045,13 @@ struct TASK *open_constask(struct SHEET *sht, unsigned int memtotal){
 struct SHEET *open_console(struct SHTCTL *shtctl, unsigned int memtotal){
 	struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;
 	struct SHEET *sht = sheet_alloc(shtctl);
-	char icon[16][16];
 	//unsigned int *buf = (unsigned int *) memman_alloc_4k(memman, 256 * 165 * 4);
 	unsigned int *buf = (unsigned int *) memman_alloc_4k(memman, 525 * 479 * 4);
 	//sheet_setbuf(sht, buf, 256, 165, -1); /* 无透明色 */
 	sheet_setbuf(sht, buf, 525, 479, -1); /* 无透明色 */
 	make_window8(buf, 525, 479, "console", 0);
 	make_textbox8(sht, 3, 24, 519, 452, COL_BLACK);
-	make_icon(buf, 525, icon, 1);
+	make_icon(buf, 525, 1);
 	sht->task = open_constask(sht, memtotal);
 	sht->flags |= 0x20;	/* 有光标 */
 	return sht;

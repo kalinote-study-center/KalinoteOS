@@ -17,15 +17,15 @@ void make_window8(unsigned int *buf, int xsize, int ysize, char *title, char act
 	return;
 }
 
-void make_icon(unsigned int *buf, int xsize, char icon_pic[16][16], char type){
+void make_icon(unsigned int *buf, int xsize, char type){
 	/*
 	* 绘制窗口和任务栏(暂时没有)的logo
 	* type参数为窗口类型，如果是0则不显示icon
 	* icon_pic为0则使用默认
 	* 具体的窗口类型代码后面再来定义
 	*/
-	int x, y, c, i;
-	char is_emp = 0;
+	int x, y, c, i, j;
+	char icon_pic[16][16];
 	static char icon_cmd[16][16] = {
 		/* 命令行logo */
 		"0000000000000000",
@@ -46,20 +46,11 @@ void make_icon(unsigned int *buf, int xsize, char icon_pic[16][16], char type){
 		"0000000000000000",
 	};
 	
-	if ( sizeof(icon_pic) != 16 ){
-		is_emp = 1;
-	} else {
-		for (i = 0; i <= 16; i++) {
-			if (sizeof(icon_pic[i]) != 16) {
-				is_emp = 1;
-			}
-		}
-	}
-
-	if (is_emp == 1) {
-		if (type == 1){
-			icon_pic = icon_cmd;
-		}
+	/* 效率太低，不过后面再改进吧 */
+	if (type == 1){
+		for(i = 0;i < 16;i++)
+			for(j = 0;j < 16;j++)
+				icon_pic[i][j] = icon_cmd[i][j];
 	}
 
 	for (y = 0; y < 16; y++) {

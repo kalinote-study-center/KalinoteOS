@@ -16,8 +16,8 @@ void KaliMain(void){
 	unsigned int memtotal;
 	struct MOUSE_DEC mdec;
 	struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;
-	unsigned int *buf_back, buf_mouse[256];
-	struct SHEET *sht_back, *sht_mouse;
+	unsigned int *buf_back, buf_mouse[256], *buf_task_bar;
+	struct SHEET *sht_back, *sht_mouse, *sht_task_bar;
 	struct TASK *task_a, *task;
 	int key_shift = 0, key_leds = (binfo->leds >> 4) & 7, keycmd_wait = -1;
 	int j, x, y, mmx = -1, mmy = -1, mmx2 = 0;
@@ -64,10 +64,10 @@ void KaliMain(void){
 	*((int *) 0x0fec) = (int) &fifo;		/* 把fifo缓冲区存到0x0fec */
 	
 	/* 内存处理 */
-	memtotal = memtest(0x00400000, 0xffffffff); /* 测试可用内存，最大识别3972MB(除系统占用外) */
+	memtotal = memtest(SYS_MEMORY, 0xffffffff); /* 测试可用内存，最大识别3972MB(除系统占用外) */
 	memman_init(memman);
-	memman_free(memman, 0x00001000, 0x0009e000); /* 将0x00001000 - 0x0009efff清空，这一部分是是模式读取软盘的内容，在进入保护模式后，这部分内容被移动到0x00100000以后 */
-	memman_free(memman, 0x00400000, memtotal - 0x00400000); /* 清空除了系统占用的所有保护模式扩展内存(0x00400000以后) */
+	memman_free(memman, 0x00001000, 0x0009e000); /* 将0x00001000 - 0x0009efff清空，这一部分是是模式读取软盘的内容，在进入保护模式后，这部分内容被移动到0x00100000以后，这一段内存在启动完成后有其他用途 */
+	memman_free(memman, SYS_MEMORY, memtotal - SYS_MEMORY); /* 清空除了系统占用的所有保护模式扩展内存(0x00400000以后) */
 	
 	//init_palette();												// 初始化调色板
 	shtctl = shtctl_init(memman, binfo->vram, binfo->scrnx, binfo->scrny);
@@ -84,7 +84,16 @@ void KaliMain(void){
 	init_screen8(buf_back, binfo->scrnx, binfo->scrny, binfo->vmode);
 
 	/* sht_taskbar */
-	init_taskbar(buf_back, binfo->scrnx, binfo->scrny);
+	//init_taskbar(buf_back, binfo->scrnx, binfo->scrny);
+	sht_task_bar = sheet_alloc(shtctl);
+	buf_task_bar = (unsigned int *) memman_alloc_4k(memman, binfo->scrnx * 28 * 4);			/* 如果后面要创建关于task_bar的结构体，可以把task_bar的y高度放进去，不过现在先使用固定值28(包括下面的sheet_setbuf) */
+	sheet_setbuf(sht_task_bar, buf_task_bar, binfo->scrnx, 28, -1);
+	init_taskbar(buf_task_bar, binfo->scrnx, 28);
+	/* 这里可能需要改一下flags或者其他的 */
+
+	/*************************************************************************************************
+	*        对于sheet的flags还需要再研究一下，任务栏还需要单独处理一下，与普通应用程序区别开        *
+	*************************************************************************************************/
 
 	/* sht_cons */
 	key_win = open_console(shtctl, memtotal);
@@ -93,15 +102,17 @@ void KaliMain(void){
 	sht_mouse = sheet_alloc(shtctl);
 	sheet_setbuf(sht_mouse, buf_mouse, 16, 16, 99);
 	init_mouse_cursor8(buf_mouse, 99);
-	mx = (binfo->scrnx - 16) / 2;
+	mx = (binfo->scrnx - 16) / 2;								/* 将鼠标的位置置于画面中央 */
 	my = (binfo->scrny - 28 - 16) / 2;
 
 	sheet_slide(sht_back,  0,  0);
+	sheet_slide(sht_task_bar, 0, binfo->scrny - 28);
 	sheet_slide(key_win,   32, 4);
 	sheet_slide(sht_mouse, mx, my);
 	sheet_updown(sht_back,  0);
-	sheet_updown(key_win,   1);
-	sheet_updown(sht_mouse, 2);
+	sheet_updown(sht_task_bar, 1);
+	sheet_updown(key_win,   2);
+	sheet_updown(sht_mouse, 3);
 	keywin_on(key_win);
 	
 	/* 为了避免和键盘当前状态存在冲突，在一开始先进行设置 */
@@ -158,6 +169,8 @@ void KaliMain(void){
 	/* 初始化sysinfo */
 	*((int *) 0x10000) = (int) &sysinfo;	
 	sysinfo.sysmode = 0;
+	sysinfo.sysmmainver = 1;
+	sysinfo.sysver = 400;
 	
 	for(;;){
 		/***************************************************************
@@ -188,7 +201,7 @@ void KaliMain(void){
 			i = fifo32_get(&fifo); /* 从fifo中取出数据 */
 			io_sti();
 			if (key_win != 0 && key_win->flags == 0) {	/* 窗口被关闭 */
-				if (shtctl->top == 1) {	/* 只剩鼠标和背景时 */
+				if (shtctl->top == 2) {	/* 只剩鼠标、背景和任务栏时 */
 					key_win = 0;
 				} else {
 					key_win = shtctl->sheets[shtctl->top - 1];
@@ -203,12 +216,12 @@ void KaliMain(void){
 				*/
 				timer_init(timer, &fifo, 1);		/* 设置一个定时器，下一秒再次提醒 */
 				sprintf(s,"%02d:%02d:%02d",get_hour_hex(), get_min_hex(), get_sec_hex());
-				putfonts8_asc_sht(sht_back, binfo->scrnx - 70, binfo->scrny - 20, COL_BLACK, COL_BGREY, s, 8);
+				putfonts8_asc_sht(sht_task_bar, sht_task_bar->bxsize - 70, sht_task_bar->bysize - 20, COL_BLACK, COL_BGREY, s, 8);
 				/* 日期 */
 				sprintf(s,"%d/%d/%d",get_year(), get_mon_hex(), get_day_of_month());
-				putfonts8_asc_sht(sht_back, binfo->scrnx - 160, binfo->scrny - 20, COL_BLACK, COL_BGREY, s, 10);
+				putfonts8_asc_sht(sht_task_bar, sht_task_bar->bxsize - 160, sht_task_bar->bysize - 20, COL_BLACK, COL_BGREY, s, 10);
 				timer_settime(timer, 100);
-				sheet_refresh(sht_back, binfo->scrnx - 160, binfo->scrny - 20, binfo->scrnx - 70 + 8 * 8, binfo->scrny - 50 + 16);
+				sheet_refresh(sht_task_bar, sht_task_bar->bxsize - 160, sht_task_bar->bysize - 20, sht_task_bar->bxsize - 70 + 8 * 8, sht_task_bar->bysize - 50 + 16);
 			} else if (256 <= i && i <= 511) { /* 键盘数据 */
 				if (i < 0x80 + 256) { /* 将按键编码转换为字符编码 */
 					if (key_shift == 0) {
@@ -231,7 +244,7 @@ void KaliMain(void){
 				if (i == 256 + 0x0f && key_win != 0){	/* Tab */
 					keywin_off(key_win);
 					j = key_win->height - 1;
-					if (j == 0) {
+					if (j == 0 || j == 1) {
 						j = shtctl->top - 1;
 					}
 					key_win = shtctl->sheets[j];
@@ -287,7 +300,7 @@ void KaliMain(void){
 					keywin_on(key_win);
 				}
 				if (i == 256 + 0x57 && shtctl->top > 2) {	/* F11 切换窗口 */
-					sheet_updown(shtctl->sheets[1], shtctl->top - 1);
+					sheet_updown(shtctl->sheets[2], shtctl->top - 1);
 				}
 				if (i == 256 + 0xfa) {	/* 键盘成功接收到数据 */
 					keycmd_wait = -1;
@@ -330,7 +343,7 @@ void KaliMain(void){
 								sht = shtctl->sheets[j];
 								x = mx - sht->vx0;
 								y = my - sht->vy0;
-								if (0 <= x && x < sht->bxsize && 0 <= y && y < sht->bysize) {
+								if (0 <= x && x < sht->bxsize && 0 <= y && y < sht->bysize && sht->height > 1) {
 									if (sht->buf[y * sht->bxsize + x] != sht->col_inv) {
 										sheet_updown(sht, shtctl->top - 1);
 										if (sht != key_win) {
@@ -366,6 +379,13 @@ void KaliMain(void){
 											}
 										}
 										break;
+									}
+								} else if (sht->height == 1) {
+									/* 对task_bar单独处理 */
+									/* 以后可以在这里加窗口最小化和开始菜单之类的东西 */
+									if (3 <= x && x < 60 && sht->bysize - 23 <= y && y < sht->bysize - 4) {
+										/* 点击[开始]按钮 */
+										
 									}
 								}
 							}

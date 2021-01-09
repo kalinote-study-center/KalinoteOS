@@ -1,7 +1,10 @@
 //sysinfo(系统全局信息)
 struct SYSINFO {
-	char sysmode;
+	char sysmode;					/* 系统模式 */
+	char sysmmainver;				/* 系统主版本号 */
+	int sysver;						/* 系统版本号 */
 };
+#define	SYS_MEMORY		0x00400000			//系统占用内存
 
 //asmhead.nas(bootpack.c的前面部分)
 struct BOOTINFO {	/* 0x0ff0-0x0fff */
@@ -16,7 +19,7 @@ struct BOOTINFO {	/* 0x0ff0-0x0fff */
 #define ADR_BOOTINFO	0x00000ff0
 #define ADR_DISKIMG		0x00100000			//文件位置(软盘，内存中)
 #undef	NULL
-#define NULL ((void*)0)
+#define NULL ((void*)0)						//重新定义NULL
 void io_hlt(void);							//暂停处理器
 //void write_mem8(int addr, int data);		//写入内存(被指针取代)
 void io_cli(void);							//禁止中断
@@ -140,18 +143,23 @@ unsigned int memman_alloc_4k(struct MEMMAN *man, unsigned int size);								//4K
 int memman_free_4k(struct MEMMAN *man, unsigned int addr, unsigned int size);						//4K大空间释放内存
 
 //sheet.c(画面图层处理)
-#define MAX_SHEETS		256
+#define MAX_SHEETS		256												// 最大图层数(包括鼠标、桌面、任务栏等一共256层)
+#define SHEET_USE		1												// 使用状态标志(正在使用)
+#define SHEET_NO_USE	0												// 使用状态标志(未使用)
 struct SHEET {
-	unsigned int *buf;
-	int bxsize, bysize, vx0, vy0, col_inv, height, flags;
+	/* 图层结构 */
+	unsigned int *buf;													// 图像内容
+	int bxsize, bysize, vx0, vy0;										// bxsize和bysize是图像整体大小，vx0和vy0是图层在画面上的坐标位置(v是vram的省略)
+	int col_inv, height, flags;											// col_inv是透明色色号，height表示图层高度，flags表示图层设定信息
 	struct SHTCTL *ctl;
 	struct TASK *task;
 };
 struct SHTCTL {
-	unsigned int *vram, *map;
-	int xsize, ysize, top;
-	struct SHEET *sheets[MAX_SHEETS];
-	struct SHEET sheets0[MAX_SHEETS];
+	/* 多重图层的信息管理结构 */
+	unsigned int *vram, *map;											// vram是VRAM地址
+	int xsize, ysize, top;												// xsize和ysize图层大小，top是最顶层图层(鼠标指针层)高度
+	struct SHEET *sheets[MAX_SHEETS];									// 所有图层的地址(按照高度升序排列)
+	struct SHEET sheets0[MAX_SHEETS];									// 存放所有图层的图层信息
 };
 struct SHTCTL *shtctl_init(struct MEMMAN *memman, unsigned int *vram, int xsize, int ysize);		//初始化层
 struct SHEET *sheet_alloc(struct SHTCTL *ctl);														//获得未使用的新图层
@@ -229,9 +237,9 @@ struct TSS32 {
 	int ldtr, iomap;
 };
 struct TASK {
-	int sel, flags; 																// sel用来存放GDT编号
-	int level, priority;															// priority是进程优先级
-	struct FIFO32 fifo;
+	int sel, flags; 										// sel用来存放GDT编号
+	int level, priority;									// priority是进程优先级
+	struct FIFO32 fifo;										// 任务FIFO缓冲区，如果有需要以后也可以加个list(双链表)
 	struct TSS32 tss;
 	struct SEGMENT_DESCRIPTOR ldt[2];
 	struct CONSOLE *cons;
@@ -264,12 +272,19 @@ void task_switch(void);																				// 切换程序
 void task_sleep(struct TASK *task);																	// 程序睡眠
 
 /* window.c(窗口绘制) */
+struct WINDOWINFO {
+	/* 这个结构体储存窗口信息 */
+	char *wtitle;								// 窗口标题
+	int xsize,ysize;							// 窗口大小
+	int wcolor;									// 窗口颜色
+	int whandle;								// 窗口句柄
+};
 void make_window8(unsigned int *buf, int xsize, int ysize, char *title, char act);					// 生成一个窗口
 void putfonts8_asc_sht(struct SHEET *sht, int x, int y, int c, int b, char *s, int l);				// 先涂背景色，在写字符串
 void make_textbox8(struct SHEET *sht, int x0, int y0, int sx, int sy, int c);						// 生成编辑框
 void make_wtitle8(unsigned int *buf, int xsize, char *title, char act);								// 生成一个标题栏
 void change_wtitle8(struct SHEET *sht, char act);													// 改变窗口标题栏颜色
-void make_icon(unsigned int *buf, int xsize, char icon_pic[16][16], char type);						// 显示一个logo
+void make_icon(unsigned int *buf, int xsize, char type);											// 显示一个logo
 
 /* console.c(命令台) */
 struct CONSOLE {
@@ -287,7 +302,8 @@ void cons_newline(struct CONSOLE *cons);															// 命令窗口换行
 void cons_putchar(struct CONSOLE *cons, int chr, char move);										// 在命令窗口上显示文字
 void cons_putstr0(struct CONSOLE *cons, char *s);													// 显示字符串(通过字符编码0结尾)
 void cons_putstr1(struct CONSOLE *cons, char *s, int l);											// 显示字符串(通过指定长度)
-void cons_runcmd(char *cmdline, struct CONSOLE *cons, int *fat, unsigned int memtotal);				// 执行命令
+void cons_runcmd(char *cmdline, struct CONSOLE *cons, int *fat,
+	unsigned int memtotal, char sysmode);															// 执行命令
 void cmd_mem(struct CONSOLE *cons, unsigned int memtotal);											// CMD：查询内存使用状态
 void cmd_cls(struct CONSOLE *cons);																	// CMD：清屏
 void cmd_dir(struct CONSOLE *cons);																	// CMD：查询目录文件

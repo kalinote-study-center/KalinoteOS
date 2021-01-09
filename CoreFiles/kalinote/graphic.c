@@ -202,6 +202,9 @@ void putfonts8_asc(int *vram, int xsize, int x, int y, int c, unsigned char *s)
 			x += 8;
 		}
 	}
+	/***********************************************
+	*          日文显示有致命错误需要修复          *
+	***********************************************/
 	if (task->langmode == 2) {
 		/* 日文Shift-JIS */
 		for (; *s != 0x00; s++) {
