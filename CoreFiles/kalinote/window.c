@@ -4,6 +4,14 @@
 
 void make_window8(unsigned int *buf, int xsize, int ysize, char *title, char act){
 	/* 窗口窗体 */
+	/* 暂时还没有引入窗口结构体 */
+	// struct WINDOW window;
+	// window.wtitle  = title;
+	// window.xsize = xsize;
+	// window.ysize = ysize;
+	// window.wcolor.act_color = 0x00cd9b9b;			/* 窗口聚焦色(粉色) */
+	// window.wcolor.dis_act_color 0x00ffc1c1;			/* 窗口未聚焦色(暗粉色) */
+	// window.wcolor.back_color = COL_WHITE;			/* 背景色 */
 	boxfill8(buf, xsize, COL_BGREY, 0,         0,         xsize - 1, 0        );
 	boxfill8(buf, xsize, COL_WHITE, 1,         1,         xsize - 2, 1        );
 	boxfill8(buf, xsize, COL_BGREY, 0,         0,         0,         ysize - 1);
@@ -246,4 +254,71 @@ void change_wtitle8(struct SHEET *sht, char act){
 	}
 	sheet_refresh(sht, 3, 3, xsize, 21);
 	return;
+}
+
+/***************************************************************
+*                           菜单功能                           *
+***************************************************************/
+
+struct MENU *make_menu(struct MEMMAN *memman, int menux, int menuy) {
+	/* 创建菜单结构体 */
+	struct MENU *menu;
+	menu = (struct MENU *) memman_alloc_4k(memman, sizeof (struct MENU));		/* 给菜单分配一个空间 */
+	menu->menux = menux;			/* 菜单X坐标 */
+	menu->menuy = menuy;			/* 菜单Y坐标 */
+	menu->flags = 0;				/* 未显示 */
+	menu->now = 0;					/* 默认选中index=0(第一项) */
+	menu->option_num = 0;			/* 选项数量 */
+	return menu;
+}
+
+void add_options(struct MENU *menu, char *option_title, unsigned char index) {
+	/* 创建选项结构体 */
+	struct OPTIONS options;
+	if(index <= MAX_OPTIONS) {
+		/* index需要在0到256之间 */
+		options.title = option_title;
+		options.index = index;
+		options.flags = 1;
+		menu->options[index] = options;
+		menu->option_num += 1;
+	}
+}
+
+void show_menu(struct SHTCTL *shtctl, struct MEMMAN *memman, struct MENU *menu) {
+	/* 显示菜单 */
+	int i;
+	
+	menu->flags = 1;							/* 正在显示 */
+	
+	/* 计算菜单栏的高度和宽度 */
+	menu->mheight = menu->option_num * 25;			/* 每个选项高25 */
+	menu->mwidth = 120;								/* 宽度固定120 */
+	
+	/* 分配缓冲区和sheet */
+	menu->sht = sheet_alloc(shtctl);
+	menu->buf = (unsigned int *) memman_alloc_4k(memman,menu->mheight * menu->mwidth * 4);
+	sheet_setbuf(menu->sht, menu->buf, menu->mwidth, menu->mheight, -1);
+	
+	/* 绘制 */
+	boxfill8(menu->buf, menu->mwidth, COL_WHITE, 0, 0, menu->mwidth, menu->mheight);											/* 背景板 */
+	for(i = 0;i <= MAX_OPTIONS; i++){
+		if(menu->options[i].flags == 1) {
+			/* 正在使用的选项(flags为1) */
+			boxfill8(menu->buf, menu->mwidth, COL_BLACK,          0, i * 25,     menu->mwidth,       i * 25);			/* 上横线 */
+			boxfill8(menu->buf, menu->mwidth, COL_BLACK,          0, i * 25,          0, (i + 1) * 25);			/* 左竖线 */
+			boxfill8(menu->buf, menu->mwidth, COL_BLACK, menu->mwidth - 1, i * 25, menu->mwidth - 1, (i + 1) * 25);			/* 右竖线 */
+			putfonts8_asc(menu->buf, menu->mwidth, 5, 5 + (i * 25), COL_BLACK, menu->options[i].title);
+		}
+	}
+	boxfill8(menu->buf, menu->mwidth, COL_BLACK, 0, menu->mheight - 1, menu->mwidth, menu->mheight - 1);											/* 下横线 */
+	sheet_slide(menu->sht, menu->menux, menu->menuy);
+	sheet_updown(menu->sht, shtctl->top);
+}
+
+void hide_menu(struct MEMMAN *memman, struct MENU *menu) {
+	/* 隐藏菜单 */
+	sheet_free(menu->sht);																		/* 释放图层 */
+	memman_free_4k(memman, (unsigned int)(menu->buf), menu->mheight * menu->mwidth * 4);		/* 释放图层占用的内存 */
+	menu->flags = 0;																			/* 未显示 */
 }

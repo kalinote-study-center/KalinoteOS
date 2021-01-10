@@ -1,0 +1,5 @@
+使用
+make_menus(int menux, int menuy);
+来初始化一个菜单
+
+每个选项高固定20，宽固定120

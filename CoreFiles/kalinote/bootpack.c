@@ -28,6 +28,7 @@ void KaliMain(void){
 	struct FILEINFO *finfo_jp;
 	extern char fonts[4096];
 	struct SYSINFO sysinfo;
+	struct MENU *start_menu;
 	static char keytable0[0x80] = {
 		0,   0,   '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', 0x08, 0,
 		'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', '[', ']', 0x0a, 0, 'A', 'S',
@@ -88,7 +89,8 @@ void KaliMain(void){
 	sht_task_bar = sheet_alloc(shtctl);
 	buf_task_bar = (unsigned int *) memman_alloc_4k(memman, binfo->scrnx * 28 * 4);			/* 如果后面要创建关于task_bar的结构体，可以把task_bar的y高度放进去，不过现在先使用固定值28(包括下面的sheet_setbuf) */
 	sheet_setbuf(sht_task_bar, buf_task_bar, binfo->scrnx, 28, -1);
-	init_taskbar(buf_task_bar, binfo->scrnx, 28);
+	start_menu = init_taskbar(memman, buf_task_bar, binfo->scrnx, 28);
+	putfonts8_asc_sht(sht_task_bar, 6, 8, COL_BLACK, COL_BGREY, "shutdown", 8);
 	/* 这里可能需要改一下flags或者其他的 */
 
 	/*************************************************************************************************
@@ -330,8 +332,8 @@ void KaliMain(void){
 					new_mx = mx;
 					new_my = my;
 					/* 鼠标位置 */
-					//sprintf(s, "(%3d, %3d)", mx, my);
-					//putfonts8_asc_sht(sht_back, 0, 0, COL_WHITE, COL_LDBLUE, s, 10);
+					// sprintf(s, "(%3d, %3d)", mx, my);
+					// putfonts8_asc_sht(sht_back, 0, 0, COL_WHITE, COL_LDBLUE, s, 10);
 					/* 启用鼠标位置显示会导致画面卡顿 */
 					sheet_slide(sht_mouse, mx, my); /* 包含sheet_refresh */
 					if ((mdec.btn & 0x01) != 0) {
@@ -383,8 +385,12 @@ void KaliMain(void){
 								} else if (sht->height == 1) {
 									/* 对task_bar单独处理 */
 									/* 以后可以在这里加窗口最小化和开始菜单之类的东西 */
-									if (3 <= x && x < 60 && sht->bysize - 23 <= y && y < sht->bysize - 4) {
+									if (3 <= x && x < 75 && sht->bysize - 23 <= y && y < sht->bysize - 4) {
 										/* 点击[开始]按钮 */
+										switch(start_menu->flags) {
+											case 0:show_menu(shtctl, memman, start_menu);break;
+											case 1:hide_menu(memman, start_menu);break;
+										}
 										
 									}
 								}
@@ -397,6 +403,9 @@ void KaliMain(void){
 							new_wy = new_wy + y;
 							mmy = my;	/* 更新为移动后的坐标 */
 						}
+					} else if ((mdec.btn & 0x02) != 0) {
+						/* 按下右键 */
+						
 					} else {
 						/* 没有按下左键 */
 						mmx = -1;	/* 返回通常模式 */

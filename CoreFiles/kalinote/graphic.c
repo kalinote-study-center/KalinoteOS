@@ -84,25 +84,6 @@ void init_screen8(int *vram, int x, int y, int bc){
 	return;
 }
 
-void init_taskbar(int *vram, int x, int y){
-	/* 初始化任务栏 */
-	boxfill8(vram, x, COL_BGREY,  0,     y - 28, x -  1, y - 28);
-	boxfill8(vram, x, COL_WHITE,  0,     y - 27, x -  1, y - 27);
-	boxfill8(vram, x, COL_BGREY,  0,     y - 26, x -  1, y -  1);
-	
-	boxfill8(vram, x, COL_WHITE,  3,    y - 24, 59,     y - 24);
-	boxfill8(vram, x, COL_WHITE,  2,    y - 24,  2,     y -  4);
-	boxfill8(vram, x, COL_DGREY,  3,     y -  4, 59,     y -  4);
-	boxfill8(vram, x, COL_DGREY, 59,     y - 23, 59,     y -  5);
-	boxfill8(vram, x, COL_BLACK,  2,     y -  3, 59,     y -  3);
-	boxfill8(vram, x, COL_BLACK, 60,     y - 24, 60,     y -  3);
-	
-	boxfill8(vram, x, COL_DGREY, x - 75, y - 24, x -  4, y - 24);
-	boxfill8(vram, x, COL_DGREY, x - 75, y - 23, x - 75, y -  4);
-	boxfill8(vram, x, COL_WHITE, x - 75, y -  3, x -  4, y -  3);
-	boxfill8(vram, x, COL_WHITE, x -  3, y - 24, x -  3, y -  3);
-}
-
 void putfont8(int *vram, int xsize, int x, int y, int c, char *font){
 	/*绘制字体 - 此处原内容在第93页*/
 	int i;
@@ -310,7 +291,7 @@ void putblock8_8(int *vram, int vxsize, int pxsize,
 }
 
 int read_wallpaper_32 (unsigned char *filename, int x, int y, int *fat, unsigned int *vram) {
-	/* 32位色彩模式下读取壁纸 */
+	/* 32位色彩模式下读取壁纸(后面把这个函数改一下，写个图片显示API) */
 	int i, j, x0, y0, fsize, info[4];
 	unsigned char *filebuf, r, g, b;
 	struct RGB *picbuf;
@@ -344,3 +325,5 @@ int read_wallpaper_32 (unsigned char *filename, int x, int y, int *fat, unsigned
 	memman_free_4k(memman, (int) env, sizeof(struct DLL_STRPICENV));
 	return 0;
 }
+
+

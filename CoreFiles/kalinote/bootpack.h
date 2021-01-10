@@ -179,7 +179,6 @@ void putfonts8_asc(int *vram, int xsize, int x, int y, int c, unsigned char *s);
 void init_mouse_cursor8(int *mouse, int bc);														//初始化鼠标指针
 void putblock8_8(int *vram, int vxsize, int pxsize,
 	int pysize, int px0, int py0, int *buf, int bxsize);											//鼠标背景色处理
-void init_taskbar(int *vram, int x, int y);															//初始化任务栏
 // 15种颜色常数定义，此系统支持RGB全彩色，所以可以使用0xRGB(普通的RGB表示方法)来表示颜色
 #define COL_BLACK		0x00000000
 #define COL_BRED		0x00ff0000
@@ -272,12 +271,38 @@ void task_switch(void);																				// 切换程序
 void task_sleep(struct TASK *task);																	// 程序睡眠
 
 /* window.c(窗口绘制) */
-struct WINDOWINFO {
-	/* 这个结构体储存窗口信息 */
-	char *wtitle;								// 窗口标题
-	int xsize,ysize;							// 窗口大小
-	int wcolor;									// 窗口颜色
-	int whandle;								// 窗口句柄
+#define	MAX_OPTIONS		255							// 最大选项数量
+struct WINCOLORS {
+	/* 窗口(主题)颜色 */
+	int act_color,dis_act_color,back_color;			// 窗口颜色，act_color是key_on态颜色，dis_act_color是key_off态颜色
+};
+struct WINDOW {
+	/* 这个结构体储存窗口信息(暂时还没有使用) */
+	char *wtitle;									// 窗口标题
+	int xsize,ysize;								// 窗口大小
+	struct WINCOLORS wcolor;						// 窗口颜色
+	int whandle;									// 窗口句柄
+};
+struct OPTIONS {
+	/* 菜单栏选项结构体 */
+	int flags;										// 选项标志
+	char *title;									// 选项标题
+	unsigned char index;							// 选项index
+	//int(*onOptionClick)();
+};
+struct MENU {
+	/* 菜单栏结构体 */
+	/*****************************************************
+	*                 这里还要再考虑考虑                 *
+	******************************************************/
+	int menux,menuy;								// 菜单栏坐标
+	int mheight,mwidth;								// 菜单栏大小
+	unsigned int *buf;								// 菜单图像缓冲地址
+	struct SHEET *sht;								// 菜单图像sheet
+	int flags;										// flags是菜单当前状态
+	unsigned int now;								// now是当前选中项
+	int option_num;									// 当前选项数量
+	struct OPTIONS options[MAX_OPTIONS];			// 存放选项列表(最多256个选项，应该不会有哪个程序用到200多个选项)
 };
 void make_window8(unsigned int *buf, int xsize, int ysize, char *title, char act);					// 生成一个窗口
 void putfonts8_asc_sht(struct SHEET *sht, int x, int y, int c, int b, char *s, int l);				// 先涂背景色，在写字符串
@@ -285,6 +310,10 @@ void make_textbox8(struct SHEET *sht, int x0, int y0, int sx, int sy, int c);			
 void make_wtitle8(unsigned int *buf, int xsize, char *title, char act);								// 生成一个标题栏
 void change_wtitle8(struct SHEET *sht, char act);													// 改变窗口标题栏颜色
 void make_icon(unsigned int *buf, int xsize, char type);											// 显示一个logo
+struct MENU *make_menu(struct MEMMAN *memman, int menux, int menuy);								// 创建菜单栏
+void add_options(struct MENU *menus, char *option_title, unsigned char index);						// 增加选项
+void show_menu(struct SHTCTL *shtctl, struct MEMMAN *memman, struct MENU *menu);					// 显示菜单
+void hide_menu(struct MEMMAN *memman, struct MENU *menu);					// 隐藏菜单
 
 /* console.c(命令台) */
 struct CONSOLE {
@@ -511,3 +540,6 @@ void write2sector(struct disk* hd, void* buf,
 	unsigned char sec_cnt);							// 将buf中sec_cnt扇区的数据写入硬盘
 void ide_read(struct disk* hd, unsigned int lba,
 	void* buf, unsigned int sec_cnt);				// 从硬盘读取sec_cnt个扇区到buf
+
+/* taskbar.c(低端任务栏) */
+struct MENU *init_taskbar(struct MEMMAN *memman, int *vram, int x, int y);							//初始化任务栏
