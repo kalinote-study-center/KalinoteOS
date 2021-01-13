@@ -35,7 +35,7 @@ struct SHEET *sheet_alloc(struct SHTCTL *ctl){
 		/* 在sheets0[]中循环查找一个没有使用的图层 */
 		if (ctl->sheets0[i].flags == SHEET_NO_USE) {
 			sht = &ctl->sheets0[i];			/* sht的地址(ctl->sheets0[i]的地址) */
-			sht->flags = SHEET_USE;			/* 标记为正在使用 */
+			sht->flags = SHEET_USE;			/* 标记为正在使用(作为窗口) */
 			sht->height = -1;				/* 高度设置为-1，表示高度还没有设置，不显示 */
 			sht->task = 0;					/* 不使用自动关闭 */
 			return sht;

@@ -327,6 +327,8 @@ void cons_runcmd(char *cmdline, struct CONSOLE *cons, int *fat, unsigned int mem
 		cmd_sysmode(cons, cmdline);
 	} else if (strncmp(cmdline, "echo ",5) == 0) {
 		cmd_echo(cons, cmdline);
+	} else if (strcmp(cmdline,"test") == 0) {
+		/* 测试专用 */
 	} else if (cmdline[0] != 0) {
 		/* 执行cmd_app(),如果不是一个应用，会返回0 */
 		if (cmd_app(cons, fat, cmdline) == 0) {
@@ -606,6 +608,11 @@ void cmd_echo(struct CONSOLE *cons, char *cmdline) {
 	cons_putstr0(cons,s);
 }
 
+void cmd_systest(struct CONSOLE *cons) {
+	/* 测试系统功能专用指令 */
+	
+}
+
 int cmd_app(struct CONSOLE *cons, int *fat, char *cmdline){
 	struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;
 	struct FILEINFO *finfo;
@@ -656,7 +663,7 @@ int cmd_app(struct CONSOLE *cons, int *fat, char *cmdline){
 			shtctl = (struct SHTCTL *) *((int *) 0x0fe4);
 			for (i = 0; i < MAX_SHEETS; i++) {
 				sht = &(shtctl->sheets0[i]);
-				if ((sht->flags & 0x11) == 0x11 && sht->task == task) {
+				if (sht->flags == SHEET_APIWIN && sht->task == task) {
 					/* 找到应用程序残留的窗口 */
 					sheet_free(sht);	/* 关闭 */
 				}
@@ -714,7 +721,7 @@ int *kal_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int 
 		//生成窗口
 		sht = sheet_alloc(shtctl);
 		sht->task = task;
-		sht->flags |= 0x10;
+		sht->flags = SHEET_APIWIN;			/* 外部API窗口 */
 		sheet_setbuf(sht, (int *) ebx + ds_base, esi, edi, eax);
 		make_window8((int *) ebx + ds_base, esi, edi, (char *) ecx + ds_base, 0);
 		sheet_slide(sht, ((shtctl->xsize - esi) / 2) & ~3, (shtctl->ysize - edi) / 2);
@@ -1001,10 +1008,11 @@ void kal_api_linewin(struct SHEET *sht, int x0, int y0, int x1, int y1, int col)
 }
 
 void keywin_off(struct SHEET *key_win){
-	if (key_win->height > 1) {
-		/* 只对高度在1以上的层有效(0是背景，1是任务栏) */
+	if (key_win->flags != SHEET_NO_TITLE && key_win->flags < 100) {
+		/* 不是无标题栏窗口，且flags小于100(100以后是特殊图层) */
 		change_wtitle8(key_win, 0);
-		if ((key_win->flags & 0x20) != 0) {
+		if (key_win->flags == SHEET_CONS) {
+			/* 命令行窗口 */
 			fifo32_put(&key_win->task->fifo, 3); /* 命令行窗口光标OFF */
 		}
 	}
@@ -1012,10 +1020,11 @@ void keywin_off(struct SHEET *key_win){
 }
 
 void keywin_on(struct SHEET *key_win){
-	if (key_win->height > 1){
-		/* 只对高度在1以上的层有效(0是背景，1是任务栏) */
+	if (key_win->flags != SHEET_NO_TITLE && key_win->flags < 100){
+		/* 不是无标题栏窗口，且flags小于100(100以后是特殊图层) */
 		change_wtitle8(key_win, 1);
-		if ((key_win->flags & 0x20) != 0) {
+		if (key_win->flags == SHEET_CONS) {
+			/* 命令行窗口 */
 			fifo32_put(&key_win->task->fifo, 2); /* 命令行窗口光标ON */
 		}
 	}
@@ -1053,7 +1062,7 @@ struct SHEET *open_console(struct SHTCTL *shtctl, unsigned int memtotal){
 	make_textbox8(sht, 3, 24, 519, 452, COL_BLACK);
 	make_icon(buf, 525, 1);
 	sht->task = open_constask(sht, memtotal);
-	sht->flags |= 0x20;	/* 有光标 */
+	sht->flags = SHEET_CONS;	/* 命令行窗口 */
 	return sht;
 }
 
@@ -1062,7 +1071,7 @@ void close_constask(struct TASK *task){
 	task_sleep(task);
 	memman_free_4k(memman, task->cons_stack, 64 * 1024);
 	memman_free_4k(memman, (int) task->fifo.buf, 128 * 4);
-	task->flags = 0; /* 用来替代task_free(task); */
+	task->flags = SHEET_NO_USE; /* 用来替代task_free(task); */
 	return;
 }
 

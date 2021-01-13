@@ -21,14 +21,14 @@ void KaliMain(void){
 	struct TASK *task_a, *task;
 	int key_shift = 0, key_leds = (binfo->leds >> 4) & 7, keycmd_wait = -1;
 	int j, x, y, mmx = -1, mmy = -1, mmx2 = 0;
-	struct SHEET *sht = 0, *key_win, *sht2;
+	struct SHEET *sht = 0, *point_sht = 0, *key_win, *sht2;			/* point_sht是用来处理鼠标移动时指向的层的 */
 	int *fat_ch, *fat_jp;
 	unsigned char *chinese, *nihongo;
 	struct FILEINFO *finfo_ch;
 	struct FILEINFO *finfo_jp;
 	extern char fonts[4096];
 	struct SYSINFO sysinfo;
-	struct MENU *start_menu;
+	struct MENU *start_menu, *desktop_menu;
 	static char keytable0[0x80] = {
 		0,   0,   '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', 0x08, 0,
 		'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', '[', ']', 0x0a, 0, 'A', 'S',
@@ -83,6 +83,13 @@ void KaliMain(void){
 	buf_back  = (unsigned int *) memman_alloc_4k(memman, binfo->scrnx * binfo->scrny * 4);
 	sheet_setbuf(sht_back, buf_back, binfo->scrnx, binfo->scrny, -1);
 	init_screen8(buf_back, binfo->scrnx, binfo->scrny, binfo->vmode);
+	sht_back->flags = SHEET_BACK;
+	/* 桌面右键菜单栏 */
+	desktop_menu = make_menu(memman, 0, 0);
+	add_options(desktop_menu, "Desktop Menu", 0);
+	add_options(desktop_menu, "refresh", 1);
+	add_options(desktop_menu, "nouse1", 2);
+	add_options(desktop_menu, "nouse2", 3);
 
 	/* sht_taskbar */
 	//init_taskbar(buf_back, binfo->scrnx, binfo->scrny);
@@ -91,11 +98,7 @@ void KaliMain(void){
 	sheet_setbuf(sht_task_bar, buf_task_bar, binfo->scrnx, 28, -1);
 	start_menu = init_taskbar(memman, buf_task_bar, binfo->scrnx, 28);
 	putfonts8_asc_sht(sht_task_bar, 6, 8, COL_BLACK, COL_BGREY, "shutdown", 8);
-	/* 这里可能需要改一下flags或者其他的 */
-
-	/*************************************************************************************************
-	*        对于sheet的flags还需要再研究一下，任务栏还需要单独处理一下，与普通应用程序区别开        *
-	*************************************************************************************************/
+	sht_task_bar->flags = SHEET_TASKBAR;
 
 	/* sht_cons */
 	key_win = open_console(shtctl, memtotal);
@@ -106,6 +109,7 @@ void KaliMain(void){
 	init_mouse_cursor8(buf_mouse, 99);
 	mx = (binfo->scrnx - 16) / 2;								/* 将鼠标的位置置于画面中央 */
 	my = (binfo->scrny - 28 - 16) / 2;
+	sht_mouse->flags = SHEET_MOUSE;
 
 	sheet_slide(sht_back,  0,  0);
 	sheet_slide(sht_task_bar, 0, binfo->scrny - 28);
@@ -336,6 +340,29 @@ void KaliMain(void){
 					// putfonts8_asc_sht(sht_back, 0, 0, COL_WHITE, COL_LDBLUE, s, 10);
 					/* 启用鼠标位置显示会导致画面卡顿 */
 					sheet_slide(sht_mouse, mx, my); /* 包含sheet_refresh */
+					/* 处理当前鼠标指向图层 */
+					for (j = shtctl->top - 1; j > 0; j--) {
+						/* 从上到下寻找 */
+						point_sht = shtctl->sheets[j];
+						x = mx - point_sht->vx0;
+						y = my - point_sht->vy0;
+						if(0 <= x && x < point_sht->bxsize && 0 <= y && y < point_sht->bysize) {
+							/* 如果鼠标指针在图层范围内 */
+							if (point_sht->buf[y * point_sht->bxsize + x] != point_sht->col_inv) {/* 如果不是透明层 */
+								if(point_sht->flags == SHEET_MENU) {
+									/* 如果是菜单层(这里后面还要再改) */
+									/* 如何找到是哪个菜单呢？ */
+									/***************************************************************
+									*			这里需要想个办法找到对应的menu结构体               *
+									*            应该想个办法把图层和菜单栏绑定起来                *
+									*           或者像管理图层一样把所有菜单统一管理               *
+									***************************************************************/
+									option_change(start_menu, y);
+								}
+							}
+						}
+
+					}
 					if ((mdec.btn & 0x01) != 0) {
 						/* 按下左键 */
 						if (mmx < 0) {
@@ -345,45 +372,49 @@ void KaliMain(void){
 								sht = shtctl->sheets[j];
 								x = mx - sht->vx0;
 								y = my - sht->vy0;
-								if (0 <= x && x < sht->bxsize && 0 <= y && y < sht->bysize && sht->height > 1) {
-									if (sht->buf[y * sht->bxsize + x] != sht->col_inv) {
-										sheet_updown(sht, shtctl->top - 1);
-										if (sht != key_win) {
-											keywin_off(key_win);
-											key_win = sht;
-											keywin_on(key_win);
-										}
-										if (3 <= x && x < sht->bxsize - 3 && 3 <= y && y < 21) {
-											mmx = mx;	/* 进入窗口移动模式 */
-											mmy = my;
-											mmx2 = sht->vx0;
-											new_wy = sht->vy0;
-										}
-										if (sht->bxsize - 21 <= x && x < sht->bxsize - 5 && 5 <= y && y < 19) {	/* 判断是否点击在指定区域 */
-											/* 按下X按钮 */
-											if ((sht->flags & 0x10) != 0) {		/* 是否为应用程序窗口 */
-												task = sht->task;
-												cons_putstr0(task->cons, "\nBreak(mouse) :\n");
-												io_cli();	/* 禁止在强制结束处理时切换任务 */
-												task->tss.eax = (int) &(task->tss.esp0);
-												task->tss.eip = (int) asm_end_app;
-												io_sti();
-												task_run(task, -1, 0);
-											} else {	/* 命令行窗口 */
-												task = sht->task;
-												sheet_updown(sht, -1); /* 隐藏图层 */
+								if (sht->flags != 4 && sht->flags < 100) {
+									/* 有标题栏的普通窗口(包括外部API窗口、命令行和普通窗口) */
+									if(0 <= x && x < sht->bxsize && 0 <= y && y < sht->bysize) {
+										/* 如果鼠标指针在图层范围内 */
+										if (sht->buf[y * sht->bxsize + x] != sht->col_inv) {/* 如果不是透明层 */
+											sheet_updown(sht, shtctl->top - 1);
+											if (sht != key_win) {
 												keywin_off(key_win);
-												key_win = shtctl->sheets[shtctl->top - 1];
+												key_win = sht;
 												keywin_on(key_win);
-												io_cli();
-												fifo32_put(&task->fifo, 4);
-												io_sti();
 											}
+											if (3 <= x && x < sht->bxsize - 3 && 3 <= y && y < 21) {
+												mmx = mx;	/* 进入窗口移动模式 */
+												mmy = my;
+												mmx2 = sht->vx0;
+												new_wy = sht->vy0;
+											}
+											if (sht->bxsize - 21 <= x && x < sht->bxsize - 5 && 5 <= y && y < 19) {	/* 判断是否点击在指定区域 */
+												/* 按下X按钮 */
+												if (/*sht->flags == SHEET_USE || */sht->flags == SHEET_APIWIN) {		/* 是否为应用程序窗口 */
+													task = sht->task;
+													cons_putstr0(task->cons, "\nBreak(mouse) :\n");
+													io_cli();	/* 禁止在强制结束处理时切换任务 */
+													task->tss.eax = (int) &(task->tss.esp0);
+													task->tss.eip = (int) asm_end_app;
+													io_sti();
+													task_run(task, -1, 0);
+												} else {	/* 命令行窗口 */
+													task = sht->task;
+													sheet_updown(sht, -1); /* 隐藏图层 */
+													keywin_off(key_win);
+													key_win = shtctl->sheets[shtctl->top - 1];
+													keywin_on(key_win);
+													io_cli();
+													fifo32_put(&task->fifo, 4);
+													io_sti();
+												}
+											}
+											break;
 										}
-										break;
 									}
-								} else if (sht->height == 1) {
-									/* 对task_bar单独处理 */
+								} else if (sht->flags == SHEET_TASKBAR) {
+									/* task_bar */
 									/* 以后可以在这里加窗口最小化和开始菜单之类的东西 */
 									if (3 <= x && x < 75 && sht->bysize - 23 <= y && y < sht->bysize - 4) {
 										/* 点击[开始]按钮 */
@@ -391,8 +422,8 @@ void KaliMain(void){
 											case 0:show_menu(shtctl, memman, start_menu);break;
 											case 1:hide_menu(memman, start_menu);break;
 										}
-										
 									}
+									break;
 								}
 							}
 						} else {
@@ -407,7 +438,7 @@ void KaliMain(void){
 						/* 按下右键 */
 						
 					} else {
-						/* 没有按下左键 */
+						/* 没有按下任何按键 */
 						mmx = -1;	/* 返回通常模式 */
 						if (new_wx != 0x7fffffff) {
 							sheet_slide(sht, new_wx, new_wy);	/* 固定图层位置 */

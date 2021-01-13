@@ -144,8 +144,15 @@ int memman_free_4k(struct MEMMAN *man, unsigned int addr, unsigned int size);			
 
 //sheet.c(»­ÃæÍ¼²ã´¦Àí)
 #define MAX_SHEETS		256												// ×î´óÍ¼²ãÊı(°üÀ¨Êó±ê¡¢×ÀÃæ¡¢ÈÎÎñÀ¸µÈÒ»¹²256²ã)
-#define SHEET_USE		1												// Ê¹ÓÃ×´Ì¬±êÖ¾(ÕıÔÚÊ¹ÓÃ)
 #define SHEET_NO_USE	0												// Ê¹ÓÃ×´Ì¬±êÖ¾(Î´Ê¹ÓÃ)
+#define SHEET_USE		1												// Ê¹ÓÃ×´Ì¬±êÖ¾(ÕıÔÚÊ¹ÓÃ)
+#define SHEET_APIWIN	2												// Ê¹ÓÃ×´Ì¬±êÖ¾(Íâ²¿API´°¿Ú)
+#define SHEET_CONS		3												// Ê¹ÓÃ×´Ì¬±êÖ¾(ÃüÁîĞĞ´°¿Ú)
+#define SHEET_NO_TITLE	4												// Ê¹ÓÃ×´Ì¬±êÖ¾(ÆäËûÎŞ±êÌâÀ¸´°¿Ú)
+#define	SHEET_BACK		101												// Ê¹ÓÃ×´Ì¬±êÖ¾(±³¾°²ã)
+#define	SHEET_TASKBAR	102												// Ê¹ÓÃ×´Ì¬±êÖ¾(ÈÎÎñÀ¸²ã)
+#define	SHEET_MOUSE		103												// Ê¹ÓÃ×´Ì¬±êÖ¾(Êó±êÖ¸Õë²ã)
+#define	SHEET_MENU		104												// Ê¹ÓÃ×´Ì¬±êÖ¾(²Ëµ¥À¸²ã)
 struct SHEET {
 	/* Í¼²ã½á¹¹ */
 	unsigned int *buf;													// Í¼ÏñÄÚÈİ
@@ -300,7 +307,7 @@ struct MENU {
 	unsigned int *buf;								// ²Ëµ¥Í¼Ïñ»º³åµØÖ·
 	struct SHEET *sht;								// ²Ëµ¥Í¼Ïñsheet
 	int flags;										// flagsÊÇ²Ëµ¥µ±Ç°×´Ì¬
-	unsigned int now;								// nowÊÇµ±Ç°Ñ¡ÖĞÏî
+	unsigned char now, old;							// nowÊÇµ±Ç°Ñ¡ÖĞÏî,oldÊÇÉÏÒ»¸öÑ¡ÖĞÏî
 	int option_num;									// µ±Ç°Ñ¡ÏîÊıÁ¿
 	struct OPTIONS options[MAX_OPTIONS];			// ´æ·ÅÑ¡ÏîÁĞ±í(×î¶à256¸öÑ¡Ïî£¬Ó¦¸Ã²»»áÓĞÄÄ¸ö³ÌĞòÓÃµ½200¶à¸öÑ¡Ïî)
 };
@@ -313,7 +320,8 @@ void make_icon(unsigned int *buf, int xsize, char type);											// ÏÔÊ¾Ò»¸ölo
 struct MENU *make_menu(struct MEMMAN *memman, int menux, int menuy);								// ´´½¨²Ëµ¥À¸
 void add_options(struct MENU *menus, char *option_title, unsigned char index);						// Ôö¼ÓÑ¡Ïî
 void show_menu(struct SHTCTL *shtctl, struct MEMMAN *memman, struct MENU *menu);					// ÏÔÊ¾²Ëµ¥
-void hide_menu(struct MEMMAN *memman, struct MENU *menu);					// Òş²Ø²Ëµ¥
+void hide_menu(struct MEMMAN *memman, struct MENU *menu);											// Òş²Ø²Ëµ¥
+void option_change(struct MENU *menu, int mouse_y);													// Êó±êÒÆ¶¯Ê±Ñ¡Ïî±äÉ«´¦Àí
 
 /* console.c(ÃüÁîÌ¨) */
 struct CONSOLE {
@@ -344,6 +352,7 @@ void cmd_langmode(struct CONSOLE *cons, char *cmdline);												// CMD£ºÇĞ»»Ó
 void cmd_shutdown(void);																			// CMD£º¹Ø»ú
 void cmd_sysmode(struct CONSOLE *cons, char *cmdline);												// CMD£ºÇĞ»»ÏµÍ³Ä£Ê½
 void cmd_echo(struct CONSOLE *cons, char *cmdline);													// CMD£ºÏµÍ³Êä³ö
+void cmd_systest(struct CONSOLE *cons);																// CMD£º²âÊÔÏµÍ³¹¦ÄÜ×¨ÓÃ
 int cmd_app(struct CONSOLE *cons, int *fat, char *cmdline);											// Íâ²¿Ó¦ÓÃ³ÌĞò
 int *kal_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int eax);				// Í¨¹ıedx²éÕÒAPI
 int *inthandler0d(int *esp);																		// 0dºÅÖĞ¶Ï£¬ÓÃÓÚ´¦ÀíÒì³£³ÌĞò
