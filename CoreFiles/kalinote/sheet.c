@@ -38,6 +38,7 @@ struct SHEET *sheet_alloc(struct SHTCTL *ctl){
 			sht->flags = SHEET_USE;			/* 标记为正在使用(作为窗口) */
 			sht->height = -1;				/* 高度设置为-1，表示高度还没有设置，不显示 */
 			sht->task = 0;					/* 不使用自动关闭 */
+			sht->win = 0;					/* 默认给0，这个参数用于保存窗口(或菜单栏等)的地址 */
 			return sht;
 		}
 	}

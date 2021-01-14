@@ -313,8 +313,8 @@ struct MENU {
 	int option_num;									// 当前选项数量
 	struct OPTIONS options[MAX_OPTIONS];			// 存放选项列表(最多256个选项，应该不会有哪个程序用到200多个选项)
 };
-struct WINDOW *make_window8(unsigned int *buf, int xsize, int ysize, char *title, char act);		// 生成一个窗口(旧)
-// struct WINDOW *make_window8(unsigned int *buf, int xsize, int ysize, char *title, char act);		// 生成一个窗口
+// struct WINDOW *make_window8(unsigned int *buf, int xsize, int ysize, char *title, char act);		// 生成一个窗口(旧)
+struct WINDOW *make_window8(struct SHEET *sht, int xsize, int ysize, char *title, char act);		// 生成一个窗口
 void putfonts8_asc_sht(struct SHEET *sht, int x, int y, int c, int b, char *s, int l);				// 先涂背景色，在写字符串
 void make_textbox8(struct SHEET *sht, int x0, int y0, int sx, int sy, int c);						// 生成编辑框
 // void make_wtitle8(unsigned int *buf, int xsize, char *title, char act);							// 生成一个标题栏(旧版)

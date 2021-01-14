@@ -728,7 +728,7 @@ int *kal_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int 
 		sht->task = task;
 		sht->flags = SHEET_APIWIN;			/* 外部API窗口 */
 		sheet_setbuf(sht, (int *) ebx + ds_base, esi, edi, eax);
-		window = make_window8((int *) ebx + ds_base, esi, edi, (char *) ecx + ds_base, 0);
+		window = make_window8(sht, esi, edi, (char *) ecx + ds_base, 0);
 		sheet_slide(sht, ((shtctl->xsize - esi) / 2) & ~3, (shtctl->ysize - edi) / 2);
 		sheet_updown(sht, shtctl->top); /* 将窗口图层高度指定为当前鼠标所在图层的高度，鼠标移到上层 */
 		/*********************************************************************************
@@ -1088,7 +1088,7 @@ struct SHEET *open_console(struct SHTCTL *shtctl, unsigned int memtotal){
 	unsigned int *buf = (unsigned int *) memman_alloc_4k(memman, 525 * 479 * 4);
 	//sheet_setbuf(sht, buf, 256, 165, -1); /* 无透明色 */
 	sheet_setbuf(sht, buf, 525, 479, -1); /* 无透明色 */
-	window = make_window8(buf, 525, 479, "console", 0);
+	window = make_window8(sht, 525, 479, "console", 0);
 	make_textbox8(sht, 3, 24, 519, 452, COL_BLACK);
 	make_icon(window, 1);
 	sht->task = open_constask(sht, memtotal);

@@ -351,13 +351,7 @@ void KaliMain(void){
 							if (point_sht->buf[y * point_sht->bxsize + x] != point_sht->col_inv) {/* 如果不是透明层 */
 								if(point_sht->flags == SHEET_MENU) {
 									/* 如果是菜单层(这里后面还要再改) */
-									/* 如何找到是哪个菜单呢？ */
-									/***************************************************************
-									*			这里需要想个办法找到对应的menu结构体               *
-									*            应该想个办法把图层和菜单栏绑定起来                *
-									*           或者像管理图层一样把所有菜单统一管理               *
-									***************************************************************/
-									option_change(start_menu, y);
+									option_change((struct MENU *)(point_sht->win), y);
 								}
 							}
 						}
@@ -391,6 +385,12 @@ void KaliMain(void){
 											}
 											if (sht->bxsize - 21 <= x && x < sht->bxsize - 5 && 5 <= y && y < 19) {	/* 判断是否点击在指定区域 */
 												/* 按下X按钮 */
+												/* 释放窗口结构体内存 */
+												/***************************************************************
+												*                在点击[x]关闭命令窗口时会发生内存泄露         *
+												*                       需要进一步检查内存释放                 *
+												***************************************************************/
+												memman_free_4k(memman, (unsigned int)(sht->win), sizeof (struct WINDOW));
 												if (/*sht->flags == SHEET_USE || */sht->flags == SHEET_APIWIN) {		/* 是否为应用程序窗口 */
 													task = sht->task;
 													cons_putstr0(task->cons, "\nBreak(mouse) :\n");
@@ -424,6 +424,8 @@ void KaliMain(void){
 										}
 									}
 									break;
+								} else if (sht->flags == SHEET_MENU) {
+									/* 菜单栏点击事件 */
 								}
 							}
 						} else {
@@ -447,11 +449,15 @@ void KaliMain(void){
 					}
 				}
 			} else if (768 <= i && i <= 1023) {	/* 命令行窗口关闭处理 */
+				/* 释放窗口结构体内存 */
+				memman_free_4k(memman, (unsigned int)((shtctl->sheets0 + (i - 768))->win), sizeof (struct WINDOW));
 				close_console(shtctl->sheets0 + (i - 768));
 			} else if (1024 <= i && i <= 2023) {
 				close_constask(taskctl->tasks0 + (i - 1024));
 			} else if (2024 <= i && i <= 2279) {	/* 只关闭命令行窗口 */
 				sht2 = shtctl->sheets0 + (i - 2024);
+				/* 释放窗口结构体内存 */
+				memman_free_4k(memman, (unsigned int)(sht2->win), sizeof (struct WINDOW));
 				memman_free_4k(memman, (int) sht2->buf, 256 * 165);
 				sheet_free(sht2);
 			}

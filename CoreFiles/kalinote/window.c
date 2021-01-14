@@ -2,7 +2,7 @@
 
 #include "bootpack.h"
 
-struct WINDOW *make_window8(unsigned int *buf, int xsize, int ysize, char *title, char act){
+struct WINDOW *make_window8(struct SHEET *sht, int xsize, int ysize, char *title, char act){
 	/* 窗口窗体 */
 	/* 暂时还没有引入窗口结构体 */
 	struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;		/* 内存管理程序 */
@@ -11,19 +11,20 @@ struct WINDOW *make_window8(unsigned int *buf, int xsize, int ysize, char *title
 	window->wtitle  = title;															/* 窗口标题 */
 	window->xsize = xsize;																/* 窗口x大小	*/
 	window->ysize = ysize;																/* 窗口y大小 */
-	window->buf = buf;																	/* 窗口图形缓冲区 */
+	window->buf = sht->buf;																	/* 窗口图形缓冲区 */
 	window->wcolor.act_color = 0x00ffc1c1;												/* 窗口聚焦色(粉色) */
 	window->wcolor.dis_act_color = 0x00cd9b9b;											/* 窗口未聚焦色(暗粉色) */
 	window->wcolor.back_color = COL_WHITE;												/* 背景色 */
-	boxfill8(buf, xsize, 					COL_BGREY, 0,         0,         xsize - 1, 0        );
-	boxfill8(buf, xsize, 					COL_WHITE, 1,         1,         xsize - 2, 1        );
-	boxfill8(buf, xsize, 					COL_BGREY, 0,         0,         0,         ysize - 1);
-	boxfill8(buf, xsize, 					COL_WHITE, 1,         1,         1,         ysize - 2);
-	boxfill8(buf, xsize,					COL_DGREY, xsize - 2, 1,         xsize - 2, ysize - 2);
-	boxfill8(buf, xsize,					COL_BLACK, xsize - 1, 0,         xsize - 1, ysize - 1);
-	boxfill8(buf, xsize, 	window->wcolor.back_color, 2,         2,         xsize - 3, ysize - 3);				/* 主背景 */
-	boxfill8(buf, xsize,					COL_DGREY, 1,         ysize - 2, xsize - 2, ysize - 2);
-	boxfill8(buf, xsize,					COL_BLACK, 0,         ysize - 1, xsize - 1, ysize - 1);
+	sht->win = (unsigned int *)window;
+	boxfill8(sht->buf, xsize, 					COL_BGREY, 0,         0,         xsize - 1, 0        );
+	boxfill8(sht->buf, xsize, 					COL_WHITE, 1,         1,         xsize - 2, 1        );
+	boxfill8(sht->buf, xsize, 					COL_BGREY, 0,         0,         0,         ysize - 1);
+	boxfill8(sht->buf, xsize, 					COL_WHITE, 1,         1,         1,         ysize - 2);
+	boxfill8(sht->buf, xsize,					COL_DGREY, xsize - 2, 1,         xsize - 2, ysize - 2);
+	boxfill8(sht->buf, xsize,					COL_BLACK, xsize - 1, 0,         xsize - 1, ysize - 1);
+	boxfill8(sht->buf, xsize, 	window->wcolor.back_color, 2,         2,         xsize - 3, ysize - 3);				/* 主背景 */
+	boxfill8(sht->buf, xsize,					COL_DGREY, 1,         ysize - 2, xsize - 2, ysize - 2);
+	boxfill8(sht->buf, xsize,					COL_BLACK, 0,         ysize - 1, xsize - 1, ysize - 1);
 	make_wtitle8(window, act);
 	return window;
 }
@@ -311,6 +312,7 @@ void show_menu(struct SHTCTL *shtctl, struct MEMMAN *memman, struct MENU *menu) 
 	menu->sht->flags = SHEET_MENU;
 	menu->buf = (unsigned int *) memman_alloc_4k(memman,menu->mheight * (menu->mwidth + 1) * 4);
 	sheet_setbuf(menu->sht, menu->buf, menu->mwidth, menu->mheight + 1, -1);
+	menu->sht->win = (unsigned int *)menu;
 	
 	/* 绘制 */
 	boxfill8(menu->buf, menu->mwidth, COL_WHITE, 0, 0, menu->mwidth, menu->mheight);										/* 背景板 */
@@ -323,7 +325,7 @@ void show_menu(struct SHTCTL *shtctl, struct MEMMAN *memman, struct MENU *menu) 
 			putfonts8_asc(menu->buf, menu->mwidth, 5, 5 + (i * 25), COL_BLACK, menu->options[i].title);
 		}
 	}
-	boxfill8(menu->buf, menu->mwidth, COL_BLACK, 0, menu->mheight - 1, menu->mwidth, menu->mheight);						/* 下横线 */
+	boxfill8(menu->buf, menu->mwidth, COL_BLACK, 0, menu->mheight, menu->mwidth, menu->mheight);						/* 下横线 */
 	sheet_slide(menu->sht, menu->menux, menu->menuy);
 	sheet_updown(menu->sht, shtctl->top);
 	return;
