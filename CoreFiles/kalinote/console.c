@@ -614,6 +614,7 @@ void cmd_systest(struct CONSOLE *cons) {
 }
 
 int cmd_app(struct CONSOLE *cons, int *fat, char *cmdline){
+	/* 搜索并执行应用程序 */
 	struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;
 	struct FILEINFO *finfo;
 	char name[18], *p, *q;
@@ -624,7 +625,8 @@ int cmd_app(struct CONSOLE *cons, int *fat, char *cmdline){
 
 	/* 根据命令生成文件名 */
 	for (i = 0; i < 13; i++) {
-		if (cmdline[i] <= ' ') {
+		/* 8字节文件名和三个字节的后缀，中间加个点，一共12字节 */
+		if (cmdline[i] <= ' ') {/* 非字符或符号 */
 			break;
 		}
 		name[i] = cmdline[i];
@@ -645,21 +647,23 @@ int cmd_app(struct CONSOLE *cons, int *fat, char *cmdline){
 
 	if (finfo != 0) {
 		/* 找到文件的情况 */
-		p = (char *) memman_alloc_4k(memman, finfo->size);
-		file_loadfile(finfo->clustno, finfo->size, p, fat, (char *) (ADR_DISKIMG + 0x003e00));
+		p = (char *) memman_alloc_4k(memman, finfo->size);											/* 给应用程序分配一段空内存空间 */
+		file_loadfile(finfo->clustno, finfo->size, p, fat, (char *) (ADR_DISKIMG + 0x003e00));		/* 加载应用程序文件 */
 		if (finfo->size >= 36 && strncmp(p + 4, "Kali", 4) == 0 && *p == 0x00) {
-			segsiz = *((int *) (p + 0x0000));
-			esp    = *((int *) (p + 0x000c));
-			datsiz = *((int *) (p + 0x0010));
-			datkal = *((int *) (p + 0x0014));
-			q = (char *) memman_alloc_4k(memman, segsiz);
+			/*  这里的几个判断，第一个是kal头文件为36字节，所以kal应用程序一定会大于36字节，第二个是检查是否有kal应用签名 */
+			/* 处理kal文件头(这里以后可能还需要修改一下) */
+			segsiz = *((int *) (p + 0x0000));					/* stack+.data+heap的大小(4K的倍数) */
+			esp    = *((int *) (p + 0x000c));					/* 堆栈初始值和.data传输目的地 */
+			datsiz = *((int *) (p + 0x0010));					/* .data的大小 */
+			datkal = *((int *) (p + 0x0014));					/* .data的初始值列在文件中的位置 */
+			q = (char *) memman_alloc_4k(memman, segsiz);		/* 分配应用程序段内存空间 */
 			task->ds_base = (int) q;
-			set_segmdesc(task->ldt + 0, finfo->size - 1, (int) p, AR_CODE32_ER + 0x60);
+			set_segmdesc(task->ldt + 0, finfo->size - 1, (int) p, AR_CODE32_ER + 0x60);				/* 段定义加上0x60可以将该段权限设置为应用程序使用 */
 			set_segmdesc(task->ldt + 1, segsiz - 1,      (int) q, AR_DATA32_RW + 0x60);
 			for (i = 0; i < datsiz; i++) {
 				q[esp + i] = p[datkal + i];
 			}
-			start_app(0x1b, 0 * 8 + 4, esp, 1 * 8 + 4, &(task->tss.esp0));
+			start_app(0x1b, 0 * 8 + 4, esp, 1 * 8 + 4, &(task->tss.esp0));							/* 调用汇编写的用于启动应用程序的函数 */
 			shtctl = (struct SHTCTL *) *((int *) 0x0fe4);
 			for (i = 0; i < MAX_SHEETS; i++) {
 				sht = &(shtctl->sheets0[i]);
@@ -700,6 +704,7 @@ int *kal_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int 
 	struct FILEINFO *finfo;
 	struct FILEHANDLE *fh;
 	struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;
+	struct WINDOW *window;
 	int *reg = &eax + 1;	/* eax后面的地址 */
 		/* 强行改写通过PUSHAD保存的值 */
 		/* reg[0] : EDI,   reg[1] : ESI,   reg[2] : EBP,   reg[3] : ESP */
@@ -723,9 +728,12 @@ int *kal_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int 
 		sht->task = task;
 		sht->flags = SHEET_APIWIN;			/* 外部API窗口 */
 		sheet_setbuf(sht, (int *) ebx + ds_base, esi, edi, eax);
-		make_window8((int *) ebx + ds_base, esi, edi, (char *) ecx + ds_base, 0);
+		window = make_window8((int *) ebx + ds_base, esi, edi, (char *) ecx + ds_base, 0);
 		sheet_slide(sht, ((shtctl->xsize - esi) / 2) & ~3, (shtctl->ysize - edi) / 2);
 		sheet_updown(sht, shtctl->top); /* 将窗口图层高度指定为当前鼠标所在图层的高度，鼠标移到上层 */
+		/*********************************************************************************
+		*                         以后这里要改成返回window结构体                         *
+		*********************************************************************************/
 		reg[7] = (int) sht;
 	} else if (edx == 6) {
 		//在窗口上绘制字符
@@ -939,20 +947,41 @@ int *kal_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int 
 }
 
 int *inthandler0d(int *esp){
+	/* CPU异常中断 */
 	struct TASK *task = task_now();
 	struct CONSOLE *cons = task->cons;
-	char s[30];
-	cons_putstr0(cons, "\nINT 0x0D :\n General Protected Exception.\n");
+	char s[30], msg[512];
+	if (task->langmode == 1) {
+		/* 中文模式 */
+		sprintf(msg,"********************一般保护异常********************\n   系统在尝试运行应用时遇到了错误。\n   一般保护异常通常出现在用户程序企图访问不可访问的地址时。如果该错误第一次出现，请尝试重新启动该应用程序，如果该错误反复出现，请联系软件的开发者。\n   下面是此次错误的信息：\n");
+		cons_putstr0(cons, msg);
+		cons_putstr0(cons, "\n中断号 0x0D :\n 一般保护异常\n");
+	} else {
+		/* 非中文模式 */
+		sprintf(msg,"*****************General protection exception*****************\n   The system encountered an error while trying to run the application.\n   General protection exception usually occurs when the user program attempts to access an inaccessible address. If the error occurs for the first time, please try to restart the application. If the error occurs repeatedly, please contact the software developer. \n   the following is the error message:\n");
+		cons_putstr0(cons, msg);
+		cons_putstr0(cons, "\nINT 0x0D :\n General Protected Exception\n");
+	}
 	sprintf(s, "EIP = 0x%08X\n", esp[11]);/* esp11号是EIP，详细esp列表在书上第451页 */
 	cons_putstr0(cons, s);
+	
 	return &(task->tss.esp0);	/* 强制结束程序 */
 }
 
 int *inthandler0c(int *esp){
 	struct TASK *task = task_now();
 	struct CONSOLE *cons = task->cons;
-	char s[30];
-	cons_putstr0(cons, "\nINT 0x0C :\n Stack Exception.\n");
+	char s[30], msg[512];
+	if (task->langmode == 1) {
+		/* 中文模式 */
+		sprintf(msg,"********************栈异常********************\n   系统在尝试运行应用时遇到了错误。\n   栈异常通常出现在用户程序错误访问数据栈(如数组成员下标越界等)。如果该错误第一次出现，请尝试重新启动该应用程序，如果该错误反复出现，请联系软件的开发者。\n   下面是此次错误的信息：\n");
+		cons_putstr0(cons, msg);
+		cons_putstr0(cons, "\n中断号 0x0C :\n 栈异常\n");
+	} else {
+		sprintf(msg,"********************Stack Exception********************\n   The system encountered an error while trying to run the application. \n   stack exception usually occurs when the user program accesses the data stack by mistake (such as the subscript of array member is out of bounds). If this error occurs for the first time, please try to restart the application. If this error occurs repeatedly, please contact the software developer. \n the following is the error message:\n");
+		cons_putstr0(cons, msg);
+		cons_putstr0(cons, "\nINT 0x0C :\n Stack Exception.\n");
+	}
 	sprintf(s, "EIP = 0x%08X\n", esp[11]);
 	cons_putstr0(cons, s);
 	return &(task->tss.esp0);	/* 强制结束程序 */
@@ -1054,13 +1083,14 @@ struct TASK *open_constask(struct SHEET *sht, unsigned int memtotal){
 struct SHEET *open_console(struct SHTCTL *shtctl, unsigned int memtotal){
 	struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;
 	struct SHEET *sht = sheet_alloc(shtctl);
+	struct WINDOW *window;
 	//unsigned int *buf = (unsigned int *) memman_alloc_4k(memman, 256 * 165 * 4);
 	unsigned int *buf = (unsigned int *) memman_alloc_4k(memman, 525 * 479 * 4);
 	//sheet_setbuf(sht, buf, 256, 165, -1); /* 无透明色 */
 	sheet_setbuf(sht, buf, 525, 479, -1); /* 无透明色 */
-	make_window8(buf, 525, 479, "console", 0);
+	window = make_window8(buf, 525, 479, "console", 0);
 	make_textbox8(sht, 3, 24, 519, 452, COL_BLACK);
-	make_icon(buf, 525, 1);
+	make_icon(window, 1);
 	sht->task = open_constask(sht, memtotal);
 	sht->flags = SHEET_CONS;	/* 命令行窗口 */
 	return sht;

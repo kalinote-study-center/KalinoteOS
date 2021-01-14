@@ -2,30 +2,33 @@
 
 #include "bootpack.h"
 
-void make_window8(unsigned int *buf, int xsize, int ysize, char *title, char act){
+struct WINDOW *make_window8(unsigned int *buf, int xsize, int ysize, char *title, char act){
 	/* 窗口窗体 */
 	/* 暂时还没有引入窗口结构体 */
-	// struct WINDOW window;
-	// window.wtitle  = title;
-	// window.xsize = xsize;
-	// window.ysize = ysize;
-	// window.wcolor.act_color = 0x00cd9b9b;			/* 窗口聚焦色(粉色) */
-	// window.wcolor.dis_act_color 0x00ffc1c1;			/* 窗口未聚焦色(暗粉色) */
-	// window.wcolor.back_color = COL_WHITE;			/* 背景色 */
-	boxfill8(buf, xsize, COL_BGREY, 0,         0,         xsize - 1, 0        );
-	boxfill8(buf, xsize, COL_WHITE, 1,         1,         xsize - 2, 1        );
-	boxfill8(buf, xsize, COL_BGREY, 0,         0,         0,         ysize - 1);
-	boxfill8(buf, xsize, COL_WHITE, 1,         1,         1,         ysize - 2);
-	boxfill8(buf, xsize, COL_DGREY, xsize - 2, 1,         xsize - 2, ysize - 2);
-	boxfill8(buf, xsize, COL_BLACK, xsize - 1, 0,         xsize - 1, ysize - 1);
-	boxfill8(buf, xsize, COL_BGREY, 2,         2,         xsize - 3, ysize - 3);
-	boxfill8(buf, xsize, COL_DGREY, 1,         ysize - 2, xsize - 2, ysize - 2);
-	boxfill8(buf, xsize, COL_BLACK, 0,         ysize - 1, xsize - 1, ysize - 1);
-	make_wtitle8(buf, xsize, title, act);
-	return;
+	struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;		/* 内存管理程序 */
+	struct WINDOW *window;
+	window = (struct WINDOW *) memman_alloc_4k(memman, sizeof (struct WINDOW));			/* 给窗口信息结构体分配一段内存 */
+	window->wtitle  = title;															/* 窗口标题 */
+	window->xsize = xsize;																/* 窗口x大小	*/
+	window->ysize = ysize;																/* 窗口y大小 */
+	window->buf = buf;																	/* 窗口图形缓冲区 */
+	window->wcolor.act_color = 0x00ffc1c1;												/* 窗口聚焦色(粉色) */
+	window->wcolor.dis_act_color = 0x00cd9b9b;											/* 窗口未聚焦色(暗粉色) */
+	window->wcolor.back_color = COL_WHITE;												/* 背景色 */
+	boxfill8(buf, xsize, 					COL_BGREY, 0,         0,         xsize - 1, 0        );
+	boxfill8(buf, xsize, 					COL_WHITE, 1,         1,         xsize - 2, 1        );
+	boxfill8(buf, xsize, 					COL_BGREY, 0,         0,         0,         ysize - 1);
+	boxfill8(buf, xsize, 					COL_WHITE, 1,         1,         1,         ysize - 2);
+	boxfill8(buf, xsize,					COL_DGREY, xsize - 2, 1,         xsize - 2, ysize - 2);
+	boxfill8(buf, xsize,					COL_BLACK, xsize - 1, 0,         xsize - 1, ysize - 1);
+	boxfill8(buf, xsize, 	window->wcolor.back_color, 2,         2,         xsize - 3, ysize - 3);				/* 主背景 */
+	boxfill8(buf, xsize,					COL_DGREY, 1,         ysize - 2, xsize - 2, ysize - 2);
+	boxfill8(buf, xsize,					COL_BLACK, 0,         ysize - 1, xsize - 1, ysize - 1);
+	make_wtitle8(window, act);
+	return window;
 }
 
-void make_icon(unsigned int *buf, int xsize, char type){
+void make_icon(struct WINDOW *window, char type){
 	/*
 	* 绘制窗口和任务栏(暂时没有)的logo
 	* type参数为窗口类型，如果是0则不显示icon
@@ -113,13 +116,14 @@ void make_icon(unsigned int *buf, int xsize, char type){
 				/* 淡白色 */
 				c = 0xffffff;
 			}
-			buf[(5 + y) * xsize + (x + 5)] = c;
+			window->buf[(5 + y) * window->xsize + (x + 5)] = c;
 		}
 	}
 	return;
 }
 
-void make_wtitle8(unsigned int *buf, int xsize, char *title, char act){
+// void make_wtitle8(unsigned int *buf, int xsize, char *title, char act){
+void make_wtitle8(struct WINDOW *window, char act){
 	/* 窗口标题栏 */
 	static char closebtn[14][16] = {
 		"OOOOOOOOOOOOOOO@",
@@ -157,13 +161,13 @@ void make_wtitle8(unsigned int *buf, int xsize, char *title, char act){
 	int c, tc, tbc;
 	if (act != 0) {
 		tc = COL_WHITE;
-		tbc = 0x00ffc1c1;
+		tbc = window->wcolor.act_color;
 	} else {
 		tc = COL_BGREY;
-		tbc = 0x00cd9b9b;
+		tbc = window->wcolor.dis_act_color;
 	}
-	boxfill8(buf, xsize, tbc, 3, 3, xsize - 4, 20);
-	putfonts8_asc(buf, xsize, 24, 4, tc, title);
+	boxfill8(window->buf, window->xsize, tbc, 3, 3, window->xsize - 4, 20);
+	putfonts8_asc(window->buf, window->xsize, 24, 4, tc, window->wtitle);
 	/* 最小化窗口按钮 */
 	for (y = 0; y < 14; y++) {
 		for (x = 0; x < 16; x++) {
@@ -177,7 +181,7 @@ void make_wtitle8(unsigned int *buf, int xsize, char *title, char act){
 			} else {
 				c = COL_WHITE;
 			}
-			buf[(5 + y) * xsize + (xsize - 40 + x)] = c;
+			window->buf[(5 + y) * window->xsize + (window->xsize - 40 + x)] = c;
 		}
 	}
 	/* 关闭窗口按钮 */
@@ -193,7 +197,7 @@ void make_wtitle8(unsigned int *buf, int xsize, char *title, char act){
 			} else {
 				c = COL_WHITE;
 			}
-			buf[(5 + y) * xsize + (xsize - 21 + x)] = c;
+			window->buf[(5 + y) * window->xsize + (window->xsize - 21 + x)] = c;
 		}
 	}
 	return;
@@ -263,14 +267,19 @@ void change_wtitle8(struct SHEET *sht, char act){
 struct MENU *make_menu(struct MEMMAN *memman, int menux, int menuy) {
 	/* 创建菜单结构体 */
 	struct MENU *menu;
-	menu = (struct MENU *) memman_alloc_4k(memman, sizeof (struct MENU));		/* 给菜单分配一个空间 */
+	menu = (struct MENU *) memman_alloc_4k(memman, sizeof (struct MENU));		/* 给菜单(结构体)分配一个空间 */
 	menu->menux = menux;			/* 菜单X坐标 */
 	menu->menuy = menuy;			/* 菜单Y坐标 */
 	menu->flags = 0;				/* 未显示 */
 	menu->now = 0;					/* 默认选中index=0(第一项) */
-	menu->old = 0;
+	menu->old = 0;					/* 上一次选择项 */
 	menu->option_num = 0;			/* 选项数量 */
 	return menu;
+}
+
+void release_menu(struct MEMMAN *man, struct MENU *menu) {
+	/* 释放菜单占用的内存空间 */
+	memman_free_4k(man, (unsigned int)&menu, sizeof(struct MENU));
 }
 
 void add_options(struct MENU *menu, char *option_title, unsigned char index) {

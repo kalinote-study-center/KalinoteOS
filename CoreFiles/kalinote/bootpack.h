@@ -160,6 +160,7 @@ struct SHEET {
 	int col_inv, height, flags;											// col_inv是透明色色号，height表示图层高度，flags表示图层设定信息
 	struct SHTCTL *ctl;
 	struct TASK *task;
+	unsigned int *win;													// 窗口(或列表等)结构体的地址指针
 };
 struct SHTCTL {
 	/* 多重图层的信息管理结构 */
@@ -284,7 +285,8 @@ struct WINCOLORS {
 	int act_color,dis_act_color,back_color;			// 窗口颜色，act_color是key_on态颜色，dis_act_color是key_off态颜色
 };
 struct WINDOW {
-	/* 这个结构体储存窗口信息(暂时还没有使用) */
+	/* 这个结构体储存窗口信息 */
+	unsigned int *buf;								// 窗口图形缓冲区
 	char *wtitle;									// 窗口标题
 	int xsize,ysize;								// 窗口大小
 	struct WINCOLORS wcolor;						// 窗口颜色
@@ -311,13 +313,17 @@ struct MENU {
 	int option_num;									// 当前选项数量
 	struct OPTIONS options[MAX_OPTIONS];			// 存放选项列表(最多256个选项，应该不会有哪个程序用到200多个选项)
 };
-void make_window8(unsigned int *buf, int xsize, int ysize, char *title, char act);					// 生成一个窗口
+struct WINDOW *make_window8(unsigned int *buf, int xsize, int ysize, char *title, char act);		// 生成一个窗口(旧)
+// struct WINDOW *make_window8(unsigned int *buf, int xsize, int ysize, char *title, char act);		// 生成一个窗口
 void putfonts8_asc_sht(struct SHEET *sht, int x, int y, int c, int b, char *s, int l);				// 先涂背景色，在写字符串
 void make_textbox8(struct SHEET *sht, int x0, int y0, int sx, int sy, int c);						// 生成编辑框
-void make_wtitle8(unsigned int *buf, int xsize, char *title, char act);								// 生成一个标题栏
+// void make_wtitle8(unsigned int *buf, int xsize, char *title, char act);							// 生成一个标题栏(旧版)
+void make_wtitle8(struct WINDOW *window, char act);													// 生成一个标题栏
 void change_wtitle8(struct SHEET *sht, char act);													// 改变窗口标题栏颜色
-void make_icon(unsigned int *buf, int xsize, char type);											// 显示一个logo
+// void make_icon(unsigned int *buf, int xsize, char type);											// 显示一个logo(旧版)
+void make_icon(struct WINDOW *window, char type);													// 显示一个logo
 struct MENU *make_menu(struct MEMMAN *memman, int menux, int menuy);								// 创建菜单栏
+void release_menu(struct MEMMAN *man, struct MENU *menu);											// 释放菜单栏
 void add_options(struct MENU *menus, char *option_title, unsigned char index);						// 增加选项
 void show_menu(struct SHTCTL *shtctl, struct MEMMAN *memman, struct MENU *menu);					// 显示菜单
 void hide_menu(struct MEMMAN *memman, struct MENU *menu);											// 隐藏菜单

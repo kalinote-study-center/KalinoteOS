@@ -1,5 +1,5 @@
 APP      = color
-STACK    = 306k
-MALLOC   = 306k
+STACK    = 350k
+MALLOC   = 350k
 
 include ../app_make.txt

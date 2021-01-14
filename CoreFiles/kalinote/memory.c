@@ -90,7 +90,7 @@ unsigned int memman_alloc(struct MEMMAN *man, unsigned int size){
 	return 0; /* 没有可用空间 */
 }
 
-int memman_free(struct MEMMAN *man, unsigned int addr, unsigned int size){
+int memman_free(struct MEMMAN *man, unsigned int addr, unsigned int size) {
 	/* 释放内存 */
 	int i, j;
 	/* 为了便于归纳内存，将free[]按照addr的顺序排列 */

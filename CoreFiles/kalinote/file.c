@@ -22,14 +22,19 @@ void file_readfat(int *fat, unsigned char *img){
 }
 
 void file_loadfile(int clustno, int size, char *buf, int *fat, char *img){
+	/* 加载文件 */
 	int i;
 	for (;;) {
 		if (size <= 512) {
+			/* 根据FAT12可知，如果文件小于512字节就不用FAT表解码 */
 			for (i = 0; i < size; i++) {
+				/* 直接把文件内容全部加载到缓存内存 */
 				buf[i] = img[clustno * 512 + i];
 			}
 			break;
 		}
+		/* 超过512字节 */
+		/* 通过FAT表解码并分段读入 */
 		for (i = 0; i < 512; i++) {
 			buf[i] = img[clustno * 512 + i];
 		}

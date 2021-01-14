@@ -200,7 +200,7 @@ _asm_inthandler0c:
 		ADD		ESP,4
 		IRETD
 
-_asm_inthandler0d:
+_asm_inthandler0d:						; “Ï≥£÷–∂œ
 		STI
 		PUSH	ES
 		PUSH	DS
