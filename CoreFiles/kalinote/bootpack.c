@@ -28,7 +28,7 @@ void KaliMain(void){
 	struct FILEINFO *finfo_jp;
 	extern char fonts[4096];
 	struct SYSINFO sysinfo;
-	struct MENU *start_menu, *desktop_menu;
+	struct MENU *start_menu; /* , *desktop_menu; */
 	static char keytable0[0x80] = {
 		0,   0,   '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', 0x08, 0,
 		'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', '[', ']', 0x0a, 0, 'A', 'S',
@@ -85,11 +85,11 @@ void KaliMain(void){
 	init_screen8(buf_back, binfo->scrnx, binfo->scrny, binfo->vmode);
 	sht_back->flags = SHEET_BACK;
 	/* 桌面右键菜单栏 */
-	desktop_menu = make_menu(memman, 0, 0);
-	add_options(desktop_menu, "Desktop Menu", 0);
-	add_options(desktop_menu, "refresh", 1);
-	add_options(desktop_menu, "nouse1", 2);
-	add_options(desktop_menu, "nouse2", 3);
+	// desktop_menu = make_menu(memman, 0, 0);
+	// add_options(desktop_menu, "Desktop Menu");
+	// add_options(desktop_menu, "refresh");
+	// add_options(desktop_menu, "nouse1");
+	// add_options(desktop_menu, "nouse2");
 
 	/* sht_taskbar */
 	//init_taskbar(buf_back, binfo->scrnx, binfo->scrny);
@@ -228,6 +228,17 @@ void KaliMain(void){
 				putfonts8_asc_sht(sht_task_bar, sht_task_bar->bxsize - 160, sht_task_bar->bysize - 20, COL_BLACK, COL_BGREY, s, 10);
 				timer_settime(timer, 100);
 				sheet_refresh(sht_task_bar, sht_task_bar->bxsize - 160, sht_task_bar->bysize - 20, sht_task_bar->bxsize - 70 + 8 * 8, sht_task_bar->bysize - 50 + 16);
+			} else if (i == 2) {
+				/* 打开新的命令窗口 */
+				/* 这里的代码实际上跟Shift+F2是一样的 */
+				if (key_win != 0) {
+					keywin_off(key_win);
+				}
+				keywin_off(key_win);
+				key_win = open_console(shtctl, memtotal);
+				sheet_slide(key_win, 32, 4);
+				sheet_updown(key_win, shtctl->top);
+				keywin_on(key_win);
 			} else if (256 <= i && i <= 511) { /* 键盘数据 */
 				if (i < 0x80 + 256) { /* 将按键编码转换为字符编码 */
 					if (key_shift == 0) {
@@ -415,17 +426,23 @@ void KaliMain(void){
 									}
 								} else if (sht->flags == SHEET_TASKBAR) {
 									/* task_bar */
-									/* 以后可以在这里加窗口最小化和开始菜单之类的东西 */
-									if (3 <= x && x < 75 && sht->bysize - 23 <= y && y < sht->bysize - 4) {
-										/* 点击[开始]按钮 */
-										switch(start_menu->flags) {
-											case 0:show_menu(shtctl, memman, start_menu);break;
-											case 1:hide_menu(memman, start_menu);break;
+									if(0 <= x && x < sht->bxsize && 0 <= y && y < sht->bysize) {/* 如果鼠标指针在图层范围内 */
+										/* 以后可以在这里加窗口最小化和开始菜单之类的东西 */
+										if (3 <= x && x < 75 && sht->bysize - 23 <= y && y < sht->bysize - 4) {
+											/* 点击[开始]按钮 */
+											switch(start_menu->flags) {
+												case 0:show_menu(shtctl, memman, start_menu);break;
+												case 1:hide_menu(memman, start_menu);break;
+											}
 										}
+										break;
 									}
-									break;
 								} else if (sht->flags == SHEET_MENU) {
 									/* 菜单栏点击事件 */
+									if(0 <= x && x < sht->bxsize && 0 <= y && y < sht->bysize) {/* 如果鼠标指针在图层范围内 */
+										menu_click((struct MENU *)(sht->win), y);
+										break;
+									}
 								}
 							}
 						} else {

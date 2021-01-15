@@ -33,8 +33,8 @@ int io_in32(int port);						//´«ÊäÊı¾İÓÃµÄ£¬»ã±àINÖ¸Áî£¬ÓÃÓÚ¶Ë¿Ú²Ù×÷(32Î»)
 void io_out32(int port, int data);			//´«ÊäÊı¾İÓÃµÄ£¬»ã±àOUTÖ¸Áî£¬ÓÃÓÚ¶Ë¿Ú²Ù×÷(32Î»)
 int io_load_eflags(void);					//¶ÁÈ¡×î³õµÄeflagsÖµ
 void io_store_eflags(int eflags);			//½«Öµ´æÈëeflags¼Ä´æÆ÷
-void load_gdtr(int limit, int addr);		//¼ÓÔØGDTR¼Ä´æÆ÷
-void load_idtr(int limit, int addr);		//¼ÓÔØIDTR¼Ä´æÆ÷
+void load_gdtr(int limit, int addr);		//¼ÓÔØGDTR¼Ä´æÆ÷(GDTR¼Ä´æÆ÷ÓÃÓÚ±£´æGDTÔÚÄÚ´æÖĞµÄÎ»ÖÃ)
+void load_idtr(int limit, int addr);		//¼ÓÔØIDTR¼Ä´æÆ÷(IDTR¼Ä´æÆ÷ÓÃÓÚ±£´æIDTÔÚÄÚ´æÖĞµÄÎ»ÖÃ)
 int load_cr0(void);							//¼ÓÔØCR0¼Ä´æÆ÷
 void store_cr0(int cr0);					//´æÈëCR0¼Ä´æÆ÷
 void load_tr(int tr);						//¼ÓÔØTR¼Ä´æÆ÷
@@ -57,11 +57,17 @@ void asm_shutdown(void);					//¹Ø»ú¹¦ÄÜ
 
 //dsctbl.c(GDT,IDT)
 struct SEGMENT_DESCRIPTOR {
+	/* GDT£¬È«¾Ö¶ÎºÅ¼ÇÂ¼±íÊı¾İ½á¹¹£¬Ã¿Ìõ¼ÇÂ¼8×Ö½Ú */
+	/* Ã¿¸ö¶Î±í´¢´æ3¸öĞÅÏ¢£¬·Ö±ğÊÇ¶Î´óĞ¡(limit)£¬¶Î»ùÖ·(base)ºÍ¶Î¹ÜÀíÊôĞÔ(access_right) */
+	/* ÔÚ¸Ã½á¹¹ÌåÖĞÎªÁËÏµÍ³¶Ô²»Í¬CPUµÄ¼æÈİĞÔ£¬base·ÖÎªÁËlow(2×Ö½Ú)¡¢mid(1×Ö½Ú)¡¢high(1×Ö½Ú)£¬¼ÓÆğÀ´ÊÇ32Î» */
+	/* ÉÏÏŞ(limit)µÄ³¤¶ÈÊÇ20Î»£¬ÔÚ¶ÎÊôĞÔÖĞÓĞÒ»¸ö±êÖ¾Î»(Gbit)£¬ÓÃÓÚ±íÊ¾limitµÄµ¥Î»£¬µ±GbitÎª1Ê±£¬¶ÎÒÔÒ³(4KB)Îªµ¥Î»£¬ËùÒÔlimit×î¸ß¿É±íÊ¾4GB(4KB x 1M) */
+	/* ¶ÎÊôĞÔ(access_right)Îª12Î»£¬¾ßÌåÊı¾İ¼ûÏÂ·½³£Á¿ */
 	short limit_low, base_low;
 	char base_mid, access_right;
 	char limit_high, base_high;
 };
 struct GATE_DESCRIPTOR {
+	/* IDT£¬ÖĞ¶Ï¼ÇÂ¼±íÊı¾İ½á¹¹£¬Ã¿Ìõ¼ÇÂ¼8×Ö½Ú */
 	short offset_low, selector;
 	char dw_count, access_right;
 	short offset_high;
@@ -69,14 +75,14 @@ struct GATE_DESCRIPTOR {
 void init_gdtidt(void);																				// ³õÊ¼»¯GDTºÍIDT
 void set_segmdesc(struct SEGMENT_DESCRIPTOR *sd, unsigned int limit, int base, int ar);				// ÉèÖÃ¶ÎÃèÊö·û
 void set_gatedesc(struct GATE_DESCRIPTOR *gd, int offset, int selector, int ar);					// ÉèÖÃÃÅÃèÊö·û
-#define ADR_IDT			0x0026f800
-#define LIMIT_IDT		0x000007ff
-#define ADR_GDT			0x00270000
-#define LIMIT_GDT		0x0000ffff
-#define ADR_BOTPAK		0x00280000
-#define LIMIT_BOTPAK	0x0007ffff
-#define AR_DATA32_RW	0x4092
-#define AR_CODE32_ER	0x409a
+#define ADR_IDT			0x0026f800						/* È«¾Ö¶ÎºÅ¼ÇÂ¼±íµØÖ· */
+#define LIMIT_IDT		0x000007ff						/* IDT´óĞ¡2KB */
+#define ADR_GDT			0x00270000						/* GDTµØÖ· */
+#define LIMIT_GDT		0x0000ffff						/* GDT´óĞ¡64KB */
+#define ADR_BOTPAK		0x00280000						/* bootpack.kalµØÖ· */
+#define LIMIT_BOTPAK	0x0007ffff						/* bootpack.kal´óĞ¡512KB */
+#define AR_DATA32_RW	0x4092							/* ÏµÍ³×¨ÓÃ£¬¿É¶ÁĞ´²»¿ÉÖ´ĞĞ */
+#define AR_CODE32_ER	0x409a							/* ÏµÍ³×¨ÓÃ£¬¿É¶Á¿ÉÖ´ĞĞ²»¿ÉĞ´ */
 #define AR_LDT			0x0082
 #define AR_TSS32		0x0089
 #define AR_INTGATE32	0x008e
@@ -297,7 +303,7 @@ struct OPTIONS {
 	int flags;										// Ñ¡Ïî±êÖ¾
 	char *title;									// Ñ¡Ïî±êÌâ
 	unsigned char index;							// Ñ¡Ïîindex
-	//int(*onOptionClick)();
+	void(*onOptionClick)();							// µã»÷Ê±Ö´ĞĞ
 };
 struct MENU {
 	/* ²Ëµ¥À¸½á¹¹Ìå */
@@ -313,6 +319,13 @@ struct MENU {
 	int option_num;									// µ±Ç°Ñ¡ÏîÊıÁ¿
 	struct OPTIONS options[MAX_OPTIONS];			// ´æ·ÅÑ¡ÏîÁĞ±í(×î¶à256¸öÑ¡Ïî£¬Ó¦¸Ã²»»áÓĞÄÄ¸ö³ÌĞòÓÃµ½200¶à¸öÑ¡Ïî)
 };
+struct BUTTON {
+	/* °´Å¥½á¹¹Ìå */
+	char *title;									// °´Å¥±êÌâ
+	int height,width;								// °´Å¥´óĞ¡(¸ß¿í)
+	int flags;										// °´Å¥¼¤»î×´Ì¬
+	void(*onButtonClick)();							// µã»÷Ê±Ö´ĞĞ
+}
 // struct WINDOW *make_window8(unsigned int *buf, int xsize, int ysize, char *title, char act);		// Éú³ÉÒ»¸ö´°¿Ú(¾É)
 struct WINDOW *make_window8(struct SHEET *sht, int xsize, int ysize, char *title, char act);		// Éú³ÉÒ»¸ö´°¿Ú
 void putfonts8_asc_sht(struct SHEET *sht, int x, int y, int c, int b, char *s, int l);				// ÏÈÍ¿±³¾°É«£¬ÔÚĞ´×Ö·û´®
@@ -324,10 +337,13 @@ void change_wtitle8(struct SHEET *sht, char act);													// ¸Ä±ä´°¿Ú±êÌâÀ¸Ñ
 void make_icon(struct WINDOW *window, char type);													// ÏÔÊ¾Ò»¸ölogo
 struct MENU *make_menu(struct MEMMAN *memman, int menux, int menuy);								// ´´½¨²Ëµ¥À¸
 void release_menu(struct MEMMAN *man, struct MENU *menu);											// ÊÍ·Å²Ëµ¥À¸
-void add_options(struct MENU *menus, char *option_title, unsigned char index);						// Ôö¼ÓÑ¡Ïî
+// void add_options(struct MENU *menus, char *option_title);										// Ôö¼ÓÑ¡Ïî(¾É°æ)
+void add_options(struct MENU *menu, char *option_title, void(*onOptionClick)());					// Ôö¼ÓÑ¡Ïî
+void remove_options(struct MENU *menu, unsigned char index);										// ÒÆ³ıÑ¡Ïî
 void show_menu(struct SHTCTL *shtctl, struct MEMMAN *memman, struct MENU *menu);					// ÏÔÊ¾²Ëµ¥
 void hide_menu(struct MEMMAN *memman, struct MENU *menu);											// Òş²Ø²Ëµ¥
 void option_change(struct MENU *menu, int mouse_y);													// Êó±êÒÆ¶¯Ê±Ñ¡Ïî±äÉ«´¦Àí
+void menu_click(struct MENU *menu, int mouse_y);													// ²Ëµ¥À¸±»µ¥»÷
 
 /* console.c(ÃüÁîÌ¨) */
 struct CONSOLE {

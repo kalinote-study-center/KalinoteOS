@@ -2,26 +2,27 @@
 
 #include "bootpack.h"
 
-void init_gdtidt(void)
-{
+void init_gdtidt(void){
 	/*初始化GDT和IDT*/
-	struct SEGMENT_DESCRIPTOR *gdt = (struct SEGMENT_DESCRIPTOR *) ADR_GDT;		//GDT的地址位于0x270000~0x27ffff
-	struct GATE_DESCRIPTOR    *idt = (struct GATE_DESCRIPTOR    *) ADR_IDT;		//IDT的地址位于0x26f800~0x26ffff
+	struct SEGMENT_DESCRIPTOR *gdt = (struct SEGMENT_DESCRIPTOR *) ADR_GDT;		//GDT(全局段号记录表)的地址位于0x270000~0x27ffff(8192条记录，每条记录8字节，一共是65536字节，也就是64KB)
+	struct GATE_DESCRIPTOR    *idt = (struct GATE_DESCRIPTOR    *) ADR_IDT;		//IDT(中断记录表)的地址位于0x26f800~0x26ffff(255条记录，每条记录8字节，一共2040字节，大约2KB)
 	int i;
 
 	/* GDT初始化 */
 	for (i = 0; i <= LIMIT_GDT / 8; i++) {
-		set_segmdesc(gdt + i, 0, 0, 0);
+		/* 对LIMIT_GDT / 8(8192)个GDT表进行初始化，将每个表的上限(limit，段的字节数-1)、基址(base)、访问权限都设为0 */
+		set_segmdesc(gdt + i, 0, 0, 0);				/* 这里的gdt是指针，由于C语言特性，地址在进行加法时内部有隐含乘法，所以i每次+1，实际地址是+8(GDT结构体8字节) */
 	}
-	set_segmdesc(gdt + 1, 0xffffffff,   0x00000000, AR_DATA32_RW);
-	set_segmdesc(gdt + 2, LIMIT_BOTPAK, ADR_BOTPAK, AR_CODE32_ER);
-	load_gdtr(LIMIT_GDT, ADR_GDT);
+	set_segmdesc(gdt + 1, 0xffffffff,   0x00000000, AR_DATA32_RW);			/* 段号为1的段，表示CPU管理内存大小，设置0xffffffff是4GB(32位最大识别内存)，地址为0 */
+	set_segmdesc(gdt + 2, LIMIT_BOTPAK, ADR_BOTPAK, AR_CODE32_ER);			/* 段号为2的段，表示bootpack.kal，大小为512KB */
+	load_gdtr(LIMIT_GDT, ADR_GDT);											/* 对GDTR寄存器进行设置 */
 
 	/* IDT初始化 */
 	for (i = 0; i <= LIMIT_IDT / 8; i++) {
+		/* 将IDT初始化，全部置0，这里跟上面GDT的初始化操作一样 */
 		set_gatedesc(idt + i, 0, 0, 0);
 	}
-	load_idtr(LIMIT_IDT, ADR_IDT);
+	load_idtr(LIMIT_IDT, ADR_IDT);											/* 对IDTR寄存器进行设置 */
 	
 	/* IDT的设定(中断注册) */
 	/* 这里的2<<3表示中断段号为2，左移3位是因为最低3位有其他作用 */
@@ -31,13 +32,13 @@ void init_gdtidt(void)
 	set_gatedesc(idt + 0x21, (int) asm_inthandler21, 2 << 3, AR_INTGATE32);
 	set_gatedesc(idt + 0x27, (int) asm_inthandler27, 2 << 3, AR_INTGATE32);
 	set_gatedesc(idt + 0x2c, (int) asm_inthandler2c, 2 << 3, AR_INTGATE32);
-	set_gatedesc(idt + 0x40, (int) asm_kal_api,      2 << 3, AR_INTGATE32 + 0x60);				/* 应用程序API中断，段定义加上0x60可以将该段权限设置为应用程序使用 */
+	set_gatedesc(idt + 0x40, (int) asm_kal_api,      2 << 3, AR_INTGATE32 + 0x60);				/* 应用程序API中断，段定义加上0x60(01100000)可以将该段权限设置为应用程序使用 */
 
 	return;
 }
 
-void set_segmdesc(struct SEGMENT_DESCRIPTOR *sd, unsigned int limit, int base, int ar)
-{
+void set_segmdesc(struct SEGMENT_DESCRIPTOR *sd, unsigned int limit, int base, int ar){
+	/* 设置段描述符(Segement Discriptor,全局段号记录表,GDT) */
 	if (limit > 0xfffff) {
 		ar |= 0x8000; /* G_bit = 1 */
 		limit /= 0x1000;
@@ -51,8 +52,8 @@ void set_segmdesc(struct SEGMENT_DESCRIPTOR *sd, unsigned int limit, int base, i
 	return;
 }
 
-void set_gatedesc(struct GATE_DESCRIPTOR *gd, int offset, int selector, int ar)
-{
+void set_gatedesc(struct GATE_DESCRIPTOR *gd, int offset, int selector, int ar){
+	/* 设置门描述符(Gate discriptor,中断记录表,IDT) */
 	gd->offset_low   = offset & 0xffff;
 	gd->selector     = selector;
 	gd->dw_count     = (ar >> 8) & 0xff;

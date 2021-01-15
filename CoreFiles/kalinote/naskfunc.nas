@@ -92,9 +92,9 @@ _io_store_eflags:				; void io_store_eflags(int eflags);
 		RET
 
 _load_gdtr:						; void load_gdtr(int limit, int addr);
-		MOV		AX,[ESP+4]		; limit
+		MOV		AX,[ESP+4]		; 段上限(limit，GDT有效字节数-1)
 		MOV		[ESP+6],AX
-		LGDT	[ESP+6]
+		LGDT	[ESP+6]			; 将6字节数据写入GDTR寄存器，GDTR的低16位为段上限(limit，GDT有效字节数-1)，高32位为GDT开始的地址
 		RET
 
 _load_idtr:						; void load_idtr(int limit, int addr);

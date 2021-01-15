@@ -21,10 +21,10 @@ struct WINDOW *make_window8(struct SHEET *sht, int xsize, int ysize, char *title
 	boxfill8(sht->buf, xsize, 					COL_BGREY, 0,         0,         0,         ysize - 1);
 	boxfill8(sht->buf, xsize, 					COL_WHITE, 1,         1,         1,         ysize - 2);
 	boxfill8(sht->buf, xsize,					COL_DGREY, xsize - 2, 1,         xsize - 2, ysize - 2);
-	boxfill8(sht->buf, xsize,					COL_BLACK, xsize - 1, 0,         xsize - 1, ysize - 1);
+	boxfill8(sht->buf, xsize,					COL_WHITE, xsize - 1, 0,         xsize - 1, ysize - 1);
 	boxfill8(sht->buf, xsize, 	window->wcolor.back_color, 2,         2,         xsize - 3, ysize - 3);				/* 主背景 */
 	boxfill8(sht->buf, xsize,					COL_DGREY, 1,         ysize - 2, xsize - 2, ysize - 2);
-	boxfill8(sht->buf, xsize,					COL_BLACK, 0,         ysize - 1, xsize - 1, ysize - 1);
+	boxfill8(sht->buf, xsize,					COL_WHITE, 0,         ysize - 1, xsize - 1, ysize - 1);
 	make_wtitle8(window, act);
 	return window;
 }
@@ -268,6 +268,7 @@ void change_wtitle8(struct SHEET *sht, char act){
 struct MENU *make_menu(struct MEMMAN *memman, int menux, int menuy) {
 	/* 创建菜单结构体 */
 	struct MENU *menu;
+	int i;
 	menu = (struct MENU *) memman_alloc_4k(memman, sizeof (struct MENU));		/* 给菜单(结构体)分配一个空间 */
 	menu->menux = menux;			/* 菜单X坐标 */
 	menu->menuy = menuy;			/* 菜单Y坐标 */
@@ -275,6 +276,10 @@ struct MENU *make_menu(struct MEMMAN *memman, int menux, int menuy) {
 	menu->now = 0;					/* 默认选中index=0(第一项) */
 	menu->old = 0;					/* 上一次选择项 */
 	menu->option_num = 0;			/* 选项数量 */
+	for(i = 0; i <= MAX_OPTIONS; i++) {
+		/* 初始化options，flags全部置0 */
+		menu->options[i].flags = 0;
+	}
 	return menu;
 }
 
@@ -283,18 +288,32 @@ void release_menu(struct MEMMAN *man, struct MENU *menu) {
 	memman_free_4k(man, (unsigned int)&menu, sizeof(struct MENU));
 }
 
-void add_options(struct MENU *menu, char *option_title, unsigned char index) {
+void add_options(struct MENU *menu, char *option_title, void(*onOptionClick)()) {
 	/* 创建选项结构体 */
 	struct OPTIONS options;
-	if(index <= MAX_OPTIONS) {
-		/* index需要在0到256之间 */
+	if(menu->option_num < MAX_OPTIONS) {
+		/* 选项未达到最大值，向后插入选项 */
 		options.title = option_title;
-		options.index = index;
+		options.index = menu->option_num;
 		options.flags = 1;
-		menu->options[index] = options;
+		options.onOptionClick = onOptionClick;
+		menu->options[menu->option_num] = options;
 		menu->option_num += 1;
 	}
 	return;
+}
+
+void remove_options(struct MENU *menu, unsigned char index) {
+	/* 移除选项 */
+	/* 从index+1开始，每个选项往前移动一位，一直到menu->option_num-1 */
+	/* index+1 -> index | index+2 -> index+1	... */
+	int i;
+	for(i = index; i < menu->option_num - 1; i++) {
+		menu->options[i] = menu->options[i+1];
+	}
+	/* 把index为option_num-1的选项的flags置0 */
+	menu->options[menu->option_num - 1].flags = 0;
+	menu->option_num -= 1;
 }
 
 void show_menu(struct SHTCTL *shtctl, struct MEMMAN *memman, struct MENU *menu) {
@@ -357,3 +376,22 @@ void option_change(struct MENU *menu, int mouse_y) {
 	menu->old = menu->now;
 	return;
 }
+
+void menu_click(struct MENU *menu, int mouse_y) {
+	/* 菜单栏被单击 */
+	struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;
+	menu->now = mouse_y / 25;	/* 现在选中的是哪一项 */
+	
+	/* 运行程序 */
+	(*(menu->options[menu->now].onOptionClick))();
+	
+	/* 隐藏菜单栏 */
+	hide_menu(memman, menu);
+	return;
+}
+
+/***************************************************************
+*                           按钮功能                           *
+***************************************************************/
+
+

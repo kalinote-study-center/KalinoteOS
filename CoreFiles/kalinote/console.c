@@ -658,8 +658,8 @@ int cmd_app(struct CONSOLE *cons, int *fat, char *cmdline){
 			datkal = *((int *) (p + 0x0014));					/* .data的初始值列在文件中的位置 */
 			q = (char *) memman_alloc_4k(memman, segsiz);		/* 分配应用程序段内存空间 */
 			task->ds_base = (int) q;
-			set_segmdesc(task->ldt + 0, finfo->size - 1, (int) p, AR_CODE32_ER + 0x60);				/* 段定义加上0x60可以将该段权限设置为应用程序使用 */
-			set_segmdesc(task->ldt + 1, segsiz - 1,      (int) q, AR_DATA32_RW + 0x60);
+			set_segmdesc(task->ldt + 0, finfo->size - 1, (int) p, AR_CODE32_ER + 0x60);				/* 段定义加上0x60(01100000)可以将该段权限设置为应用程序使用 */	/* 可读可执行不可写 */
+			set_segmdesc(task->ldt + 1, segsiz - 1,      (int) q, AR_DATA32_RW + 0x60);				/* 可读写不可执行 */
 			for (i = 0; i < datsiz; i++) {
 				q[esp + i] = p[datkal + i];
 			}
