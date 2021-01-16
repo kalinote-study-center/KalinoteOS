@@ -168,7 +168,7 @@ pipelineflush:
 		CALL	memcpy
 skip:
 		MOV		ESP,[EBX+12]	; 堆栈初始值
-		JMP		DWORD 2*8:0x0000001b
+		JMP		DWORD 2*8:0x0000001b	;KaliMain入口的地址
 
 waitkbdout:
 		IN		 AL,0x64

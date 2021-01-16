@@ -11,11 +11,12 @@ struct WINDOW *make_window8(struct SHEET *sht, int xsize, int ysize, char *title
 	window->wtitle  = title;															/* 窗口标题 */
 	window->xsize = xsize;																/* 窗口x大小	*/
 	window->ysize = ysize;																/* 窗口y大小 */
-	window->buf = sht->buf;																	/* 窗口图形缓冲区 */
+	window->buf = sht->buf;																/* 窗口图形缓冲区 */
+	window->whandle = (int)sht;															/* 窗口句柄 */		/* 这里后面再改成底层图层 */
 	window->wcolor.act_color = 0x00ffc1c1;												/* 窗口聚焦色(粉色) */
 	window->wcolor.dis_act_color = 0x00cd9b9b;											/* 窗口未聚焦色(暗粉色) */
 	window->wcolor.back_color = COL_WHITE;												/* 背景色 */
-	sht->win = (unsigned int *)window;
+	sht->win = (unsigned int *)window;													/* 让底层图层指向窗口 */
 	boxfill8(sht->buf, xsize, 					COL_BGREY, 0,         0,         xsize - 1, 0        );
 	boxfill8(sht->buf, xsize, 					COL_WHITE, 1,         1,         xsize - 2, 1        );
 	boxfill8(sht->buf, xsize, 					COL_BGREY, 0,         0,         0,         ysize - 1);
@@ -394,4 +395,8 @@ void menu_click(struct MENU *menu, int mouse_y) {
 *                           按钮功能                           *
 ***************************************************************/
 
-
+struct BUTTON *make_button(struct MEMMAN *memman, int menux, int menuy, char *title, void(*onButtonClick)()) {
+	struct BUTTON *button;
+	button = (struct BUTTON *) memman_alloc_4k(memman, sizeof (struct BUTTON));		/* 给按钮(结构体)分配一个空间 */
+	return button;
+}

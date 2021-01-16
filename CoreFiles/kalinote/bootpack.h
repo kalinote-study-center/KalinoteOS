@@ -16,34 +16,34 @@ struct BOOTINFO {	/* 0x0ff0-0x0fff */
 	short scrnx, scrny;	/*画面分辨率*/
 	int *vram;
 };
-#define ADR_BOOTINFO	0x00000ff0
-#define ADR_DISKIMG		0x00100000			//文件位置(软盘，内存中)
+#define ADR_BOOTINFO	0x00000ff0			// bootinfo位置
+#define ADR_DISKIMG		0x00100000			// 文件位置(软盘，内存中)
 #undef	NULL
-#define NULL ((void*)0)						//重新定义NULL
-void io_hlt(void);							//暂停处理器
-//void write_mem8(int addr, int data);		//写入内存(被指针取代)
-void io_cli(void);							//禁止中断
-void io_sti(void);							//允许中断
-void io_stihlt(void);						//允许中断并暂停处理器
-int io_in8(int port);						//传输数据用的，汇编IN指令，用于端口操作(8位)
-void io_out8(int port, int data);			//传输数据用的，汇编OUT指令，用于端口操作(8位)
-int io_in16(int port);						//传输数据用的，汇编IN指令，用于端口操作(16位)
-void io_out16(int port, int data);			//传输数据用的，汇编OUT指令，用于端口操作(16位)
-int io_in32(int port);						//传输数据用的，汇编IN指令，用于端口操作(32位)
-void io_out32(int port, int data);			//传输数据用的，汇编OUT指令，用于端口操作(32位)
-int io_load_eflags(void);					//读取最初的eflags值
-void io_store_eflags(int eflags);			//将值存入eflags寄存器
-void load_gdtr(int limit, int addr);		//加载GDTR寄存器(GDTR寄存器用于保存GDT在内存中的位置)
-void load_idtr(int limit, int addr);		//加载IDTR寄存器(IDTR寄存器用于保存IDT在内存中的位置)
-int load_cr0(void);							//加载CR0寄存器
-void store_cr0(int cr0);					//存入CR0寄存器
-void load_tr(int tr);						//加载TR寄存器
-void asm_inthandler0c(void);				//0c号中断，用于处理栈异常
-void asm_inthandler0d(void);				//0d号中断，用于处理异常程序
-void asm_inthandler20(void);				//20号中断，用于timer
-void asm_inthandler21(void);				//21号中断，注册在0x21
-void asm_inthandler27(void);				//27号中断，注册在0x27
-void asm_inthandler2c(void);				//2c号中断，注册在0x2c
+#define NULL ((void*)0)						// 重新定义NULL
+void io_hlt(void);							// 暂停处理器
+//void write_mem8(int addr, int data);		// 写入内存(被指针取代)
+void io_cli(void);							// 禁止中断
+void io_sti(void);							// 允许中断
+void io_stihlt(void);						// 允许中断并暂停处理器
+int io_in8(int port);						// 传输数据用的，汇编IN指令，用于端口操作(8位)
+void io_out8(int port, int data);			// 传输数据用的，汇编OUT指令，用于端口操作(8位)
+int io_in16(int port);						// 传输数据用的，汇编IN指令，用于端口操作(16位)
+void io_out16(int port, int data);			// 传输数据用的，汇编OUT指令，用于端口操作(16位)
+int io_in32(int port);						// 传输数据用的，汇编IN指令，用于端口操作(32位)
+void io_out32(int port, int data);			// 传输数据用的，汇编OUT指令，用于端口操作(32位)
+int io_load_eflags(void);					// 读取最初的eflags值
+void io_store_eflags(int eflags);			// 将值存入eflags寄存器
+void load_gdtr(int limit, int addr);		// 加载GDTR寄存器(GDTR寄存器用于保存GDT在内存中的位置)
+void load_idtr(int limit, int addr);		// 加载IDTR寄存器(IDTR寄存器用于保存IDT在内存中的位置)
+int load_cr0(void);							// 加载CR0寄存器
+void store_cr0(int cr0);					// 存入CR0寄存器
+void load_tr(int tr);						// 加载TR寄存器
+void asm_inthandler0c(void);				// 0c号中断，用于处理栈异常
+void asm_inthandler0d(void);				// 0d号中断，用于处理异常程序
+void asm_inthandler20(void);				// 20号中断，用于timer
+void asm_inthandler21(void);				// 21号中断，注册在0x21
+void asm_inthandler27(void);				// 27号中断，注册在0x27
+void asm_inthandler2c(void);				// 2c号中断，注册在0x2c
 unsigned int memtest_sub(
 	unsigned int start,
 	unsigned int end);						//读取内存
@@ -149,31 +149,32 @@ unsigned int memman_alloc_4k(struct MEMMAN *man, unsigned int size);								//4K
 int memman_free_4k(struct MEMMAN *man, unsigned int addr, unsigned int size);						//4K大空间释放内存
 
 //sheet.c(画面图层处理)
-#define MAX_SHEETS		256												// 最大图层数(包括鼠标、桌面、任务栏等一共256层)
-#define SHEET_NO_USE	0												// 使用状态标志(未使用)
-#define SHEET_USE		1												// 使用状态标志(正在使用)
-#define SHEET_APIWIN	2												// 使用状态标志(外部API窗口)
-#define SHEET_CONS		3												// 使用状态标志(命令行窗口)
-#define SHEET_NO_TITLE	4												// 使用状态标志(其他无标题栏窗口)
-#define	SHEET_BACK		101												// 使用状态标志(背景层)
-#define	SHEET_TASKBAR	102												// 使用状态标志(任务栏层)
-#define	SHEET_MOUSE		103												// 使用状态标志(鼠标指针层)
-#define	SHEET_MENU		104												// 使用状态标志(菜单栏层)
+#define MAX_SHEETS			256									// 最大图层数(包括鼠标、桌面、任务栏等)
+#define SHEET_NO_USE		0									// 使用状态标志(未使用)
+#define SHEET_USE			1									// 使用状态标志(正在使用)
+#define SHEET_APIWIN		2									// 使用状态标志(外部API窗口)
+#define SHEET_CONS			3									// 使用状态标志(命令行窗口)
+#define SHEET_NO_TITLE		4									// 使用状态标志(其他无标题栏窗口)
+#define	SHEET_BACK			101									// 使用状态标志(背景层)
+#define	SHEET_TASKBAR		102									// 使用状态标志(任务栏层)
+#define	SHEET_MOUSE			103									// 使用状态标志(鼠标指针层)
+#define	SHEET_MENU			104									// 使用状态标志(菜单栏层)
 struct SHEET {
 	/* 图层结构 */
-	unsigned int *buf;													// 图像内容
-	int bxsize, bysize, vx0, vy0;										// bxsize和bysize是图像整体大小，vx0和vy0是图层在画面上的坐标位置(v是vram的省略)
-	int col_inv, height, flags;											// col_inv是透明色色号，height表示图层高度，flags表示图层设定信息
-	struct SHTCTL *ctl;
-	struct TASK *task;
-	unsigned int *win;													// 窗口(或列表等)结构体的地址指针
+	unsigned int *buf;										// 图像内容
+	int bxsize, bysize, vx0, vy0;							// bxsize和bysize是图像整体大小，vx0和vy0是图层在画面上的坐标位置(v是vram的省略)
+	int col_inv, height, flags;								// col_inv是透明色色号，height表示图层高度，flags表示图层设定信息
+	struct SHTCTL *ctl;										// 父图层管理器，SHTCTL结构体
+	struct SHTCTL *subctl;									// 子图层管理器，SHTCTL结构体，属于SHEET的内部图层
+	struct TASK *task;										// 将图层和任务进行绑定，在强制结束任务时可以寻找残留图层并关闭
+	unsigned int *win;										// 窗口(或列表等)结构体的地址指针
 };
 struct SHTCTL {
 	/* 多重图层的信息管理结构 */
-	unsigned int *vram, *map;											// vram是VRAM地址
-	int xsize, ysize, top;												// xsize和ysize图层大小，top是最顶层图层(鼠标指针层)高度
-	struct SHEET *sheets[MAX_SHEETS];									// 所有图层的地址(按照高度升序排列)
-	struct SHEET sheets0[MAX_SHEETS];									// 存放所有图层的图层信息
+	unsigned int *vram, *map;								// vram是VRAM地址
+	int xsize, ysize, top;									// xsize和ysize图层大小，top是最顶层图层(鼠标指针层)高度
+	struct SHEET *sheets[MAX_SHEETS];						// 所有图层的地址(按照高度升序排列)
+	struct SHEET sheets0[MAX_SHEETS];						// 存放所有图层的图层信息
 };
 struct SHTCTL *shtctl_init(struct MEMMAN *memman, unsigned int *vram, int xsize, int ysize);		//初始化层
 struct SHEET *sheet_alloc(struct SHTCTL *ctl);														//获得未使用的新图层
@@ -296,7 +297,7 @@ struct WINDOW {
 	char *wtitle;									// 窗口标题
 	int xsize,ysize;								// 窗口大小
 	struct WINCOLORS wcolor;						// 窗口颜色
-	int whandle;									// 窗口句柄
+	int whandle;									// 窗口句柄(可以在这里存放SHEET结构体)
 };
 struct OPTIONS {
 	/* 菜单栏选项结构体 */
@@ -325,7 +326,7 @@ struct BUTTON {
 	int height,width;								// 按钮大小(高宽)
 	int flags;										// 按钮激活状态
 	void(*onButtonClick)();							// 点击时执行
-}
+};
 // struct WINDOW *make_window8(unsigned int *buf, int xsize, int ysize, char *title, char act);		// 生成一个窗口(旧)
 struct WINDOW *make_window8(struct SHEET *sht, int xsize, int ysize, char *title, char act);		// 生成一个窗口
 void putfonts8_asc_sht(struct SHEET *sht, int x, int y, int c, int b, char *s, int l);				// 先涂背景色，在写字符串

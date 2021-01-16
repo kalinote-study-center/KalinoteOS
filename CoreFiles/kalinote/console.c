@@ -647,23 +647,24 @@ int cmd_app(struct CONSOLE *cons, int *fat, char *cmdline){
 
 	if (finfo != 0) {
 		/* 找到文件的情况 */
-		p = (char *) memman_alloc_4k(memman, finfo->size);											/* 给应用程序分配一段空内存空间 */
+		p = (char *) memman_alloc_4k(memman, finfo->size);											/* 给应用程序分配一段空内存空间(读取应用) */
 		file_loadfile(finfo->clustno, finfo->size, p, fat, (char *) (ADR_DISKIMG + 0x003e00));		/* 加载应用程序文件 */
 		if (finfo->size >= 36 && strncmp(p + 4, "Kali", 4) == 0 && *p == 0x00) {
 			/*  这里的几个判断，第一个是kal头文件为36字节，所以kal应用程序一定会大于36字节，第二个是检查是否有kal应用签名 */
 			/* 处理kal文件头(这里以后可能还需要修改一下) */
-			segsiz = *((int *) (p + 0x0000));					/* stack+.data+heap的大小(4K的倍数) */
+			segsiz = *((int *) (p + 0x0000));					/* stack+.data+heap(数据段，函数外定义的数据，以及字符串等)的大小(4K的倍数) */
 			esp    = *((int *) (p + 0x000c));					/* 堆栈初始值和.data传输目的地 */
 			datsiz = *((int *) (p + 0x0010));					/* .data的大小 */
 			datkal = *((int *) (p + 0x0014));					/* .data的初始值列在文件中的位置 */
-			q = (char *) memman_alloc_4k(memman, segsiz);		/* 分配应用程序段内存空间 */
+			q = (char *) memman_alloc_4k(memman, segsiz);		/* 分配应用程序段内存空间(数据段) */
 			task->ds_base = (int) q;
 			set_segmdesc(task->ldt + 0, finfo->size - 1, (int) p, AR_CODE32_ER + 0x60);				/* 段定义加上0x60(01100000)可以将该段权限设置为应用程序使用 */	/* 可读可执行不可写 */
 			set_segmdesc(task->ldt + 1, segsiz - 1,      (int) q, AR_DATA32_RW + 0x60);				/* 可读写不可执行 */
 			for (i = 0; i < datsiz; i++) {
+				/* 将Kal应用中的数据部分复制到数据段 */
 				q[esp + i] = p[datkal + i];
 			}
-			start_app(0x1b, 0 * 8 + 4, esp, 1 * 8 + 4, &(task->tss.esp0));							/* 调用汇编写的用于启动应用程序的函数 */
+			start_app(0x1b, 0 * 8 + 4, esp, 1 * 8 + 4, &(task->tss.esp0));							/* 调用汇编写的用于启动应用程序的函数，其中0x1b是KaliMain程序入口(这里有一个JMP指令，跳转到真正的程序入口) */
 			shtctl = (struct SHTCTL *) *((int *) 0x0fe4);
 			for (i = 0; i < MAX_SHEETS; i++) {
 				sht = &(shtctl->sheets0[i]);
@@ -682,7 +683,13 @@ int cmd_app(struct CONSOLE *cons, int *fat, char *cmdline){
 			memman_free_4k(memman, (int) q, segsiz);
 			task->langbyte1 = 0;
 		} else {
-			cons_putstr0(cons, "\nUnrecognized file format.\n");
+			if (task->langmode == 1) {
+				/* 中文模式 */
+				cons_putstr0(cons,"不支持的文件格式。");
+			} else {
+				/* 英文或日文模式 */
+				cons_putstr0(cons, "\nUnrecognized file format.\n");
+		}
 		}
 		memman_free_4k(memman, (int) p, finfo->size);
 		cons_newline(cons);
@@ -694,6 +701,7 @@ int cmd_app(struct CONSOLE *cons, int *fat, char *cmdline){
 
 int *kal_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int eax){
 	/* 开放给外部程序的系统API */
+	/* 这个函数的传入参数的寄存器是按照PUSHAD来写的 */
 	int i;
 	struct TASK *task = task_now();
 	int ds_base = task->ds_base;
@@ -731,10 +739,7 @@ int *kal_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int 
 		window = make_window8(sht, esi, edi, (char *) ecx + ds_base, 0);
 		sheet_slide(sht, ((shtctl->xsize - esi) / 2) & ~3, (shtctl->ysize - edi) / 2);
 		sheet_updown(sht, shtctl->top); /* 将窗口图层高度指定为当前鼠标所在图层的高度，鼠标移到上层 */
-		/*********************************************************************************
-		*                         以后这里要改成返回window结构体                         *
-		*********************************************************************************/
-		reg[7] = (int) sht;
+		reg[7] = window->whandle;			/* (通过EAX寄存器)返回窗口句柄((int)sht) */
 	} else if (edx == 6) {
 		//在窗口上绘制字符
 		sht = (struct SHEET *) (ebx & 0xfffffffe);
@@ -799,8 +804,10 @@ int *kal_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int 
 			io_cli();
 			if (fifo32_status(&task->fifo) == 0) {
 				if (eax != 0) {
-					task_sleep(task);	/* FIFO为空，休眠并等待 */
+					/* FIFO为空，休眠，直到键盘接收到数据 */
+					task_sleep(task);
 				} else {
+					/* FIFO为空，返回-1 */
 					io_sti();
 					reg[7] = -1;
 					return 0;
@@ -937,7 +944,7 @@ int *kal_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int 
 		/* 查询语言模式 */
 		reg[7] = task->langmode;
 	} else if (edx == 28) {
-		/* 显示icon */
+		/* 绘制icon */
 		
 	} else if (edx == 29) {
 		/* 清空命令台 */

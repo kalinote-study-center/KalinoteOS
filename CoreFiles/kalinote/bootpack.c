@@ -16,12 +16,12 @@ void KaliMain(void){
 	unsigned int memtotal;
 	struct MOUSE_DEC mdec;
 	struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;
-	unsigned int *buf_back, buf_mouse[256], *buf_task_bar;
+	unsigned int *buf_back, buf_mouse[256], *buf_task_bar, *subbuf_back;
 	struct SHEET *sht_back, *sht_mouse, *sht_task_bar;
 	struct TASK *task_a, *task;
 	int key_shift = 0, key_leds = (binfo->leds >> 4) & 7, keycmd_wait = -1;
 	int j, x, y, mmx = -1, mmy = -1, mmx2 = 0;
-	struct SHEET *sht = 0, *point_sht = 0, *key_win, *sht2;			/* point_sht是用来处理鼠标移动时指向的层的 */
+	struct SHEET *sht = 0, *point_sht = 0, *key_win, *sht2, *subsht_back;			/* point_sht是用来处理鼠标移动时指向的层的 */
 	int *fat_ch, *fat_jp;
 	unsigned char *chinese, *nihongo;
 	struct FILEINFO *finfo_ch;
@@ -90,6 +90,15 @@ void KaliMain(void){
 	// add_options(desktop_menu, "refresh");
 	// add_options(desktop_menu, "nouse1");
 	// add_options(desktop_menu, "nouse2");
+	/* 测试使用 */
+	// sht_back->subctl = shtctl_init(memman, buf_back, sht_back->bxsize, sht_back->bysize);		/* 设置子图层管理器 */
+	// subsht_back = sheet_alloc(sht_back->subctl);
+	// subbuf_back = (unsigned int *) memman_alloc_4k(memman, 16 * 64 * 4);
+	// sheet_setbuf(subsht_back, subbuf_back, 64, 16, -1);
+	// subsht_back->flags = SHEET_NO_TITLE;
+	// putfonts8_asc_sht(subsht_back, 0, 0, 0x000000, 0xffffff, "testtest", 8);
+	// sheet_slide(subsht_back, 10, 10);
+	// sheet_updown(subsht_back,  0);
 
 	/* sht_taskbar */
 	//init_taskbar(buf_back, binfo->scrnx, binfo->scrny);

@@ -82,8 +82,9 @@ err_form:
 	put32(&fbuf[26], dsize); /* .data大小 */
 	*fbuf = write_zero(fbuf, 30, 2); /* 写2位0 */
 	put32(&fbuf[32], dofs);  /* .data的初始值列在文件中的位置 */
-	put32(&fbuf[36], 0xe9000000); /* 0xe9000000 */
-	*fbuf = write_zero(fbuf, 40, 8); /* 写8位0 */
+	put32(&fbuf[36], 0xe9000000); /* 0xe9000000 */		/* JMP指令 */		/* 这里的地址是0x24，程序跳转到这里执行*/
+	put32(&fbuf[40], entry - 0x20); /* 程序入口 - 0x20 */
+	*fbuf = write_zero(fbuf, 44, 4); /* 写4位0 */
 	*fbuf = write_zero(fbuf, 48, 42); /*系统兼容信息保留位(如果没有则以0x00填充，长度42)(暂时写0)*/
 	put32(&fbuf[96], 0x00000000); /*程序创建时间(暂时写0)*/
 	*fbuf = write_zero(fbuf, 100, 4); /* 写4位0 */
@@ -98,7 +99,7 @@ err_form:
 	*fbuf = write_zero(fbuf, 144, 96); /* 保留文件头区域(0x00填充) */
 	put32(&fbuf[240], 0x00000000); /* 程序图标(ico)长度 */
 	put32(&fbuf[244], 0x00000000); /* 程序图标(ico)位置 */
-	put32(&fbuf[248], entry - 0x20); /* 程序入口 - 0x20 */
+	*fbuf = write_zero(fbuf, 248, 4); /* 写4位0 */
 	put32(&fbuf[252], heap_adr); /* heap区域(malloc区域)开始地址 */
 	
 	/* 写文件 */
@@ -195,10 +196,10 @@ UCHAR write_zero(UCHAR *fbuf,int start_location,int length){
 (.data:数据区 stack:栈 heap:堆 .text:代码段)
 bim和kal文件结构如下：
 [.bim文件结构]
-+ 0 : .text大小
++ 0 : .text(代码段)大小
 + 4 : 文件里.text开始的地址(0x24)
 + 8 : .text开始的地址(0x24)
-+12 : .data大小
++12 : .data(数据段)大小
 +16 : 文件里.data的开始地址
 +20 : .data的开始地址
 +24 : 程序入口

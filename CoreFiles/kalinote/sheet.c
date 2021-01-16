@@ -39,6 +39,16 @@ struct SHEET *sheet_alloc(struct SHTCTL *ctl){
 			sht->height = -1;				/* 高度设置为-1，表示高度还没有设置，不显示 */
 			sht->task = 0;					/* 不使用自动关闭 */
 			sht->win = 0;					/* 默认给0，这个参数用于保存窗口(或菜单栏等)的地址 */
+			// sht->subctl = 0;				/* 子图层管理器，管理子图层 */
+			/* 创建一个子图层管理器 */
+			// if(subctl != 0) {
+				// /* 需要时再分配，避免浪费内存 */
+				// sht->subctl = shtctl_init(memman, sht->buf, sht->bxsize, sht->bysize);
+			// } else {
+				// sht->subctl = 0;
+			// }
+			/* 如果需要使用子图层管理器，需要在sheet_setbuf以后通过sht->subctl = shtctl_init(memman, sht_buf, sht->bxsize, sht->bysize);设置 */
+			sht->subctl = 0;
 			return sht;
 		}
 	}
@@ -231,3 +241,5 @@ void sheet_free(struct SHEET *sht){
 	sht->flags = SHEET_NO_USE; /* 将图层标记为未使用状态 */
 	return;
 }
+
+

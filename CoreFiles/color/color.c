@@ -2,7 +2,7 @@
 #include "apilib.h"
 
 void KaliMain(void) {
-	int buf[383 * 200 * 4];
+	int buf[385 * 200 * 4];
 	int win, i;
 	api_initmalloc();
 	win = api_openwin(buf, 383, 200, -1, "Full color!");

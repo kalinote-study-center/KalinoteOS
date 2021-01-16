@@ -73,7 +73,7 @@ void init_screen8(int *vram, int x, int y, int bc){
 	/*初始化屏幕*/
 	int *fat;
 	boxfill8(vram, x, COL_LDBLUE, 0, 0, x - 1, y - 1);		//绘制一个纯色背景当底板
-	char s[100];
+	char s[50];
 	struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;
 	fat = (int *) memman_alloc_4k(memman, 4 * 1024 * 768);
 	file_readfat(fat, (unsigned char *) (ADR_DISKIMG + 0x000200));
