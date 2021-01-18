@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include "bootpack.h"
 
+void nouse(void);
+
 void KaliMain(void){
 	/* 系统入口 */
 	
@@ -16,12 +18,12 @@ void KaliMain(void){
 	unsigned int memtotal;
 	struct MOUSE_DEC mdec;
 	struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;
-	unsigned int *buf_back, buf_mouse[256], *buf_task_bar, *subbuf_back;
-	struct SHEET *sht_back, *sht_mouse, *sht_task_bar;
+	unsigned int *buf_back, buf_mouse[256], *buf_task_bar;/* , *subbuf_back; */
+	struct SHEET *sht_back, *sht_mouse, *sht_task_bar, *sht_debug_cons; /* , *btn_sht */
 	struct TASK *task_a, *task;
 	int key_shift = 0, key_leds = (binfo->leds >> 4) & 7, keycmd_wait = -1;
-	int j, x, y, mmx = -1, mmy = -1, mmx2 = 0;
-	struct SHEET *sht = 0, *point_sht = 0, *key_win, *sht2, *subsht_back;			/* point_sht是用来处理鼠标移动时指向的层的 */
+	int j, x, y, mmx = -1, mmy = -1, mmx2 = 0, subx, suby;
+	struct SHEET *sht = 0, *subsht = 0, *point_sht = 0, *key_win, *sht2;/* , *subsht_back; */			/* point_sht是用来处理鼠标移动时指向的层的 */
 	int *fat_ch, *fat_jp;
 	unsigned char *chinese, *nihongo;
 	struct FILEINFO *finfo_ch;
@@ -29,6 +31,8 @@ void KaliMain(void){
 	extern char fonts[4096];
 	struct SYSINFO sysinfo;
 	struct MENU *start_menu; /* , *desktop_menu; */
+	/* struct WINDOW *debug_window; */
+	/* struct BUTTON *button; */
 	static char keytable0[0x80] = {
 		0,   0,   '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', 0x08, 0,
 		'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', '[', ']', 0x0a, 0, 'A', 'S',
@@ -50,6 +54,12 @@ void KaliMain(void){
 		0,   0,   0,   '|', 0,   0,   0,   0,   0,   0,   0,   0,   0,   '|', 0,   0
 	};
 
+	/* 初始化sysinfo */
+	*((int *) 0x10000) = (int) &sysinfo;	
+	sysinfo.sysmode = 0;
+	sysinfo.sysmmainver = 1;
+	sysinfo.sysver = 400;
+
 	/* 初始化 */
 	init_gdtidt();													// 初始化GDT和IDT
 	init_pic();														// 初始化中断控制器
@@ -63,12 +73,16 @@ void KaliMain(void){
 	
 	fifo32_init(&keycmd, 32, keycmd_buf, 0);
 	*((int *) 0x0fec) = (int) &fifo;		/* 把fifo缓冲区存到0x0fec */
-	
+
 	/* 内存处理 */
 	memtotal = memtest(SYS_MEMORY, 0xffffffff); /* 测试可用内存，最大识别3972MB(除系统占用外) */
 	memman_init(memman);
 	memman_free(memman, 0x00001000, 0x0009e000); /* 将0x00001000 - 0x0009efff清空，这一部分是是模式读取软盘的内容，在进入保护模式后，这部分内容被移动到0x00100000以后，这一段内存在启动完成后有其他用途 */
 	memman_free(memman, SYS_MEMORY, memtotal - SYS_MEMORY); /* 清空除了系统占用的所有保护模式扩展内存(0x00400000以后) */
+	sysinfo.memtotal = memtotal;
+	
+	/* 硬盘 */
+	init_ide_hd(memman);											// 初始化IDE硬盘控制程序
 	
 	//init_palette();												// 初始化调色板
 	shtctl = shtctl_init(memman, binfo->vram, binfo->scrnx, binfo->scrny);
@@ -90,8 +104,8 @@ void KaliMain(void){
 	// add_options(desktop_menu, "refresh");
 	// add_options(desktop_menu, "nouse1");
 	// add_options(desktop_menu, "nouse2");
-	/* 测试使用 */
-	// sht_back->subctl = shtctl_init(memman, buf_back, sht_back->bxsize, sht_back->bysize);		/* 设置子图层管理器 */
+	/* 测试代码 */
+	// sht_back->subctl = shtctl_init(memman, sht_back->buf, sht_back->bxsize, sht_back->bysize);		/* 设置子图层管理器 */
 	// subsht_back = sheet_alloc(sht_back->subctl);
 	// subbuf_back = (unsigned int *) memman_alloc_4k(memman, 16 * 64 * 4);
 	// sheet_setbuf(subsht_back, subbuf_back, 64, 16, -1);
@@ -99,6 +113,7 @@ void KaliMain(void){
 	// putfonts8_asc_sht(subsht_back, 0, 0, 0x000000, 0xffffff, "testtest", 8);
 	// sheet_slide(subsht_back, 10, 10);
 	// sheet_updown(subsht_back,  0);
+	/* 测试代码 */
 
 	/* sht_taskbar */
 	//init_taskbar(buf_back, binfo->scrnx, binfo->scrny);
@@ -106,11 +121,16 @@ void KaliMain(void){
 	buf_task_bar = (unsigned int *) memman_alloc_4k(memman, binfo->scrnx * 28 * 4);			/* 如果后面要创建关于task_bar的结构体，可以把task_bar的y高度放进去，不过现在先使用固定值28(包括下面的sheet_setbuf) */
 	sheet_setbuf(sht_task_bar, buf_task_bar, binfo->scrnx, 28, -1);
 	start_menu = init_taskbar(memman, buf_task_bar, binfo->scrnx, 28);
-	putfonts8_asc_sht(sht_task_bar, 6, 8, COL_BLACK, COL_BGREY, "shutdown", 8);
+	putfonts8_asc_sht(sht_task_bar, 6, 8, COL_BLACK, COL_BGREY, "Function", 8);
 	sht_task_bar->flags = SHEET_TASKBAR;
+	/* 测试代码 */
+	// button = make_button(memman, 40, 23, 150, 4, "test", COL_BGREY, nouse);				/* 测试通过 */
+	// btn_sht = show_button(sht_task_bar, memman, button);								/* 测试通过 */
+	// change_button(button, btn_sht, 1);
+	/* 测试代码 */
 
 	/* sht_cons */
-	key_win = open_console(shtctl, memtotal);
+	key_win = open_console(shtctl, memtotal, 0);
 
 	/* sht_mouse */
 	sht_mouse = sheet_alloc(shtctl);
@@ -120,14 +140,21 @@ void KaliMain(void){
 	my = (binfo->scrny - 28 - 16) / 2;
 	sht_mouse->flags = SHEET_MOUSE;
 
+	/* DEBUG cons */
+	*((int *) DEBUG_ADDR) = (int)open_console(shtctl, memtotal, 1);
+	sht_debug_cons = (struct SHEET *) *((int *) DEBUG_ADDR);
+	sht_debug_cons->flags = SHEET_DEBUG_CONS;
+
 	sheet_slide(sht_back,  0,  0);
 	sheet_slide(sht_task_bar, 0, binfo->scrny - 28);
 	sheet_slide(key_win,   32, 4);
 	sheet_slide(sht_mouse, mx, my);
+	sheet_slide(sht_debug_cons, 10, 10);
 	sheet_updown(sht_back,  0);
 	sheet_updown(sht_task_bar, 1);
 	sheet_updown(key_win,   2);
 	sheet_updown(sht_mouse, 3);
+	sheet_updown(sht_debug_cons, -1);
 	keywin_on(key_win);
 	
 	/* 为了避免和键盘当前状态存在冲突，在一开始先进行设置 */
@@ -180,12 +207,6 @@ void KaliMain(void){
 	timer = timer_alloc();
 	timer_init(timer, &fifo, 1);
 	timer_settime(timer, 100);	/* 每1秒更新一次时间 */
-	
-	/* 初始化sysinfo */
-	*((int *) 0x10000) = (int) &sysinfo;	
-	sysinfo.sysmode = 0;
-	sysinfo.sysmmainver = 1;
-	sysinfo.sysver = 400;
 	
 	for(;;){
 		/***************************************************************
@@ -244,7 +265,7 @@ void KaliMain(void){
 					keywin_off(key_win);
 				}
 				keywin_off(key_win);
-				key_win = open_console(shtctl, memtotal);
+				key_win = open_console(shtctl, memtotal, 0);
 				sheet_slide(key_win, 32, 4);
 				sheet_updown(key_win, shtctl->top);
 				keywin_on(key_win);
@@ -320,7 +341,7 @@ void KaliMain(void){
 						keywin_off(key_win);
 					}
 					keywin_off(key_win);
-					key_win = open_console(shtctl, memtotal);
+					key_win = open_console(shtctl, memtotal, 0);
 					sheet_slide(key_win, 32, 4);
 					sheet_updown(key_win, shtctl->top);
 					keywin_on(key_win);
@@ -436,7 +457,24 @@ void KaliMain(void){
 								} else if (sht->flags == SHEET_TASKBAR) {
 									/* task_bar */
 									if(0 <= x && x < sht->bxsize && 0 <= y && y < sht->bysize) {/* 如果鼠标指针在图层范围内 */
-										/* 以后可以在这里加窗口最小化和开始菜单之类的东西 */
+										// for(j = sht->subctl->top; j > 0; j--) {
+											// /* 从上到下寻找子图层 */
+											// subsht = sht->subctl->sheets[j];
+											// subx = x - subsht->vx0;				/* 指针在子图层位置 */
+											// suby = y - subsht->vy0;
+											// if(0 <= subx && subx < subsht->bxsize && 0 <= suby && suby < subsht->bysize) {
+												// /* 如果鼠标指针在子图层里 */
+												// if(subsht->flags == SHEET_BUTTON) {
+													// /* 如果是按钮 */
+													// if(((struct BUTTON *)subsht->win)->click_old == 1) {
+														// change_button((struct BUTTON *)subsht->win, 0);
+													// } else {
+														// change_button((struct BUTTON *)subsht->win, 1);
+													// }
+													// break;
+												// }
+											// }
+										// }
 										if (3 <= x && x < 75 && sht->bysize - 23 <= y && y < sht->bysize - 4) {
 											/* 点击[开始]按钮 */
 											switch(start_menu->flags) {
@@ -489,4 +527,9 @@ void KaliMain(void){
 			}
 		}
 	}
+}
+
+void nouse(void) {
+	/* 用于函数指针传参测试 */
+	return;
 }

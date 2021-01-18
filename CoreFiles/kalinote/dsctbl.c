@@ -14,7 +14,7 @@ void init_gdtidt(void){
 		set_segmdesc(gdt + i, 0, 0, 0);				/* 这里的gdt是指针，由于C语言特性，地址在进行加法时内部有隐含乘法，所以i每次+1，实际地址是+8(GDT结构体8字节) */
 	}
 	set_segmdesc(gdt + 1, 0xffffffff,   0x00000000, AR_DATA32_RW);			/* 段号为1的段，表示CPU管理内存大小，设置0xffffffff是4GB(32位最大识别内存)，地址为0 */
-	set_segmdesc(gdt + 2, LIMIT_BOTPAK, ADR_BOTPAK, AR_CODE32_ER);			/* 段号为2的段，表示bootpack.kal，大小为512KB */
+	set_segmdesc(gdt + 2, LIMIT_BOTPAK, ADR_BOTPAK, AR_CODE32_ER);			/* 段号为2的段，包括了整个bootpack.h，大小为512KB */
 	load_gdtr(LIMIT_GDT, ADR_GDT);											/* 对GDTR寄存器进行设置 */
 
 	/* IDT初始化 */
@@ -30,9 +30,10 @@ void init_gdtidt(void){
 	set_gatedesc(idt + 0x0c, (int) asm_inthandler0c, 2 << 3, AR_INTGATE32);						/* 栈异常中断 */
 	set_gatedesc(idt + 0x0d, (int) asm_inthandler0d, 2 << 3, AR_INTGATE32);						/* 一般保护异常中断 */
 	set_gatedesc(idt + 0x20, (int) asm_inthandler20, 2 << 3, AR_INTGATE32);						/* 时钟中断 */
-	set_gatedesc(idt + 0x21, (int) asm_inthandler21, 2 << 3, AR_INTGATE32);
-	set_gatedesc(idt + 0x27, (int) asm_inthandler27, 2 << 3, AR_INTGATE32);
-	set_gatedesc(idt + 0x2c, (int) asm_inthandler2c, 2 << 3, AR_INTGATE32);
+	set_gatedesc(idt + 0x21, (int) asm_inthandler21, 2 << 3, AR_INTGATE32);						/* 键盘中断 */
+	set_gatedesc(idt + 0x27, (int) asm_inthandler27, 2 << 3, AR_INTGATE32);						/* 没用的中断，仅为了避免老硬件发生错误 */
+	set_gatedesc(idt + 0x2c, (int) asm_inthandler2c, 2 << 3, AR_INTGATE32);						/* 鼠标中断 */
+	set_gatedesc(idt + 0x2e, (int) asm_inthandler2e, 2 << 3, AR_INTGATE32);						/* IDE硬盘中断 */
 	set_gatedesc(idt + 0x40, (int) asm_kal_api,      2 << 3, AR_INTGATE32 + 0x60);				/* 应用程序API中断，段定义加上0x60(01100000)可以将该段权限设置为应用程序使用 */
 
 	return;

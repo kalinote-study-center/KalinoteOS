@@ -89,7 +89,7 @@ full :
 run_full :
 	$(MAKE) full
 	$(COPY) kalinote.img ..\z_tools\qemu\kalinoteos.bin
-	$(COPY) kalinote.img ..\z_tools\qemu\kalinoteos.bin
+	$(COPY) kalinote.img ..\z_tools\qemu\kalinoteos.vfd
 	$(MAKE) -C ../z_tools/qemu
 
 install_full :
@@ -101,10 +101,10 @@ run_os :
 	$(MAKE) run
 
 os:
+	$(MAKE) -C kalinote
 	$(MAKE) kalinote.img
 	$(COPY) kalinote.img ..\z_tools\qemu\kalinoteos.bin
 	$(COPY) kalinote.img ..\z_tools\qemu\kalinoteos.vfd
-	$(MAKE) -C kalinote
 
 clean :
 # √ª”√

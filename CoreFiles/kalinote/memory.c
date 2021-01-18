@@ -70,6 +70,7 @@ unsigned int memman_total(struct MEMMAN *man){
 unsigned int memman_alloc(struct MEMMAN *man, unsigned int size){
 	/*分配内存*/
 	unsigned int i, a;
+	struct SYSINFO *sysinfo = (struct SYSINFO *) *((int *) 0x10000);
 	for (i = 0; i < man->frees; i++) {
 		if (man->free[i].size >= size) {
 			/* 找到足够大的内存 */
@@ -83,6 +84,7 @@ unsigned int memman_alloc(struct MEMMAN *man, unsigned int size){
 					man->free[i] = man->free[i + 1]; /* 在删除空间为0的内存表后整体向前位移 */
 				}
 			}
+			sysinfo->free_mem = memman_total(man);
 			/* 返回一段空内存位置 */
 			return a;
 		}

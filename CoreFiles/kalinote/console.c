@@ -323,10 +323,14 @@ void cons_runcmd(char *cmdline, struct CONSOLE *cons, int *fat, unsigned int mem
 		cmd_langmode(cons, cmdline);
 	} else if (strcmp(cmdline, "shutdown") == 0) {
 		cmd_shutdown();
-	} else if (strncmp(cmdline, "sysmode ",8) == 0) {
+	} else if (strncmp(cmdline, "sysmode ", 8) == 0) {
 		cmd_sysmode(cons, cmdline);
-	} else if (strncmp(cmdline, "echo ",5) == 0) {
+	} else if (strncmp(cmdline, "echo ", 5) == 0) {
 		cmd_echo(cons, cmdline);
+	} else if (strcmp(cmdline, "hdnum") == 0) {
+		cmd_hdnum(cons);
+	} else if (strncmp(cmdline, "hdinfo ", 7) == 0) {
+		cmd_hdinfo(cons, cmdline);
 	} else if (strcmp(cmdline,"test") == 0) {
 		/* 测试专用 */
 	} else if (cmdline[0] != 0) {
@@ -508,7 +512,7 @@ void cmd_exit(struct CONSOLE *cons, int *fat){
 void cmd_start(struct CONSOLE *cons, char *cmdline, int memtotal){
 	/* 在新的命令窗口启动一个应用程序 */
 	struct SHTCTL *shtctl = (struct SHTCTL *) *((int *) 0x0fe4);
-	struct SHEET *sht = open_console(shtctl, memtotal);
+	struct SHEET *sht = open_console(shtctl, memtotal, 0);
 	struct FIFO32 *fifo = &sht->task->fifo;
 	int i;
 	sheet_slide(sht, 32, 4);
@@ -571,8 +575,17 @@ void cmd_sysmode(struct CONSOLE *cons, char *cmdline) {
 	struct TASK *task = task_now();
 	char mode = cmdline[8] - '0';
 	char s[64];
-	sysinfo->sysmode = mode;
-	if (sysinfo->sysmode == 0) {
+	struct SHEET *sht_debug_cons = (struct SHEET *) *((int *) DEBUG_ADDR);
+	
+	if(sysinfo->sysmode == mode) {
+		/* 不变 */
+		cons_putstr0(cons,"System mode has no change\n");
+		return;
+	}
+	if (mode == 0) {
+		sysinfo->sysmode = mode;
+		/* 隐藏DEBUG console */
+		sheet_updown(sht_debug_cons, -1);
 		if (task->langmode == 1) {
 			/* 中文模式 */
 			cons_putstr0(cons,"系统切换到正常模式\n");
@@ -580,7 +593,12 @@ void cmd_sysmode(struct CONSOLE *cons, char *cmdline) {
 			/* 英文或日文模式 */
 			cons_putstr0(cons,"System switch to normal mode\n");
 		}
-	} else if (sysinfo->sysmode == 1) {
+		sysinfo->sysmode = mode;
+	} else if (mode == 1) {
+		sysinfo->sysmode = mode;
+		/* 显示DEBUG console */
+		sheet_updown(sht_debug_cons, sht_debug_cons->ctl->top);
+		cons_putstr0(sht_debug_cons->task->cons,"DEBUG MODE\n");
 		if (task->langmode == 1) {
 			/* 中文模式 */
 			cons_putstr0(cons,"系统切换到调试模式\n");
@@ -589,6 +607,7 @@ void cmd_sysmode(struct CONSOLE *cons, char *cmdline) {
 			cons_putstr0(cons,"System switch to debug mode\n");
 		}
 	} else {
+		sysinfo->sysmode = mode;
 		if (task->langmode == 1) {
 			/* 中文模式 */
 			sprintf(s,"该系统模式未定义，模式码：%d\n",sysinfo->sysmode);
@@ -599,6 +618,7 @@ void cmd_sysmode(struct CONSOLE *cons, char *cmdline) {
 			cons_putstr0(cons,s);
 		}
 	}
+	return;
 }
 
 void cmd_echo(struct CONSOLE *cons, char *cmdline) {
@@ -606,6 +626,33 @@ void cmd_echo(struct CONSOLE *cons, char *cmdline) {
 	char *s = (char *)0x2f000;
 	sprintf(s,"%s\n", cmdline + 5);
 	cons_putstr0(cons,s);
+	return;
+}
+
+void cmd_hdnum(struct CONSOLE *cons) {
+	/* 查询系统硬盘数量 */
+	struct IDE_DISK_DRIVER *hd = (struct IDE_DISK_DRIVER *) IDE_HD_DRIVER_ADDR;
+	char s[50];
+	sprintf(s,"hard disk number:%d\n",hd->disk_num);
+	cons_putstr0(cons,s);
+	return;
+}
+
+void cmd_hdinfo(struct CONSOLE *cons, char *cmdline) {
+	/* 显示硬盘信息 */
+	struct IDE_HARD_DISK *hda = (struct IDE_HARD_DISK *) HDA_ADDR;
+	struct IDE_HARD_DISK *hdb = (struct IDE_HARD_DISK *) HDB_ADDR;
+	char hd = cmdline[7] - '0';
+	if(hd == 0) {
+		cons_putstr0(cons, "hda:\n");
+		hd_identify(cons, hda);
+	} else if (hd == 1) {
+		cons_putstr0(cons, "hdb:\n");
+		hd_identify(cons, hdb);
+	} else {
+		cons_putstr0(cons, "hd number error.\n");
+	}
+	return;
 }
 
 void cmd_systest(struct CONSOLE *cons) {
@@ -736,7 +783,7 @@ int *kal_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int 
 		sht->task = task;
 		sht->flags = SHEET_APIWIN;			/* 外部API窗口 */
 		sheet_setbuf(sht, (int *) ebx + ds_base, esi, edi, eax);
-		window = make_window8(sht, esi, edi, (char *) ecx + ds_base, 0);
+		window = make_window8(sht, esi, edi, TIT_ACT_DEFAULT, TIT_DEACT_DEFAULT, (char *) ecx + ds_base, 0);
 		sheet_slide(sht, ((shtctl->xsize - esi) / 2) & ~3, (shtctl->ysize - edi) / 2);
 		sheet_updown(sht, shtctl->top); /* 将窗口图层高度指定为当前鼠标所在图层的高度，鼠标移到上层 */
 		reg[7] = window->whandle;			/* (通过EAX寄存器)返回窗口句柄((int)sht) */
@@ -1046,7 +1093,7 @@ void kal_api_linewin(struct SHEET *sht, int x0, int y0, int x1, int y1, int col)
 void keywin_off(struct SHEET *key_win){
 	if (key_win->flags != SHEET_NO_TITLE && key_win->flags < 100) {
 		/* 不是无标题栏窗口，且flags小于100(100以后是特殊图层) */
-		change_wtitle8(key_win, 0);
+		change_wtitle8((struct WINDOW *)(key_win->win), 0);
 		if (key_win->flags == SHEET_CONS) {
 			/* 命令行窗口 */
 			fifo32_put(&key_win->task->fifo, 3); /* 命令行窗口光标OFF */
@@ -1058,7 +1105,7 @@ void keywin_off(struct SHEET *key_win){
 void keywin_on(struct SHEET *key_win){
 	if (key_win->flags != SHEET_NO_TITLE && key_win->flags < 100){
 		/* 不是无标题栏窗口，且flags小于100(100以后是特殊图层) */
-		change_wtitle8(key_win, 1);
+		change_wtitle8((struct WINDOW *)(key_win->win), 1);
 		if (key_win->flags == SHEET_CONS) {
 			/* 命令行窗口 */
 			fifo32_put(&key_win->task->fifo, 2); /* 命令行窗口光标ON */
@@ -1087,7 +1134,7 @@ struct TASK *open_constask(struct SHEET *sht, unsigned int memtotal){
 	return task;
 }
 
-struct SHEET *open_console(struct SHTCTL *shtctl, unsigned int memtotal){
+struct SHEET *open_console(struct SHTCTL *shtctl, unsigned int memtotal, int debug){
 	struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;
 	struct SHEET *sht = sheet_alloc(shtctl);
 	struct WINDOW *window;
@@ -1095,7 +1142,11 @@ struct SHEET *open_console(struct SHTCTL *shtctl, unsigned int memtotal){
 	unsigned int *buf = (unsigned int *) memman_alloc_4k(memman, 525 * 479 * 4);
 	//sheet_setbuf(sht, buf, 256, 165, -1); /* 无透明色 */
 	sheet_setbuf(sht, buf, 525, 479, -1); /* 无透明色 */
-	window = make_window8(sht, 525, 479, "console", 0);
+	if(debug == 1) {
+		window = make_window8(sht, 525, 479, COL_BRED, COL_DRED, "DEBUG consle", 0);
+	} else {
+		window = make_window8(sht, 525, 479, TIT_ACT_DEFAULT, TIT_DEACT_DEFAULT, "console", 0);
+	}
 	make_textbox8(sht, 3, 24, 519, 452, COL_BLACK);
 	make_icon(window, 1);
 	sht->task = open_constask(sht, memtotal);

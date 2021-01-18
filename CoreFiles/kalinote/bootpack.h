@@ -3,6 +3,9 @@ struct SYSINFO {
 	char sysmode;					/* ÏµÍ³Ä£Ê½ */
 	char sysmmainver;				/* ÏµÍ³Ö÷°æ±¾ºÅ */
 	int sysver;						/* ÏµÍ³°æ±¾ºÅ */
+	unsigned char ide_hd_num;		/* ¼ÆËã»úIDEÓ²ÅÌÊıÁ¿ */
+	unsigned int free_mem;			/* ÏµÍ³Ê£ÓàÄÚ´æÈİÁ¿ */
+	unsigned int memtotal;			/* ÏµÍ³×ÜÄÚ´æ */
 };
 #define	SYS_MEMORY		0x00400000			//ÏµÍ³Õ¼ÓÃÄÚ´æ
 
@@ -16,44 +19,47 @@ struct BOOTINFO {	/* 0x0ff0-0x0fff */
 	short scrnx, scrny;	/*»­Ãæ·Ö±æÂÊ*/
 	int *vram;
 };
-#define ADR_BOOTINFO	0x00000ff0			// bootinfoÎ»ÖÃ
-#define ADR_DISKIMG		0x00100000			// ÎÄ¼şÎ»ÖÃ(ÈíÅÌ£¬ÄÚ´æÖĞ)
-#undef	NULL
-#define NULL ((void*)0)						// ÖØĞÂ¶¨ÒåNULL
-void io_hlt(void);							// ÔİÍ£´¦ÀíÆ÷
-//void write_mem8(int addr, int data);		// Ğ´ÈëÄÚ´æ(±»Ö¸ÕëÈ¡´ú)
-void io_cli(void);							// ½ûÖ¹ÖĞ¶Ï
-void io_sti(void);							// ÔÊĞíÖĞ¶Ï
-void io_stihlt(void);						// ÔÊĞíÖĞ¶Ï²¢ÔİÍ£´¦ÀíÆ÷
-int io_in8(int port);						// ´«ÊäÊı¾İÓÃµÄ£¬»ã±àINÖ¸Áî£¬ÓÃÓÚ¶Ë¿Ú²Ù×÷(8Î»)
-void io_out8(int port, int data);			// ´«ÊäÊı¾İÓÃµÄ£¬»ã±àOUTÖ¸Áî£¬ÓÃÓÚ¶Ë¿Ú²Ù×÷(8Î»)
-int io_in16(int port);						// ´«ÊäÊı¾İÓÃµÄ£¬»ã±àINÖ¸Áî£¬ÓÃÓÚ¶Ë¿Ú²Ù×÷(16Î»)
-void io_out16(int port, int data);			// ´«ÊäÊı¾İÓÃµÄ£¬»ã±àOUTÖ¸Áî£¬ÓÃÓÚ¶Ë¿Ú²Ù×÷(16Î»)
-int io_in32(int port);						// ´«ÊäÊı¾İÓÃµÄ£¬»ã±àINÖ¸Áî£¬ÓÃÓÚ¶Ë¿Ú²Ù×÷(32Î»)
-void io_out32(int port, int data);			// ´«ÊäÊı¾İÓÃµÄ£¬»ã±àOUTÖ¸Áî£¬ÓÃÓÚ¶Ë¿Ú²Ù×÷(32Î»)
-int io_load_eflags(void);					// ¶ÁÈ¡×î³õµÄeflagsÖµ
-void io_store_eflags(int eflags);			// ½«Öµ´æÈëeflags¼Ä´æÆ÷
-void load_gdtr(int limit, int addr);		// ¼ÓÔØGDTR¼Ä´æÆ÷(GDTR¼Ä´æÆ÷ÓÃÓÚ±£´æGDTÔÚÄÚ´æÖĞµÄÎ»ÖÃ)
-void load_idtr(int limit, int addr);		// ¼ÓÔØIDTR¼Ä´æÆ÷(IDTR¼Ä´æÆ÷ÓÃÓÚ±£´æIDTÔÚÄÚ´æÖĞµÄÎ»ÖÃ)
-int load_cr0(void);							// ¼ÓÔØCR0¼Ä´æÆ÷
-void store_cr0(int cr0);					// ´æÈëCR0¼Ä´æÆ÷
-void load_tr(int tr);						// ¼ÓÔØTR¼Ä´æÆ÷
-void asm_inthandler0c(void);				// 0cºÅÖĞ¶Ï£¬ÓÃÓÚ´¦ÀíÕ»Òì³£
-void asm_inthandler0d(void);				// 0dºÅÖĞ¶Ï£¬ÓÃÓÚ´¦ÀíÒì³£³ÌĞò
-void asm_inthandler20(void);				// 20ºÅÖĞ¶Ï£¬ÓÃÓÚtimer
-void asm_inthandler21(void);				// 21ºÅÖĞ¶Ï£¬×¢²áÔÚ0x21
-void asm_inthandler27(void);				// 27ºÅÖĞ¶Ï£¬×¢²áÔÚ0x27
-void asm_inthandler2c(void);				// 2cºÅÖĞ¶Ï£¬×¢²áÔÚ0x2c
-unsigned int memtest_sub(
-	unsigned int start,
-	unsigned int end);						//¶ÁÈ¡ÄÚ´æ
-void farjmp(int eip, int cs);				//Ö¸ÁîÌø×ª(ÓÃÓÚÈÎÎñÇĞ»»)
-void farcall(int eip, int cs);				//×ªÒÆµ½µ÷ÓÃµÄ×Ó³ÌĞò(Ö¸¶¨Æ«ÒÆ)
-void asm_kal_api(void);						//KalinoteOS ÏµÍ³API
-void start_app(int eip, int cs,
-	int esp, int ds, int *tss_esp0);		//Æô¶¯Ó¦ÓÃ³ÌĞò
-void asm_end_app(void);						//½áÊøÓ¦ÓÃ³ÌĞò
-void asm_shutdown(void);					//¹Ø»ú¹¦ÄÜ
+#define ADR_BOOTINFO	0x00000ff0						// bootinfoÎ»ÖÃ
+#define ADR_DISKIMG		0x00100000						// ÎÄ¼şÎ»ÖÃ(ÈíÅÌ£¬ÄÚ´æÖĞ)
+#undef	NULL			
+#define NULL ((void*)0)									// ÖØĞÂ¶¨ÒåNULL
+void io_hlt(void);										// ÔİÍ£´¦ÀíÆ÷
+//void write_mem8(int addr, int data);					// Ğ´ÈëÄÚ´æ(±»Ö¸ÕëÈ¡´ú)
+void io_cli(void);										// ½ûÖ¹ÖĞ¶Ï
+void io_sti(void);										// ÔÊĞíÖĞ¶Ï
+void io_stihlt(void);									// ÔÊĞíÖĞ¶Ï²¢ÔİÍ£´¦ÀíÆ÷
+int io_in8(int port);									// ´«ÊäÊı¾İÓÃµÄ£¬»ã±àINÖ¸Áî£¬ÓÃÓÚ¶Ë¿Ú²Ù×÷(8Î»)
+void io_out8(int port, int data);						// ´«ÊäÊı¾İÓÃµÄ£¬»ã±àOUTÖ¸Áî£¬ÓÃÓÚ¶Ë¿Ú²Ù×÷(8Î»)
+int io_in16(int port);									// ´«ÊäÊı¾İÓÃµÄ£¬»ã±àINÖ¸Áî£¬ÓÃÓÚ¶Ë¿Ú²Ù×÷(16Î»)
+void io_out16(int port, int data);						// ´«ÊäÊı¾İÓÃµÄ£¬»ã±àOUTÖ¸Áî£¬ÓÃÓÚ¶Ë¿Ú²Ù×÷(16Î»)
+int io_in32(int port);									// ´«ÊäÊı¾İÓÃµÄ£¬»ã±àINÖ¸Áî£¬ÓÃÓÚ¶Ë¿Ú²Ù×÷(32Î»)
+void io_out32(int port, int data);						// ´«ÊäÊı¾İÓÃµÄ£¬»ã±àOUTÖ¸Áî£¬ÓÃÓÚ¶Ë¿Ú²Ù×÷(32Î»)
+int io_load_eflags(void);								// ¶ÁÈ¡×î³õµÄeflagsÖµ
+void io_store_eflags(int eflags);						// ½«Öµ´æÈëeflags¼Ä´æÆ÷
+void port_read(unsigned short port, void* buf, int n);	// ¶Ë¿Ú¶ÁÊı¾İ
+void port_write(unsigned short port, void* buf, int n);	// ¶Ë¿ÚĞ´Êı¾İ
+void load_gdtr(int limit, int addr);					// ¼ÓÔØGDTR¼Ä´æÆ÷(GDTR¼Ä´æÆ÷ÓÃÓÚ±£´æGDTÔÚÄÚ´æÖĞµÄÎ»ÖÃ)
+void load_idtr(int limit, int addr);					// ¼ÓÔØIDTR¼Ä´æÆ÷(IDTR¼Ä´æÆ÷ÓÃÓÚ±£´æIDTÔÚÄÚ´æÖĞµÄÎ»ÖÃ)
+int load_cr0(void);										// ¼ÓÔØCR0¼Ä´æÆ÷
+void store_cr0(int cr0);								// ´æÈëCR0¼Ä´æÆ÷
+void load_tr(int tr);									// ¼ÓÔØTR¼Ä´æÆ÷
+void asm_inthandler0c(void);							// 0cºÅÖĞ¶Ï£¬ÓÃÓÚ´¦ÀíÕ»Òì³£
+void asm_inthandler0d(void);							// 0dºÅÖĞ¶Ï£¬ÓÃÓÚ´¦ÀíÒì³£³ÌĞò
+void asm_inthandler20(void);							// 20ºÅÖĞ¶Ï£¬ÓÃÓÚtimer
+void asm_inthandler21(void);							// 21ºÅÖĞ¶Ï£¬×¢²áÔÚ0x21
+void asm_inthandler27(void);							// 27ºÅÖĞ¶Ï£¬×¢²áÔÚ0x27
+void asm_inthandler2c(void);							// 2cºÅÖĞ¶Ï£¬×¢²áÔÚ0x2c
+void asm_inthandler2e(void);							// IDEÓ²ÅÌÖĞ¶Ï
+unsigned int memtest_sub(			
+	unsigned int start,			
+	unsigned int end);									//¶ÁÈ¡ÄÚ´æ
+void farjmp(int eip, int cs);							//Ö¸ÁîÌø×ª(ÓÃÓÚÈÎÎñÇĞ»»)
+void farcall(int eip, int cs);							//×ªÒÆµ½µ÷ÓÃµÄ×Ó³ÌĞò(Ö¸¶¨Æ«ÒÆ)
+void asm_kal_api(void);									//KalinoteOS ÏµÍ³API
+void start_app(int eip, int cs,			
+	int esp, int ds, int *tss_esp0);					//Æô¶¯Ó¦ÓÃ³ÌĞò
+void asm_end_app(void);									//½áÊøÓ¦ÓÃ³ÌĞò
+void asm_shutdown(void);								//¹Ø»ú¹¦ÄÜ
 
 //dsctbl.c(GDT,IDT)
 struct SEGMENT_DESCRIPTOR {
@@ -155,10 +161,12 @@ int memman_free_4k(struct MEMMAN *man, unsigned int addr, unsigned int size);			
 #define SHEET_APIWIN		2									// Ê¹ÓÃ×´Ì¬±êÖ¾(Íâ²¿API´°¿Ú)
 #define SHEET_CONS			3									// Ê¹ÓÃ×´Ì¬±êÖ¾(ÃüÁîĞĞ´°¿Ú)
 #define SHEET_NO_TITLE		4									// Ê¹ÓÃ×´Ì¬±êÖ¾(ÆäËûÎŞ±êÌâÀ¸´°¿Ú)
+#define SHEET_DEBUG_CONS	5									// Ê¹ÓÃ×´Ì¬±êÖ¾(DEBUGÃüÁîĞĞ´°¿Ú)
 #define	SHEET_BACK			101									// Ê¹ÓÃ×´Ì¬±êÖ¾(±³¾°²ã)
 #define	SHEET_TASKBAR		102									// Ê¹ÓÃ×´Ì¬±êÖ¾(ÈÎÎñÀ¸²ã)
 #define	SHEET_MOUSE			103									// Ê¹ÓÃ×´Ì¬±êÖ¾(Êó±êÖ¸Õë²ã)
 #define	SHEET_MENU			104									// Ê¹ÓÃ×´Ì¬±êÖ¾(²Ëµ¥À¸²ã)
+#define	SHEET_BUTTON		105									// Ê¹ÓÃ×´Ì¬±êÖ¾(°´Å¥²ã)
 struct SHEET {
 	/* Í¼²ã½á¹¹ */
 	unsigned int *buf;										// Í¼ÏñÄÚÈİ
@@ -173,6 +181,7 @@ struct SHTCTL {
 	/* ¶àÖØÍ¼²ãµÄĞÅÏ¢¹ÜÀí½á¹¹ */
 	unsigned int *vram, *map;								// vramÊÇVRAMµØÖ·
 	int xsize, ysize, top;									// xsizeºÍysizeÍ¼²ã´óĞ¡£¬topÊÇ×î¶¥²ãÍ¼²ã(Êó±êÖ¸Õë²ã)¸ß¶È
+	struct SHEET *fsheet;									// ¸¸Í¼²ã
 	struct SHEET *sheets[MAX_SHEETS];						// ËùÓĞÍ¼²ãµÄµØÖ·(°´ÕÕ¸ß¶ÈÉıĞòÅÅÁĞ)
 	struct SHEET sheets0[MAX_SHEETS];						// ´æ·ÅËùÓĞÍ¼²ãµÄÍ¼²ãĞÅÏ¢
 };
@@ -286,7 +295,9 @@ void task_switch(void);																				// ÇĞ»»³ÌĞò
 void task_sleep(struct TASK *task);																	// ³ÌĞòË¯Ãß
 
 /* window.c(´°¿Ú»æÖÆ) */
-#define	MAX_OPTIONS		255							// ×î´óÑ¡ÏîÊıÁ¿
+#define	MAX_OPTIONS			255						// ×î´óÑ¡ÏîÊıÁ¿
+#define TIT_ACT_DEFAULT		0x00ffc1c1				// Ä¬ÈÏ´°¿Ú±êÌâÀ¸Ñ¡ÖĞÑÕÉ«	
+#define TIT_DEACT_DEFAULT	0x00cd9b9b				// Ä¬ÈÏ´°¿Ú±êÌâÀ¸Î´Ñ¡ÖĞÑÕÉ«
 struct WINCOLORS {
 	/* ´°¿Ú(Ö÷Ìâ)ÑÕÉ« */
 	int act_color,dis_act_color,back_color;			// ´°¿ÚÑÕÉ«£¬act_colorÊÇkey_onÌ¬ÑÕÉ«£¬dis_act_colorÊÇkey_offÌ¬ÑÕÉ«
@@ -323,17 +334,23 @@ struct MENU {
 struct BUTTON {
 	/* °´Å¥½á¹¹Ìå */
 	char *title;									// °´Å¥±êÌâ
+	int buttonx, buttony;							// °´Å¥Î»ÖÃ
 	int height,width;								// °´Å¥´óĞ¡(¸ß¿í)
 	int flags;										// °´Å¥¼¤»î×´Ì¬
+	int back_color;									// °´Å¥±³¾°É«
+	struct SHEET *sht;								// °´Å¥Í¼Ïñsheet
+	char click_old;									// ÉÏÒ»´ÎÊÇ·ñ°´ÏÂ(1Îª°´ÏÂ£¬0ÎªÎ´°´)
+	char show;										// ÊÇ·ñÕı¿ÉÊÓ
 	void(*onButtonClick)();							// µã»÷Ê±Ö´ĞĞ
 };
 // struct WINDOW *make_window8(unsigned int *buf, int xsize, int ysize, char *title, char act);		// Éú³ÉÒ»¸ö´°¿Ú(¾É)
-struct WINDOW *make_window8(struct SHEET *sht, int xsize, int ysize, char *title, char act);		// Éú³ÉÒ»¸ö´°¿Ú
+struct WINDOW *make_window8(struct SHEET *sht, int xsize, int ysize,
+	int act_color, int deact_color, char *title, char act);											// Éú³ÉÒ»¸ö´°¿Ú
 void putfonts8_asc_sht(struct SHEET *sht, int x, int y, int c, int b, char *s, int l);				// ÏÈÍ¿±³¾°É«£¬ÔÚĞ´×Ö·û´®
 void make_textbox8(struct SHEET *sht, int x0, int y0, int sx, int sy, int c);						// Éú³É±à¼­¿ò
 // void make_wtitle8(unsigned int *buf, int xsize, char *title, char act);							// Éú³ÉÒ»¸ö±êÌâÀ¸(¾É°æ)
 void make_wtitle8(struct WINDOW *window, char act);													// Éú³ÉÒ»¸ö±êÌâÀ¸
-void change_wtitle8(struct SHEET *sht, char act);													// ¸Ä±ä´°¿Ú±êÌâÀ¸ÑÕÉ«
+void change_wtitle8(struct WINDOW *window, char act);												// ¸Ä±ä´°¿Ú±êÌâÀ¸ÑÕÉ«
 // void make_icon(unsigned int *buf, int xsize, char type);											// ÏÔÊ¾Ò»¸ölogo(¾É°æ)
 void make_icon(struct WINDOW *window, char type);													// ÏÔÊ¾Ò»¸ölogo
 struct MENU *make_menu(struct MEMMAN *memman, int menux, int menuy);								// ´´½¨²Ëµ¥À¸
@@ -345,8 +362,13 @@ void show_menu(struct SHTCTL *shtctl, struct MEMMAN *memman, struct MENU *menu);
 void hide_menu(struct MEMMAN *memman, struct MENU *menu);											// Òş²Ø²Ëµ¥
 void option_change(struct MENU *menu, int mouse_y);													// Êó±êÒÆ¶¯Ê±Ñ¡Ïî±äÉ«´¦Àí
 void menu_click(struct MENU *menu, int mouse_y);													// ²Ëµ¥À¸±»µ¥»÷
+struct BUTTON *make_button(struct MEMMAN *memman, int width, int height,
+	int buttonx, int buttony, char *title, int back_color, void(*onButtonClick)());					// ´´½¨Ò»¸ö°´Å¥
+struct SHEET * show_button(struct SHEET *sht, struct MEMMAN *memman, struct BUTTON *button);		// »æÖÆ°´Å¥
+void change_button(struct BUTTON *button, struct SHEET *sht, char click);							// ¸ü¸Ä°´Å¥Í¹ÆğºÍ°´ÏÂ(»ò½ûÓÃ)
 
 /* console.c(ÃüÁîÌ¨) */
+#define DEBUG_ADDR		0x30000				// DEBUG consoleÎ»ÖÃ
 struct CONSOLE {
 	struct SHEET *sht;
 	int cur_x, cur_y, cur_c;
@@ -375,13 +397,15 @@ void cmd_langmode(struct CONSOLE *cons, char *cmdline);												// CMD£ºÇĞ»»Ó
 void cmd_shutdown(void);																			// CMD£º¹Ø»ú
 void cmd_sysmode(struct CONSOLE *cons, char *cmdline);												// CMD£ºÇĞ»»ÏµÍ³Ä£Ê½
 void cmd_echo(struct CONSOLE *cons, char *cmdline);													// CMD£ºÏµÍ³Êä³ö
+void cmd_hdnum(struct CONSOLE *cons);																// CMD£º²éÑ¯ÏµÍ³Ó²ÅÌÊıÁ¿
+void cmd_hdinfo(struct CONSOLE *cons, char *cmdline);												// CMD£º²éÑ¯IDEÓ²ÅÌĞÅÏ¢
 void cmd_systest(struct CONSOLE *cons);																// CMD£º²âÊÔÏµÍ³¹¦ÄÜ×¨ÓÃ
 int cmd_app(struct CONSOLE *cons, int *fat, char *cmdline);											// Íâ²¿Ó¦ÓÃ³ÌĞò
 int *kal_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int eax);				// Í¨¹ıedx²éÕÒAPI
 int *inthandler0d(int *esp);																		// 0dºÅÖĞ¶Ï£¬ÓÃÓÚ´¦ÀíÒì³£³ÌĞò
 int *inthandler0c(int *esp);																		// 0cºÅÖĞ¶Ï£¬ÓÃÓÚ´¦ÀíÕ»Òì³£
 void kal_api_linewin(struct SHEET *sht, int x0, int y0, int x1, int y1, int col);					// »æÖÆÒ»ÌõÖ±Ïß
-struct SHEET *open_console(struct SHTCTL *shtctl, unsigned int memtotal);							// ¿ªÆôÒ»¸öÃüÁî´°¿Ú
+struct SHEET *open_console(struct SHTCTL *shtctl, unsigned int memtotal, int debug);				// ¿ªÆôÒ»¸öÃüÁî´°¿Ú
 struct TASK *open_constask(struct SHEET *sht, unsigned int memtotal);								// ¿ªÆôÒ»¸öÈÎÎñ
 void keywin_off(struct SHEET *key_win);																// ¿ØÖÆ´°¿Ú±êÌâÀ¸ÑÕÉ«ºÍ¹â±ê¼¤»î×´Ì¬
 void keywin_on(struct SHEET *key_win);																// ¿ØÖÆ´°¿Ú±êÌâÀ¸ÑÕÉ«ºÍ¹â±ê¼¤»î×´Ì¬
@@ -445,133 +469,68 @@ unsigned int get_day_of_week();						// È¡µ±Ç°ĞÇÆÚ
 unsigned int get_mon_hex();							// È¡µ±Ç°ÔÂ·İ
 unsigned int get_year();							// È¡µ±Ç°Äê·İ
 
-/* bitmap(Î»Í¼£¬ÏµÍ³ÕæÏó377Ò³) */
-struct bitmap {
-	/* bitmap */
-	unsigned int btmp_bytes_len;
-	unsigned char* bits;					    	// ÔÚ±éÀúÎ»Í¼Ê±,ÕûÌåÉÏÒÔ×Ö½ÚÎªµ¥Î»,Ï¸½ÚÉÏÊÇÒÔÎ»Îªµ¥Î»,ËùÒÔ´Ë´¦Î»Í¼µÄÖ¸Õë±ØĞëÊÇµ¥×Ö½Ú
-};
-
-/* list.c(Á´±í½á¹¹,ÓÃÀ´ÊµÏÖ¶ÓÁĞ) */
-struct list_elem {
-	struct list_elem* prev;							// Ç°Çû½áµã
-	struct list_elem* next;							// ºó¼Ì½áµã
-};
-struct list {
-	struct list_elem head;							// headÊÇ¶ÓÊ×,ÊÇ¹Ì¶¨²»±äµÄ£¬²»ÊÇµÚ1¸öÔªËØ,µÚ1¸öÔªËØÎªhead.next
-	struct list_elem tail;							// tailÊÇ¶ÓÎ²,Í¬ÑùÊÇ¹Ì¶¨²»±äµÄ
-};
-void list_init (struct list* list);					// ³õÊ¼»¯Ë«Á´±í
-
-/* lock.c(½ø³ÌËø£¬ÏµÍ³ÕæÏó439Ò³) */
-struct semaphore {
-	/* ĞÅºÅÁ¿½á¹¹ */
-	unsigned char  value;
-	struct   list waiters;
-};
-struct lock {
-	/* Ëø½á¹¹ */
-	struct   TASK* holder;							// ËøµÄ³ÖÓĞÕß
-	struct   semaphore semaphore;					// ÓÃ¶şÔªĞÅºÅÁ¿ÊµÏÖËø
-	unsigned int holder_repeat_nr;					// ËøµÄ³ÖÓĞÕßÖØ¸´ÉêÇëËøµÄ´ÎÊı
-};
-void sema_init(struct semaphore* psema, unsigned char value);			// ³õÊ¼»¯ĞÅºÅÁ¿
-void lock_init(struct lock* plock);										// ³õÊ¼»¯Ëøplock
-void lock_acquire(struct lock* plock);									// »ñÈ¡Ëøplock(ÔİÎ´ÊµÏÖ)
-void sema_down(struct semaphore* psema);								// ĞÅºÅÁ¿down²Ù×÷(ÔİÎ´ÊµÏÖ)
-void sema_up(struct semaphore* psema);									// ĞÅºÅÁ¿up²Ù×÷(ÔİÎ´ÊµÏÖ)
-void lock_release(struct lock* plock);									// ÊÍ·ÅËøplock(ÔİÎ´ÊµÏÖ)
-
 /* ide.c(ideÓ²ÅÌÇı¶¯) */
-struct partition {
-	/* ·ÖÇø½á¹¹ */
-	unsigned int start_lba;							// ÆğÊ¼ÉÈÇø
-	unsigned int sec_cnt;							// ÉÈÇøÊı
-	struct disk* my_disk;							// ·ÖÇøËùÊôµÄÓ²ÅÌ
-	//struct list_elem part_tag;					// ÓÃÓÚ¶ÓÁĞÖĞµÄ±ê¼Ç
-	char name[8];									// ·ÖÇøÃû³Æ
-	struct super_block* sb;							// ±¾·ÖÇøµÄ³¬¼¶¿é
-	/* ÏÂÃæÓÃµ½µÄbitmapºÍlist£¬±¾²Ù×÷ÏµÍ³ÔİÎ´ÊµÏÖ£¬ÒÔºóÓĞÊ±¼äÔÙËµ */
-	struct bitmap block_bitmap;						// ¿éÎ»Í¼
-	struct bitmap inode_bitmap;						// i½áµãÎ»Í¼
-	// struct list open_inodes;						// ±¾·ÖÇø´ò¿ªµÄi½áµã¶ÓÁĞ
+struct IDE_DISK_DRIVER {
+	/* IDEÓ²ÅÌ¿ØÖÆÊı¾İ½á¹¹Ìå */
+	unsigned char disk_num;							// Ó²ÅÌÊıÁ¿
+	unsigned char disk_interrupt;					// Ó²ÅÌÖĞ¶Ï(?)
+	unsigned char reg_status;						// ¼Ä´æÆ÷×´Ì¬(+7¶Ë¿Ú»ñÈ¡µ½µÄ×´Ì¬)
+	unsigned int *buf;								// ¶ÁÈ¡Êı¾İ»º³åÇø
+	unsigned int hda_sectors;						// hdaÉÈÇø
+	unsigned int hdb_sectors;						// hdbÉÈÇø
 };
-struct disk{
-	/* Ó²ÅÌ½á¹¹ */
-	char name[8];									// Ó²ÅÌÃû³Æ(8¸ö×Ö·û)
-	struct ide_channel* my_channel;					// ´Ë¿éÓ²ÅÌ¹éÊôÓÚÄÄ¸öideÍ¨µÀ
-	unsigned int dev_no;							// Ö÷ÅÌ(0)»¹ÊÇ´ÓÅÌ(1)
-	struct partition prim_parts[4];					// Ö÷·ÖÇø(×î¶à4¸ö)
-	struct partition logic_parts[8];				// Âß¼­·ÖÇø(Éè¶¨×î¶à8¸ö)
+struct IDE_HARD_DISK {
+	/* Ó²ÅÌÊı¾İ½á¹¹Ìå */
+	unsigned int sectors;							// Ó²ÅÌÉÈÇøÊı
+	unsigned int drive;								// Ö÷ÅÌ»¹ÊÇ´ÓÅÌ
+	unsigned int *buf;								// Ó²ÅÌ¶ÁĞ´»º³åÇø
 };
-struct ide_channel{
-	/* ata(ide)Í¨µÀ½á¹¹ */
-	char name[8];									// ±¾ataÍ¨µÀÃû³Æ, Èçata0,Ò²±»½Ğ×öide0. ¿ÉÒÔ²Î¿¼bochsÅäÖÃÎÄ¼şÖĞ¹ØÓÚÓ²ÅÌµÄÅäÖÃ¡£
-	unsigned int port_base;							// ±¾Í¨µÀµÄÆğÊ¼¶Ë¿ÚºÅ
-	unsigned int irq_no;							// ±¾Í¨µÀËùÓÃµÄÖĞ¶ÏºÅ
-	struct lock lock;
-	char expecting_intr;							// ÏòÓ²ÅÌ·¢ÍêÃüÁîºóµÈ´ıÀ´×ÔÓ²ÅÌµÄÖĞ¶Ï
-	struct semaphore disk_done;						// Ó²ÅÌ´¦ÀíÍê³É.Ïß³ÌÓÃÕâ¸öĞÅºÅÁ¿À´×èÈû×Ô¼º£¬ÓÉÓ²ÅÌÍê³Éºó²úÉúµÄÖĞ¶Ï½«Ïß³Ì»½ĞÑ
-	struct disk devices[2];							// Ò»¸öÍ¨µÀÉÏÁ¬½ÓÁ½¸öÓ²ÅÌ£¬Ò»Ö÷Ò»´Ó
-};
-struct partition_table_entry {
-	/* ¹¹½¨Ò»¸ö16×Ö½Ú´óĞ¡µÄ½á¹¹Ìå,ÓÃÀ´´æ·ÖÇø±íÏî */
-	unsigned char  bootable;		// ÊÇ·ñ¿ÉÒıµ¼	
-	unsigned char  start_head;		// ÆğÊ¼´ÅÍ·ºÅ
-	unsigned char  start_sec;		// ÆğÊ¼ÉÈÇøºÅ
-	unsigned char  start_chs;		// ÆğÊ¼ÖùÃæºÅ
-	unsigned char  fs_type;			// ·ÖÇøÀàĞÍ
-	unsigned char  end_head;		// ½áÊø´ÅÍ·ºÅ
-	unsigned char  end_sec;			// ½áÊøÉÈÇøºÅ
-	unsigned char  end_chs;			// ½áÊøÖùÃæºÅ
-	/* ¸üĞèÒª¹Ø×¢µÄÊÇÏÂÃæÕâÁ½Ïî */
-	unsigned int start_lba;			// ±¾·ÖÇøÆğÊ¼ÉÈÇøµÄlbaµØÖ·
-	unsigned int sec_cnt;			// ±¾·ÖÇøµÄÉÈÇøÊıÄ¿
-};
-struct boot_sector {
-	/* Òıµ¼ÉÈÇø,mbr»òebrËùÔÚµÄÉÈÇø */
-	unsigned char  other[446];									// Òıµ¼´úÂë
-	struct   partition_table_entry partition_table[4];			// ·ÖÇø±íÖĞÓĞ4Ïî,¹²64×Ö½Ú
-	unsigned short signature;									// Æô¶¯ÉÈÇøµÄ½áÊø±êÖ¾ÊÇ0x55,0xaa,
-};
-/* ¶¨ÒåÓ²ÅÌ¸÷¼Ä´æÆ÷µÄ¶Ë¿ÚºÅ */
-#define reg_data(channel)			(channel->port_base + 0)
-#define reg_error(channel)			(channel->port_base + 1)
-#define reg_sect_cnt(channel)		(channel->port_base + 2)
-#define reg_lba_l(channel)			(channel->port_base + 3)
-#define reg_lba_m(channel)			(channel->port_base + 4)
-#define reg_lba_h(channel)			(channel->port_base + 5)
-#define reg_dev(channel)			(channel->port_base + 6)
-#define reg_status(channel)			(channel->port_base + 7)
-#define reg_cmd(channel)			(reg_status(channel))
-#define reg_alt_status(channel)		(channel->port_base + 0x206)
-#define reg_ctl(channel)			reg_alt_status(channel)
-/* reg_status¼Ä´æÆ÷µÄÒ»Ğ©¹Ø¼üÎ» */
-#define BIT_STAT_BSY		0x80					// Ó²ÅÌÃ¦
-#define BIT_STAT_DRDY		0x40					// Çı¶¯Æ÷×¼±¸ºÃ	 
-#define BIT_STAT_DRQ		0x8						// Êı¾İ´«Êä×¼±¸ºÃÁË
-/* device¼Ä´æÆ÷µÄÒ»Ğ©¹Ø¼üÎ» */
-#define BIT_DEV_MBS	0xa0							// µÚ7Î»ºÍµÚ5Î»¹Ì¶¨Îª1
-#define BIT_DEV_LBA	0x40
-#define BIT_DEV_DEV	0x10
-/* Ò»Ğ©Ó²ÅÌ²Ù×÷µÄÖ¸Áî */
-#define CMD_IDENTIFY	   0xec						// identifyÖ¸Áî
-#define CMD_READ_SECTOR	   0x20						// ¶ÁÉÈÇøÖ¸Áî
-#define CMD_WRITE_SECTOR   0x30						// Ğ´ÉÈÇøÖ¸Áî
-/* ¶¨Òå¿É¶ÁĞ´µÄ×î´óÉÈÇøÊı(µ÷ÊÔÊ¹ÓÃ) */
-#define MAX_LBA ((1024*1024*1024/512) - 1)			// Ö»Ö§³Ö1024MBÓ²ÅÌ
-void ide_init();									// Ó²ÅÌÊı¾İ½á¹¹³õÊ¼»¯
-void select_disk(struct disk* hd);					// Ñ¡ÔñÒª¶ÁĞ´µÄÓ²ÅÌ
-void select_sector(struct disk* hd,
-	unsigned int lba, unsigned char sec_cnt);		// ÏòÓ²ÅÌ¿ØÖÆÆ÷Ğ´ÈëÆğÊ¼ÉÈÇøµØÖ·¼°Òª¶ÁĞ´µÄÉÈÇøÊı
-void cmd_out(struct ide_channel* channel,
-	unsigned char cmd);								// ÏòÍ¨µÀchannel·¢ÃüÁîcmd
-void read_from_sector(struct disk* hd,
-	void* buf, unsigned char sec_cnt);				// Ó²ÅÌ¶ÁÈësec_cnt¸öÉÈÇøµÄÊı¾İµ½buf
-void write2sector(struct disk* hd, void* buf,
-	unsigned char sec_cnt);							// ½«bufÖĞsec_cntÉÈÇøµÄÊı¾İĞ´ÈëÓ²ÅÌ
-void ide_read(struct disk* hd, unsigned int lba,
-	void* buf, unsigned int sec_cnt);				// ´ÓÓ²ÅÌ¶ÁÈ¡sec_cnt¸öÉÈÇøµ½buf
+#define	IDE0_DATA				0x170								// IDE¿ØÖÆÆ÷0Êı¾İ¶Ë¿Ú£¬ÓÃÀ´´«ËÍ¶Á/Ğ´µÄÊı¾İ(ÆäÄÚÈİÊÇÕıÔÚ´«ÊäµÄÒ»¸ö×Ö½ÚµÄÊı¾İ)
+#define	IDE0_ERRCODE			0x171								// IDE¿ØÖÆÆ÷0´íÎóÂë¶Ë¿Ú£¬ÓÃÀ´¶ÁÈ¡´íÎóÂë
+#define	IDE0_NSECTOR			0x172								// IDE¿ØÖÆÆ÷0¶ÁĞ´µÄÉÈÇøÊıÁ¿
+#define	IDE0_LBA_LOW			0x173								// IDE¿ØÖÆÆ÷0¶ÁĞ´ÉÈÇøºÅÂë(LBAµÍ8Î»)
+#define	IDE0_LBA_MID			0x174								// IDE¿ØÖÆÆ÷0¶ÁĞ´ÖùÃæµÍ8Î»(LBA8-15Î»)
+#define	IDE0_LBA_HIGH			0x175								// IDE¿ØÖÆÆ÷0¶ÁĞ´ÖùÃæ¸ß2Î»(LBA16-23Î»)
+#define	IDE0_DEVICE				0x176								// IDE¿ØÖÆÆ÷0¶ÁĞ´´ÅÅÌºÅºÍ´ÅÍ·ºÅ(°üº¬LBA24-27Î»£¬µÚËÄÎ»ÓÃÓÚÖ¸¶¨Ö÷ÅÌ»ò´ÓÅÌ£¬µÚÁùÎ»ÉèÖÃÊÇ·ñÆô¶¯LBA·½Ê½£¬µÚÎåÎ»ºÍµÚÆßÎ»¹Ì¶¨Îª1)
+#define	IDE0_STATUS				0x177								// IDE¿ØÖÆÆ÷0¶Á²Ù×÷ºóµÄ×´Ì¬
+#define	IDE1_DATA				0x1f0								// IDE¿ØÖÆÆ÷1Êı¾İ¶Ë¿Ú£¬ÓÃÀ´´«ËÍ¶Á/Ğ´µÄÊı¾İ(ÆäÄÚÈİÊÇÕıÔÚ´«ÊäµÄÒ»¸ö×Ö½ÚµÄÊı¾İ)
+#define	IDE1_ERRCODE			0x1f1								// IDE¿ØÖÆÆ÷1´íÎóÂë¶Ë¿Ú£¬ÓÃÀ´¶ÁÈ¡´íÎóÂë
+#define	IDE1_NSECTOR			0x1f2								// IDE¿ØÖÆÆ÷1¶ÁĞ´µÄÉÈÇøÊıÁ¿
+#define	IDE1_LBA_LOW			0x1f3								// IDE¿ØÖÆÆ÷1¶ÁĞ´ÉÈÇøºÅÂë(LBAµÍ8Î»)
+#define	IDE1_LBA_MID			0x1f4								// IDE¿ØÖÆÆ÷1¶ÁĞ´ÖùÃæµÍ8Î»(LBA8-15Î»)
+#define	IDE1_LBA_HIGH			0x1f5								// IDE¿ØÖÆÆ÷1¶ÁĞ´ÖùÃæ¸ß2Î»(LBA16-23Î»)
+#define	IDE1_DEVICE				0x1f6								// IDE¿ØÖÆÆ÷1¶ÁĞ´´ÅÅÌºÅºÍ´ÅÍ·ºÅ(°üº¬LBA24-27Î»)
+#define	IDE1_STATUS				0x1f7								// IDE¿ØÖÆÆ÷1¶Á²Ù×÷ºóµÄ×´Ì¬
+#define	IDE_HD_NUM_ADDR			0x475								// IDEÓ²ÅÌÊıÁ¿ĞÅÏ¢»º´æµØÖ·(Í¨¹ıBIOS)
+#define	SECTOR_SIZE				512									// ÉÈÇø´óĞ¡
+#define	IDE_HD_DRIVER_ADDR		0x3F0000							// struct IDE_DISK_DRIVER hdÎ»ÖÃ
+#define HDA_ADDR				0x3F1000							// hda½á¹¹Ìå
+#define HDB_ADDR				0x3F2000							// hdb½á¹¹Ìå
+#define STATUS_WAIT_TIMEOUT		0x100000							// µÈ´ı¼Ä´æÆ÷³¬Ê±Öµ
+#define	STATUS_READY			0x40								// ´ÅÅÌÇı¶¯Æ÷ÒÑ¾ÍĞ÷
+#define	STATUS_BUSY				0x80								// ´ÅÅÌÇı¶¯Æ÷Ã¦Âµ
+#define	STATUS_DFSE	¡¤			0x20								// ´ÅÅÌÇı¶¯Æ÷Ğ´Èë´íÎó
+#define	STATUS_DSC				0x10								// ´ÅÅÌÇı¶¯Æ÷ËÑË÷Íê³É
+#define	STATUS_DRQ				0x08								// ÉÈÇø»º³åÇøÃ»ÓĞ×¼±¸ºÃ
+#define	STATUS_CORR				0x04								// ÊÇ·ñÕıÈ·¶ÁÈ¡´ÅÅÌ
+#define	STATUS_IDX				0x02								// ´ÅÅÌĞı×ªÒ»ÖÜ
+#define	STATUS_ERR				0x01								// ÉÏÒ»¸öÃüÁîÒò´íÎó¶ø½áÊø
+#define REG_DEV_CTRL			0x3f6								// 0x3f6ÊÇATA±¸ÓÃ×´Ì¬¼Ä´æÆ÷
+#define REG_ALT_STATUS			REG_DEV_CTRL
+#define REG_DRV_ADDR			0x3f7								// Êı×ÖÊäÈë¼Ä´æÆ÷(ÓëÈíÅÌºÏÓÃ)
+#define REG_CMD					IDE0_STATUS							// Ö¸ÁîÖ´ĞĞ¼Ä´æÆ÷
+#define ATA_IDENTIFY			0xec								// »ñÈ¡Ó²ÅÌĞÅÏ¢µÄÖ¸Áî
+
+#define	MAKE_DEVICE_REG(lba,drv,lba_highest) (((lba) << 6) |\
+					      ((drv) << 4) |\
+					      (lba_highest & 0xF) | (0xA0))
+void inthandler2e(int *esp);										// Ó²ÅÌÖĞ¶Ï³ÌĞò
+void init_ide_hd();													// ³õÊ¼»¯IDEÓ²ÅÌ¿ØÖÆ³ÌĞò
+void wait_hd_status(unsigned char reg, unsigned char status);		// µÈ´ıÓ²ÅÌ×´Ì¬
+void wait_hd_interrupt(void);										// µÈ´ıÓ²ÅÌÖĞ¶Ï
+void hd_identify(struct CONSOLE *cons, struct IDE_HARD_DISK *disk);	// »ñÈ¡Ó²ÅÌĞÅÏ¢
+void print_identify_info(struct CONSOLE *cons,
+	struct IDE_HARD_DISK *disk, unsigned short *hdinfo);			// ÏÔÊ¾»ñÈ¡µÄÓ²ÅÌĞÅÏ¢
 
 /* taskbar.c(µÍ¶ËÈÎÎñÀ¸) */
 struct MENU *init_taskbar(struct MEMMAN *memman, int *vram, int x, int y);							//³õÊ¼»¯ÈÎÎñÀ¸

@@ -73,6 +73,7 @@ clean :
 	-$(DEL) *.map
 	-$(DEL) *.bim
 	-$(DEL) *.kal
+	-$(DEL) *.gas
 
 src_only :
 	$(MAKE) clean

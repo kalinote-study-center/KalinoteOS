@@ -1,0 +1,8 @@
+I/O端口地址分配表：
+https://blog.csdn.net/zeflove/article/details/7337012
+
+IDE硬盘端口操作：
+https://blog.csdn.net/loafertb/article/details/5262814
+
+BIOS数据区：
+https://blog.csdn.net/x86ipc/article/details/5303760

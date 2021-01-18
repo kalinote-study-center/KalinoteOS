@@ -19,6 +19,7 @@ struct SHTCTL *shtctl_init(struct MEMMAN *memman, unsigned int *vram, int xsize,
 	ctl->xsize = xsize;						/* 可显示的x大小 */
 	ctl->ysize = ysize;						/* 可显示的y大小 */
 	ctl->top = -1; 							/* 一个SHEET都没有(给SHTCTL结构体的"top(顶层层数)"赋值-1，表示没有图册) */
+	ctl->fsheet = 0;						/* 父图层 */
 	for (i = 0; i < MAX_SHEETS; i++) {
 		ctl->sheets0[i].flags = SHEET_NO_USE;			/* 标记为未使用 */
 		ctl->sheets0[i].ctl = ctl;						/* 记录所属 */
@@ -48,6 +49,9 @@ struct SHEET *sheet_alloc(struct SHTCTL *ctl){
 				// sht->subctl = 0;
 			// }
 			/* 如果需要使用子图层管理器，需要在sheet_setbuf以后通过sht->subctl = shtctl_init(memman, sht_buf, sht->bxsize, sht->bysize);设置 */
+			/**************************************************************************************************
+			* 在使用子图层管理器的时候一定要注意sht->subctl是否已经定义，还有是否没有图层(图层管理器top = -1) *
+			**************************************************************************************************/
 			sht->subctl = 0;
 			return sht;
 		}
