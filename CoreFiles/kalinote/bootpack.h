@@ -295,7 +295,6 @@ void task_switch(void);																				// 切换程序
 void task_sleep(struct TASK *task);																	// 程序睡眠
 
 /* window.c(窗口绘制) */
-#define	MAX_OPTIONS			255						// 最大选项数量
 #define TIT_ACT_DEFAULT		0x00ffc1c1				// 默认窗口标题栏选中颜色	
 #define TIT_DEACT_DEFAULT	0x00cd9b9b				// 默认窗口标题栏未选中颜色
 struct WINCOLORS {
@@ -310,27 +309,18 @@ struct WINDOW {
 	struct WINCOLORS wcolor;						// 窗口颜色
 	int whandle;									// 窗口句柄(可以在这里存放SHEET结构体)
 };
-struct OPTIONS {
-	/* 菜单栏选项结构体 */
-	int flags;										// 选项标志
-	char *title;									// 选项标题
-	unsigned char index;							// 选项index
-	void(*onOptionClick)();							// 点击时执行
-};
-struct MENU {
-	/* 菜单栏结构体 */
-	/*****************************************************
-	*                 这里还要再考虑考虑                 *
-	******************************************************/
-	int menux,menuy;								// 菜单栏坐标
-	int mheight,mwidth;								// 菜单栏大小
-	unsigned int *buf;								// 菜单图像缓冲地址
-	struct SHEET *sht;								// 菜单图像sheet
-	int flags;										// flags是菜单当前状态
-	unsigned char now, old;							// now是当前选中项,old是上一个选中项
-	int option_num;									// 当前选项数量
-	struct OPTIONS options[MAX_OPTIONS];			// 存放选项列表(最多256个选项，应该不会有哪个程序用到200多个选项)
-};
+// struct WINDOW *make_window8(unsigned int *buf, int xsize, int ysize, char *title, char act);		// 生成一个窗口(旧)
+struct WINDOW *make_window8(struct SHEET *sht, int xsize, int ysize,
+	int act_color, int deact_color, char *title, char act);											// 生成一个窗口
+void putfonts8_asc_sht(struct SHEET *sht, int x, int y, int c, int b, char *s, int l);				// 先涂背景色，在写字符串
+void make_textbox8(struct SHEET *sht, int x0, int y0, int sx, int sy, int c);						// 生成编辑框
+// void make_wtitle8(unsigned int *buf, int xsize, char *title, char act);							// 生成一个标题栏(旧版)
+void make_wtitle8(struct WINDOW *window, char act);													// 生成一个标题栏
+void change_wtitle8(struct WINDOW *window, char act);												// 改变窗口标题栏颜色
+// void make_icon(unsigned int *buf, int xsize, char type);											// 显示一个logo(旧版)
+void make_icon(struct WINDOW *window, char type);													// 显示一个logo
+
+/* button.c(按钮) */
 struct BUTTON {
 	/* 按钮结构体 */
 	char *title;									// 按钮标题
@@ -343,16 +333,32 @@ struct BUTTON {
 	char show;										// 是否正可视
 	void(*onButtonClick)();							// 点击时执行
 };
-// struct WINDOW *make_window8(unsigned int *buf, int xsize, int ysize, char *title, char act);		// 生成一个窗口(旧)
-struct WINDOW *make_window8(struct SHEET *sht, int xsize, int ysize,
-	int act_color, int deact_color, char *title, char act);											// 生成一个窗口
-void putfonts8_asc_sht(struct SHEET *sht, int x, int y, int c, int b, char *s, int l);				// 先涂背景色，在写字符串
-void make_textbox8(struct SHEET *sht, int x0, int y0, int sx, int sy, int c);						// 生成编辑框
-// void make_wtitle8(unsigned int *buf, int xsize, char *title, char act);							// 生成一个标题栏(旧版)
-void make_wtitle8(struct WINDOW *window, char act);													// 生成一个标题栏
-void change_wtitle8(struct WINDOW *window, char act);												// 改变窗口标题栏颜色
-// void make_icon(unsigned int *buf, int xsize, char type);											// 显示一个logo(旧版)
-void make_icon(struct WINDOW *window, char type);													// 显示一个logo
+struct BUTTON *make_button(struct MEMMAN *memman, int width, int height,
+	int buttonx, int buttony, char *title, int back_color, void(*onButtonClick)());					// 创建一个按钮
+struct SHEET * show_button(struct SHEET *sht, struct MEMMAN *memman, struct BUTTON *button);		// 绘制按钮
+void change_button(struct BUTTON *button, struct SHEET *sht, char click);							// 更改按钮凸起和按下(或禁用)
+void click_button(struct BUTTON *button);															// 点击按钮
+
+/* menu.c(菜单栏) */
+#define	MAX_OPTIONS			255						// 最大选项数量
+struct OPTIONS {
+	/* 菜单栏选项结构体 */
+	int flags;										// 选项标志
+	char *title;									// 选项标题
+	unsigned char index;							// 选项index
+	void(*onOptionClick)();							// 点击时执行
+};
+struct MENU {
+	/* 菜单栏结构体 */
+	int menux,menuy;								// 菜单栏坐标
+	int mheight,mwidth;								// 菜单栏大小
+	unsigned int *buf;								// 菜单图像缓冲地址
+	struct SHEET *sht;								// 菜单图像sheet
+	int flags;										// flags是菜单当前状态
+	unsigned char now, old;							// now是当前选中项,old是上一个选中项
+	int option_num;									// 当前选项数量
+	struct OPTIONS options[MAX_OPTIONS];			// 存放选项列表(最多256个选项，应该不会有哪个程序用到200多个选项)
+};
 struct MENU *make_menu(struct MEMMAN *memman, int menux, int menuy);								// 创建菜单栏
 void release_menu(struct MEMMAN *man, struct MENU *menu);											// 释放菜单栏
 // void add_options(struct MENU *menus, char *option_title);										// 增加选项(旧版)
@@ -362,10 +368,6 @@ void show_menu(struct SHTCTL *shtctl, struct MEMMAN *memman, struct MENU *menu);
 void hide_menu(struct MEMMAN *memman, struct MENU *menu);											// 隐藏菜单
 void option_change(struct MENU *menu, int mouse_y);													// 鼠标移动时选项变色处理
 void menu_click(struct MENU *menu, int mouse_y);													// 菜单栏被单击
-struct BUTTON *make_button(struct MEMMAN *memman, int width, int height,
-	int buttonx, int buttony, char *title, int back_color, void(*onButtonClick)());					// 创建一个按钮
-struct SHEET * show_button(struct SHEET *sht, struct MEMMAN *memman, struct BUTTON *button);		// 绘制按钮
-void change_button(struct BUTTON *button, struct SHEET *sht, char click);							// 更改按钮凸起和按下(或禁用)
 
 /* console.c(命令台) */
 #define DEBUG_ADDR		0x30000				// DEBUG console位置
