@@ -1,4 +1,4 @@
-//sysinfo(ÏµÍ³È«¾ÖĞÅÏ¢)
+//sysinfo(bootpack.cÏµÍ³È«¾ÖĞÅÏ¢)
 struct SYSINFO {
 	char sysmode;					/* ÏµÍ³Ä£Ê½ */
 	char sysmmainver;				/* ÏµÍ³Ö÷°æ±¾ºÅ */
@@ -7,7 +7,10 @@ struct SYSINFO {
 	unsigned int free_mem;			/* ÏµÍ³Ê£ÓàÄÚ´æÈİÁ¿ */
 	unsigned int memtotal;			/* ÏµÍ³×ÜÄÚ´æ */
 };
-#define	SYS_MEMORY		0x00400000			//ÏµÍ³Õ¼ÓÃÄÚ´æ
+#define	SYS_MEMORY		0x00400000			// ÏµÍ³Õ¼ÓÃÄÚ´æ
+#define FIFO_ADDR		0x0fec				// FIFOµØÖ·
+#define SYSINFO_ADDR	0x10000				// ÏµÍ³ĞÅÏ¢µØÖ·
+#define SHTCTL_ADDR		0x0fe4				// ÏµÍ³Í¼²ã¹ÜÀí½á¹¹ÌåµØÖ·
 
 //asmhead.nas(bootpack.cµÄÇ°Ãæ²¿·Ö)
 struct BOOTINFO {	/* 0x0ff0-0x0fff */
@@ -335,7 +338,7 @@ struct BUTTON {
 };
 struct BUTTON *make_button(struct MEMMAN *memman, int width, int height,
 	int buttonx, int buttony, char *title, int back_color, void(*onButtonClick)());					// ´´½¨Ò»¸ö°´Å¥
-struct SHEET * show_button(struct SHEET *sht, struct MEMMAN *memman, struct BUTTON *button);		// »æÖÆ°´Å¥
+void show_button(struct SHEET *sht, struct MEMMAN *memman, struct BUTTON *button);		// »æÖÆ°´Å¥
 void change_button(struct BUTTON *button, struct SHEET *sht, char click);							// ¸ü¸Ä°´Å¥Í¹ÆğºÍ°´ÏÂ(»ò½ûÓÃ)
 void click_button(struct BUTTON *button);															// µã»÷°´Å¥
 
@@ -540,4 +543,5 @@ void hd_read_sectors(int lba, void *buf, int counts, int hd_num);	// ¶ÁÈ¡Ó²ÅÌÉÈÇ
 void hd_write_sectors(int lba, void *buf, int counts,int hd_num);	// Ğ´ÉÈÇø
 
 /* taskbar.c(µÍ¶ËÈÎÎñÀ¸) */
-struct MENU *init_taskbar(struct MEMMAN *memman, int *vram, int x, int y);							//³õÊ¼»¯ÈÎÎñÀ¸
+struct MENU *init_taskbar(struct MEMMAN *memman, int *vram, int x, int y);							// ³õÊ¼»¯ÈÎÎñÀ¸
+void onStartButtonClick(void);																		// µ¥»÷¿ªÊ¼°´Å¥

@@ -3,7 +3,7 @@
 
 void cmd_start(struct CONSOLE *cons, char *cmdline, int memtotal){
 	/* 在新的命令窗口启动一个应用程序 */
-	struct SHTCTL *shtctl = (struct SHTCTL *) *((int *) 0x0fe4);
+	struct SHTCTL *shtctl = (struct SHTCTL *) *((int *) SHTCTL_ADDR);
 	struct SHEET *sht = open_console(shtctl, memtotal, 0);
 	struct FIFO32 *fifo = &sht->task->fifo;
 	int i;

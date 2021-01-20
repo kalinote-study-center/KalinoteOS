@@ -2,8 +2,6 @@
 #include <stdio.h>
 #include "../bootpack.h"
 
-void nouse(void);
-
 void KaliMain(void){
 	/* 系统入口 */
 	
@@ -19,11 +17,11 @@ void KaliMain(void){
 	struct MOUSE_DEC mdec;
 	struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;
 	unsigned int *buf_back, buf_mouse[256], *buf_task_bar;/* , *subbuf_back; */
-	struct SHEET *sht_back, *sht_mouse, *sht_task_bar, *sht_debug_cons; /* , *btn_sht */
+	struct SHEET *sht_back, *sht_mouse, *sht_task_bar, *sht_debug_cons;/* , *btn_sht; */
 	struct TASK *task_a, *task;
 	int key_shift = 0, key_leds = (binfo->leds >> 4) & 7, keycmd_wait = -1;
-	int j, x, y, mmx = -1, mmy = -1, mmx2 = 0;/* , subx, suby; */
-	struct SHEET *sht = 0,/* *subsht = 0, */ *point_sht = 0, *key_win, *sht2;/* , *subsht_back; */			/* point_sht是用来处理鼠标移动时指向的层的 */
+	int j, x, y, mmx = -1, mmy = -1, mmx2 = 0, subx, suby;
+	struct SHEET *sht = 0, *subsht = 0, *point_sht = 0, *key_win, *sht2;/* , *subsht_back; */			/* point_sht是用来处理鼠标移动时指向的层的 */
 	int *fat_ch, *fat_jp;
 	unsigned char *chinese, *nihongo;
 	struct FILEINFO *finfo_ch;
@@ -32,7 +30,7 @@ void KaliMain(void){
 	struct SYSINFO sysinfo;
 	struct MENU *start_menu; /* , *desktop_menu; */
 	/* struct WINDOW *debug_window; */
-	/* struct BUTTON *button; */
+	struct BUTTON *start_button;
 	static char keytable0[0x80] = {
 		0,   0,   '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', 0x08, 0,
 		'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', '[', ']', 0x0a, 0, 'A', 'S',
@@ -55,7 +53,7 @@ void KaliMain(void){
 	};
 
 	/* 初始化sysinfo */
-	*((int *) 0x10000) = (int) &sysinfo;	
+	*((int *) SYSINFO_ADDR) = (int) &sysinfo;	
 	sysinfo.sysmode = 0;
 	sysinfo.sysmmainver = 1;
 	sysinfo.sysver = 400;
@@ -72,7 +70,7 @@ void KaliMain(void){
 	io_out8(PIC1_IMR, 0xaf); 										// 允许PS/2鼠标和硬盘(10101111)
 	
 	fifo32_init(&keycmd, 32, keycmd_buf, 0);
-	*((int *) 0x0fec) = (int) &fifo;		/* 把fifo缓冲区存到0x0fec */
+	*((int *) FIFO_ADDR) = (int) &fifo;		/* 把fifo缓冲区存到0x0fec */
 
 	/* 内存处理 */
 	memtotal = memtest(SYS_MEMORY, 0xffffffff); /* 测试可用内存，最大识别3972MB(除系统占用外) */
@@ -89,7 +87,7 @@ void KaliMain(void){
 	task_a = task_init(memman);
 	fifo.task = task_a;
 	task_run(task_a, 1, 2);					/* 系统主进程 */
-	*((int *) 0x0fe4) = (int) shtctl;		/* 把shtctl的值存到地址0xfe4的地方 */
+	*((int *) SHTCTL_ADDR) = (int) shtctl;		/* 把shtctl的值存到地址0xfe4的地方 */
 	task_a->langmode = 0;
 
 	/* DEBUG cons */
@@ -128,12 +126,10 @@ void KaliMain(void){
 	start_menu = init_taskbar(memman, buf_task_bar, binfo->scrnx, 28);
 	putfonts8_asc_sht(sht_task_bar, 6, 8, COL_BLACK, COL_BGREY, "Function", 8);
 	sht_task_bar->flags = SHEET_TASKBAR;
-	/* 测试代码 */
-	// button = make_button(memman, 40, 23, 150, 4, "test", COL_BGREY, nouse);				/* 测试通过 */
-	// btn_sht = show_button(sht_task_bar, memman, button);								/* 测试通过 */
-	// change_button(button, btn_sht, 1);
-	/* 测试代码 */
-
+	/* start按钮 */
+	start_button = make_button(memman, 40, 23, 150, 4, "test", COL_BGREY, onStartButtonClick);
+	show_button(sht_task_bar, memman, start_button);
+	
 	/* sht_cons */
 	key_win = open_console(shtctl, memtotal, 0);
 
@@ -461,31 +457,33 @@ void KaliMain(void){
 								} else if (sht->flags == SHEET_TASKBAR) {
 									/* task_bar */
 									if(0 <= x && x < sht->bxsize && 0 <= y && y < sht->bysize) {/* 如果鼠标指针在图层范围内 */
-										// for(j = sht->subctl->top; j > 0; j--) {
-											// /* 从上到下寻找子图层 */
-											// subsht = sht->subctl->sheets[j];
-											// subx = x - subsht->vx0;				/* 指针在子图层位置 */
-											// suby = y - subsht->vy0;
-											// if(0 <= subx && subx < subsht->bxsize && 0 <= suby && suby < subsht->bysize) {
-												// /* 如果鼠标指针在子图层里 */
-												// if(subsht->flags == SHEET_BUTTON) {
-													// /* 如果是按钮 */
+										debug_print("taskbar> sht->subctl->top = %d\n",sht->subctl->top);
+										for(j = sht->subctl->top; j > -1; j--) {
+											/* 从上到下寻找子图层(最底层是0) */
+											subsht = sht->subctl->sheets[j];
+											subx = x - subsht->vx0;				/* 指针在子图层位置 */
+											suby = y - subsht->vy0;
+											if(0 <= subx && subx < subsht->bxsize && 0 <= suby && suby < subsht->bysize) {
+												/* 如果鼠标指针在子图层里 */
+												if(subsht->flags == SHEET_BUTTON) {
+													/* 如果是按钮 */
 													// if(((struct BUTTON *)subsht->win)->click_old == 1) {
 														// change_button((struct BUTTON *)subsht->win, 0);
 													// } else {
 														// change_button((struct BUTTON *)subsht->win, 1);
 													// }
-													// break;
-												// }
-											// }
-										// }
-										if (3 <= x && x < 75 && sht->bysize - 23 <= y && y < sht->bysize - 4) {
-											/* 点击[开始]按钮 */
-											switch(start_menu->flags) {
-												case 0:show_menu(shtctl, memman, start_menu);break;
-												case 1:hide_menu(memman, start_menu);break;
+													click_button((struct BUTTON *)(subsht->win));
+													break;
+												}
 											}
 										}
+										// if (3 <= x && x < 75 && sht->bysize - 23 <= y && y < sht->bysize - 4) {
+											// /* 点击[开始]按钮 */
+											// switch(start_menu->flags) {
+												// case 0:show_menu(shtctl, memman, start_menu);break;
+												// case 1:hide_menu(memman, start_menu);break;
+											// }
+										// }
 										break;
 									}
 								} else if (sht->flags == SHEET_MENU) {
@@ -531,9 +529,4 @@ void KaliMain(void){
 			}
 		}
 	}
-}
-
-void nouse(void) {
-	/* 用于函数指针传参测试 */
-	return;
 }

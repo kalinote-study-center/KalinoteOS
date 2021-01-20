@@ -14,7 +14,7 @@ void console_task(struct SHEET *sheet, unsigned int memtotal){
 	struct FILEHANDLE fhandle[8];
 	char cmdline[30];
 	unsigned char *hzk = (char *) *((int *) 0x0fe8);
-	struct SYSINFO *sysinfo = (struct SYSINFO *) *((int *) 0x10000);
+	struct SYSINFO *sysinfo = (struct SYSINFO *) *((int *) SYSINFO_ADDR);
 
 	cons.sht = sheet;
 	cons.cur_x =  8;
@@ -251,7 +251,7 @@ void cons_newline(struct CONSOLE *cons){
 	int x, y;
 	struct SHEET *sheet = cons->sht;
 	struct TASK *task = task_now();
-	struct SYSINFO *sysinfo = (struct SYSINFO *) *((int *) 0x10000);
+	struct SYSINFO *sysinfo = (struct SYSINFO *) *((int *) SYSINFO_ADDR);
 	if (cons->cur_y < 28 + 432) {
 		cons->cur_y += 16; /* 换行 */
 	} else {
@@ -415,7 +415,7 @@ int cmd_app(struct CONSOLE *cons, int *fat, char *cmdline){
 				q[esp + i] = p[datkal + i];
 			}
 			start_app(0x1b, 0 * 8 + 4, esp, 1 * 8 + 4, &(task->tss.esp0));							/* 调用汇编写的用于启动应用程序的函数，其中0x1b是KaliMain程序入口(这里有一个JMP指令，跳转到真正的程序入口) */
-			shtctl = (struct SHTCTL *) *((int *) 0x0fe4);
+			shtctl = (struct SHTCTL *) *((int *) SHTCTL_ADDR);
 			for (i = 0; i < MAX_SHEETS; i++) {
 				sht = &(shtctl->sheets0[i]);
 				if (sht->flags == SHEET_APIWIN && sht->task == task) {
@@ -456,9 +456,9 @@ int *kal_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int 
 	struct TASK *task = task_now();
 	int ds_base = task->ds_base;
 	struct CONSOLE *cons = task->cons;
-	struct SHTCTL *shtctl = (struct SHTCTL *) *((int *) 0x0fe4);
+	struct SHTCTL *shtctl = (struct SHTCTL *) *((int *) SHTCTL_ADDR);
 	struct SHEET *sht;
-	struct FIFO32 *sys_fifo = (struct FIFO32 *) *((int *) 0x0fec);
+	struct FIFO32 *sys_fifo = (struct FIFO32 *) *((int *) FIFO_ADDR);
 	struct FILEINFO *finfo;
 	struct FILEHANDLE *fh;
 	struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;

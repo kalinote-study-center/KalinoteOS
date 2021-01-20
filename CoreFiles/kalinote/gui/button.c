@@ -18,7 +18,7 @@ struct BUTTON *make_button(struct MEMMAN *memman, int width, int height, int but
 	return button;
 }
 
-struct SHEET *show_button(struct SHEET *sht, struct MEMMAN *memman, struct BUTTON *button) {
+void show_button(struct SHEET *sht, struct MEMMAN *memman, struct BUTTON *button) {
 	/* 显示按钮 */
 	struct SHEET *btn_sht;
 	unsigned int *btn_buf;
@@ -116,5 +116,5 @@ void click_button(struct BUTTON *button) {
 	/* 点击按钮 */
 	
 	/* 运行程序 */
-	(*(button->onOptionClick))();
+	(*(button->onButtonClick))();
 }

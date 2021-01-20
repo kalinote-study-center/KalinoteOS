@@ -4,7 +4,7 @@
 
 void cmd_sysmode(struct CONSOLE *cons, char *cmdline) {
 	/* 切换系统模式 */
-	struct SYSINFO *sysinfo = (struct SYSINFO *) *((int *) 0x10000);
+	struct SYSINFO *sysinfo = (struct SYSINFO *) *((int *) SYSINFO_ADDR);
 	struct TASK *task = task_now();
 	char mode = cmdline[8] - '0';
 	char s[64];

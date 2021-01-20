@@ -5,8 +5,8 @@ void cmd_exit(struct CONSOLE *cons, int *fat){
 	/* ÍË³ö³ÌÐò */
 	struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;
 	struct TASK *task = task_now();
-	struct SHTCTL *shtctl = (struct SHTCTL *) *((int *) 0x0fe4);
-	struct FIFO32 *fifo = (struct FIFO32 *) *((int *) 0x0fec);
+	struct SHTCTL *shtctl = (struct SHTCTL *) *((int *) SHTCTL_ADDR);
+	struct FIFO32 *fifo = (struct FIFO32 *) *((int *) FIFO_ADDR);
 	if (cons->sht != 0) {
 		timer_cancel(cons->timer);
 	}
