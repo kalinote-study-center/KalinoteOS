@@ -1,6 +1,6 @@
 /* 多任务处理 */
 
-#include "bootpack.h"
+#include "../bootpack.h"
 
 struct TASKCTL *taskctl;
 struct TIMER *task_timer;

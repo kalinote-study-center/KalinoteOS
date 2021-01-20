@@ -1,6 +1,6 @@
 /* 该文件负责监听鼠标 */
 
-#include "bootpack.h"
+#include "../bootpack.h"
 
 struct FIFO32 *mousefifo;
 int mousedata0;

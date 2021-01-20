@@ -1,6 +1,6 @@
 /*启动时的主程序*/
 #include <stdio.h>
-#include "bootpack.h"
+#include "../bootpack.h"
 
 void nouse(void);
 

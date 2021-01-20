@@ -1,6 +1,6 @@
 /* IDEÓ²ÅÌÇý¶¯³ÌÐò */
 #include <stdio.h>
-#include "bootpack.h"
+#include "../bootpack.h"
 
 void init_ide_hd(struct MEMMAN *memman) {
 	/* ³õÊ¼»¯IDEÓ²ÅÌ */
@@ -84,7 +84,7 @@ void print_identify_info(struct CONSOLE *cons, struct IDE_HARD_DISK *disk, unsig
 	sprintf(s, "LBA48 supported:%s\n",((cmd_set_supported & 0x0400) ? "Yes" : "No"));
 	cons_putstr0(cons, s);
 	disk->sectors = sectors;
-	sprintf(s, "HD size: 0x%x MB\n",sectors * SECTOR_SIZE / (1024*1024));
+	sprintf(s, "HD size: %d MB\n",sectors * SECTOR_SIZE / (1024*1024));
 	cons_putstr0(cons, s);
 	return;
 }

@@ -1,7 +1,7 @@
 /* 内存管理部分 */
 /* 内存管理原理可以参考《系统支持文档》 */
 
-#include "bootpack.h"
+#include "../bootpack.h"
 
 #define EFLAGS_AC_BIT		0x00040000				// 转换成二进制是 0000 0000 0000 0100 0000 0000 0000 0000，为了测试AC标志位
 #define CR0_CACHE_DISABLE	0x60000000

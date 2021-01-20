@@ -1,6 +1,6 @@
 /*此文件负责GDT,IDT等的处理*/
 
-#include "bootpack.h"
+#include "../bootpack.h"
 
 void init_gdtidt(void){
 	/*初始化GDT和IDT*/

@@ -1,6 +1,6 @@
 /* 该文件负责监听键盘 */
 
-#include "bootpack.h"
+#include "../bootpack.h"
 
 struct FIFO32 *keyfifo;
 int keydata0;

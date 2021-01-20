@@ -1,5 +1,5 @@
 /*此文件负责图形绘制*/
-#include "bootpack.h"
+#include "../bootpack.h"
 #include <stdio.h>
 
 int read_wallpaper_32 (unsigned char *filename, int x, int y, int *fat, unsigned int *vram);

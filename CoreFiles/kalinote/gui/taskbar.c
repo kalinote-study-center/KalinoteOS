@@ -1,6 +1,6 @@
 /* 底部任务栏 */
 
-#include "bootpack.h"
+#include "../bootpack.h"
 
 void onOpenConsoleClick(void);			/* 命令台选项被单击 */
 void onShutdownClick(void);				/* 关机选项被单击 */

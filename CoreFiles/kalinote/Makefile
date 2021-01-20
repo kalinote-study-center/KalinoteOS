@@ -1,7 +1,11 @@
-OBJS_BOOTPACK = bootpack.obj naskfunc.obj fonts.obj graphic.obj dsctbl.obj \
-		int.obj fifo.obj keyboard.obj mouse.obj memory.obj sheet.obj timer.obj \
-		mtask.obj window.obj console.obj file.obj kca.obj jpeg.obj cmos.obj \
-		ide.obj list.obj lock.obj taskbar.obj
+OBJS_BOOTPACK = kernel/bootpack.obj naskfunc.obj fonts.obj gui/graphic.obj kernel/dsctbl.obj \
+		kernel/int.obj kernel/fifo.obj driver/keyboard.obj driver/mouse.obj kernel/memory.obj kernel/sheet.obj driver/timer.obj \
+		kernel/mtask.obj gui/window.obj console/console.obj filesys/file.obj filesys/kca.obj gui/jpeg.obj driver/cmos.obj \
+		driver/ide.obj kernel/list.obj kernel/lock.obj gui/taskbar.obj $(OBJS_CMD)
+
+OBJS_CMD = console/cmd_mem.obj console/cmd_cls.obj console/cmd_dir.obj console/cmd_type.obj console/cmd_exit.obj \
+		console/cmd_start.obj console/cmd_run.obj console/cmd_langmode.obj console/cmd_shutdown.obj console/cmd_sysmode.obj \
+		console/cmd_echo.obj console/cmd_hdnum.obj console/cmd_hdinfo.obj console/cmd_systest.obj
 
 TOOLPATH = ../../z_tools/
 INCPATH  = ../../z_tools/kalinote/
@@ -66,6 +70,11 @@ kalinote.sys : asmhead.bin bootpack.kal Makefile
 # √¸¡Ó
 
 clean :
+	$(MAKE) -C kernel		clean
+	$(MAKE) -C driver		clean
+	$(MAKE) -C filesys		clean
+	$(MAKE) -C gui			clean
+	$(MAKE) -C console		clean
 	-$(DEL) asmhead.bin
 	-$(DEL) fonts.bin
 	-$(DEL) *.lst

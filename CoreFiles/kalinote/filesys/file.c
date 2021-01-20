@@ -1,6 +1,6 @@
 /* 文件处理相关程序 */
 
-#include "bootpack.h"
+#include "../bootpack.h"
 
 void file_readfat(int *fat, unsigned char *img){
 	/* 将磁盘映像中的FAT解码 */

@@ -1,6 +1,6 @@
 /* kca文件解压缩程序 */
 
-#include "bootpack.h"
+#include "../bootpack.h"
 #include <setjmp.h>
 #include <string.h>
 

@@ -1,7 +1,7 @@
 /* ∂¡»°jpeg∏Ò ΩÕº∆¨ */
-typedef unsigned char UCHAR;
+#include "../bootpack.h"
 
-struct DLL_STRPICENV { int work[16384]; };
+typedef unsigned char UCHAR;
 
 typedef struct
 {
@@ -71,9 +71,6 @@ typedef struct
 #define PIXEL16(r, g, b)	((r) << 11 | (g) << 5 | (b))
 	/* 0 <= r <= 31, 0 <= g <= 63, 0 <= b <= 31 */
 #endif
-
-int info_JPEG(struct DLL_STRPICENV *env, int *info, int size, UCHAR *fp);
-int decode0_JPEG(struct DLL_STRPICENV *env, int size, UCHAR *fp, int b_type, UCHAR *buf, int skip);
 
 void jpeg_idct_init(int base_img[64][64]);
 int jpeg_init(JPEG *jpeg);

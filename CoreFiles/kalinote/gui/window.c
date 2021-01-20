@@ -1,6 +1,6 @@
 /* 窗口相关程序 */
 
-#include "bootpack.h"
+#include "../bootpack.h"
 
 struct WINDOW *make_window8(struct SHEET *sht, int xsize, int ysize, int act_color, int deact_color, char *title, char act){
 	/* 窗口窗体 */
