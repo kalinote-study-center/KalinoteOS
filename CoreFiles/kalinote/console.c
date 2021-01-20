@@ -3,6 +3,7 @@
 #include "bootpack.h"
 #include <stdio.h>
 #include <string.h>
+#include <stdarg.h>
 
 void console_task(struct SHEET *sheet, unsigned int memtotal){
 	/* 命令行代码 */
@@ -44,17 +45,19 @@ void console_task(struct SHEET *sheet, unsigned int memtotal){
 	/*
 	* 这里关于系统模式切换还需要改进
 	*/
-	if (sysinfo->sysmode == 0) {
-		/* 普通模式 */
-		cons_putchar(&cons, '>', 1);			//命令提示符
-	} else if (sysinfo->sysmode == 1) {
-		/* 调试模式 */
-		cons_putchar(&cons, 10001, 1);
-	} else {
-		/* 未知系统模式 */
-		cons_putchar(&cons, 10002, 1);
-	}
-	
+	if(cons.sht->flags != SHEET_DEBUG_CONS){
+		/* DEBUG窗口不操作 */
+		if (sysinfo->sysmode == 0) {
+			/* 普通模式 */
+				cons_putchar(&cons, '>', 1);			//命令提示符
+		} else if (sysinfo->sysmode == 1) {
+			/* 调试模式 */
+			cons_putchar(&cons, 10001, 1);
+		} else {
+			/* 未知系统模式 */
+			cons_putchar(&cons, 10002, 1);
+		}
+	}	
 
 	for (;;) {
 		io_cli();
@@ -92,7 +95,7 @@ void console_task(struct SHEET *sheet, unsigned int memtotal){
 			if (i == 4) {	/* 命令窗口的X被点击 */
 				cmd_exit(&cons, fat);
 			}
-			if (256 <= i && i <= 511) { /* 键盘数据(通过任务A) */
+			if (256 <= i && i <= 511 && cons.sht->flags != SHEET_DEBUG_CONS) { /* 键盘数据(通过任务A)，debug窗口不接受键盘数据(暂时) */
 				if (i == 8 + 256) {
 					/* backspace */
 					/*
@@ -169,8 +172,8 @@ void console_task(struct SHEET *sheet, unsigned int memtotal){
 					}
 				}
 			}
-			/* 重新显示光标 */
-			if (sheet != 0) {
+			/* 重新显示光标，debug窗口不显示光标 */
+			if (sheet != 0 && cons.sht->flags != SHEET_DEBUG_CONS) {
 				if (cons.cur_c >= 0) {
 					boxfill8(sheet->buf, sheet->bxsize, cons.cur_c, 
 						cons.cur_x, cons.cur_y, cons.cur_x + 7, cons.cur_y + 15);
@@ -314,10 +317,25 @@ void cons_runcmd(char *cmdline, struct CONSOLE *cons, int *fat, unsigned int mem
 	} else if (strncmp(cmdline, "type ", 5) == 0 && cons->sht != 0) {
 		cmd_type(cons, fat, cmdline);
 	} else if (strcmp(cmdline, "exit") == 0) {
+		if(cons->sht->flags == SHEET_DEBUG_CONS) {
+		/* debug窗口不处理 */
+			cons_putstr0(cons, "cannot run this command in debug console\n");
+			return;
+		}
 		cmd_exit(cons, fat);
 	} else if (strncmp(cmdline, "start ", 6) == 0) {
+		if(cons->sht->flags == SHEET_DEBUG_CONS) {
+		/* debug窗口不处理 */
+			cons_putstr0(cons, "cannot run this command in debug console\n");
+			return;
+		}
 		cmd_start(cons, cmdline, memtotal);
 	} else if (strncmp(cmdline, "run ", 4) == 0) {
+		if(cons->sht->flags == SHEET_DEBUG_CONS) {
+		/* debug窗口不处理 */
+			cons_putstr0(cons, "cannot run this command in debug console\n");
+			return;
+		}
 		cmd_run(cons, cmdline, memtotal);
 	} else if (strncmp(cmdline, "langmode ", 9) == 0) {
 		cmd_langmode(cons, cmdline);
@@ -657,7 +675,7 @@ void cmd_hdinfo(struct CONSOLE *cons, char *cmdline) {
 
 void cmd_systest(struct CONSOLE *cons) {
 	/* 测试系统功能专用指令 */
-	
+
 }
 
 int cmd_app(struct CONSOLE *cons, int *fat, char *cmdline){
@@ -1169,5 +1187,19 @@ void close_console(struct SHEET *sht){
 	memman_free_4k(memman, (int) sht->buf, 256 * 165 * 4);
 	sheet_free(sht);
 	close_constask(task);
+	return;
+}
+
+void debug_print(char *format, ...) {
+	/* 格式化输出到debug窗口 */
+	va_list ap;
+	char s[1024];
+	int i;
+	struct SHEET *sht_debug_cons = (struct SHEET *) *((int *) DEBUG_ADDR);
+	
+	va_start(ap, format);
+	i = vsprintf(s, format, ap);
+	cons_putstr0(sht_debug_cons->task->cons,s);
+	va_end(ap);
 	return;
 }

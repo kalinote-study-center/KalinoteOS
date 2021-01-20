@@ -24,7 +24,7 @@ void inthandler2e(int *esp){
 	struct IDE_DISK_DRIVER *hd = (struct IDE_DISK_DRIVER *) IDE_HD_DRIVER_ADDR;
 	io_out8(PIC0_OCW2, 0x74);	/* 通知PIC：IRQ-01受理完毕(0x60+IRQ编号)，将0x60+IRQ号码输出给OCW2以通知PIC收到IQR的中断通知，然后PIC继续监视IRQ1中断 */
 	hd->disk_interrupt = 1;
-	hd->reg_status = io_in8(IDE0_STATUS);
+	hd->reg_status = io_in8(IDE1_STATUS);
 	return;
 }
 
@@ -33,10 +33,12 @@ void wait_hd_status(unsigned char reg, unsigned char status) {
 	int i = STATUS_WAIT_TIMEOUT;	
 	//等待寄存器返回正确的状态
 	while(i-- > 0){
-		if((io_in8(IDE0_STATUS)&reg) == status){
+		if((io_in8(IDE1_STATUS)&reg) == status){
+			debug_print("ide> IDE1_STATUS = 0x%x\n" , io_in8(IDE1_STATUS));
 			break;
 		}
 	}	
+	//debug_print("ide> IDE1_STATUS = 0x%x\n" , io_in8(IDE1_STATUS));
 	return;
 }
 
@@ -46,6 +48,7 @@ void wait_hd_interrupt(void) {
 	int i = STATUS_WAIT_TIMEOUT;
 	while(i-- > 0){
 		if(hd->disk_interrupt){
+			debug_print("ide> hd->disk_interrupt = %d\n" , hd->disk_interrupt);
 			hd->disk_interrupt = 0;
 			break;
 		}
@@ -55,7 +58,7 @@ void wait_hd_interrupt(void) {
 
 void hd_identify(struct CONSOLE *cons, struct IDE_HARD_DISK *disk){
 	/* 获取硬盘信息 */
-	io_out8(IDE0_DEVICE, MAKE_DEVICE_REG(0, disk->drive, 0));
+	io_out8(IDE1_DEVICE, MAKE_DEVICE_REG(0, disk->drive, 0));
 	wait_hd_status(STATUS_READY, STATUS_READY);
 
 	io_out8(REG_DEV_CTRL, 0x08);
@@ -64,7 +67,7 @@ void hd_identify(struct CONSOLE *cons, struct IDE_HARD_DISK *disk){
 	
 	wait_hd_interrupt();	//等待硬盘中断
 	
-	port_read(IDE0_DATA, disk->buf, SECTOR_SIZE);	//读取数据
+	port_read(IDE1_DATA, disk->buf, SECTOR_SIZE);	//读取数据
 	
 	print_identify_info(cons, disk, (unsigned short *)disk->buf);		//分析并显示出来
 	return;
@@ -84,4 +87,65 @@ void print_identify_info(struct CONSOLE *cons, struct IDE_HARD_DISK *disk, unsig
 	sprintf(s, "HD size: 0x%x MB\n",sectors * SECTOR_SIZE / (1024*1024));
 	cons_putstr0(cons, s);
 	return;
+}
+
+void hd_read_sectors(int lba, void *buf, int counts, int hd_num){
+	/* 读扇区 */
+	struct IDE_DISK_DRIVER *hd = (struct IDE_DISK_DRIVER *) IDE_HD_DRIVER_ADDR;
+	struct IDE_HARD_DISK *hda = (struct IDE_HARD_DISK *) HDA_ADDR;
+	struct IDE_HARD_DISK *hdb = (struct IDE_HARD_DISK *) HDB_ADDR;
+	
+	wait_hd_status(STATUS_BUSY, STATUS_BUSY);
+	
+	hd->disk_interrupt = 0;
+	io_out8(IDE1_NSECTOR, counts);
+	io_out8(IDE1_LBA_LOW, lba);
+	io_out8(IDE1_LBA_MID, lba>>8);
+	io_out8(IDE1_LBA_HIGH, lba>>16);
+	if(hd_num == 0){
+		io_out8(IDE1_DEVICE, MAKE_DEVICE_REG(1, hda->drive, (lba >> 24) & 0xF));
+	} else {
+		io_out8(IDE1_DEVICE, MAKE_DEVICE_REG(1, hdb->drive, (lba >> 24) & 0xF));
+	}
+	
+	wait_hd_status(STATUS_READY, STATUS_READY);
+	
+	io_out8(REG_DEV_CTRL, 0x08);
+	io_out8(REG_CMD, ATA_READ);
+	
+	wait_hd_status(STATUS_DRQ, STATUS_DRQ);
+
+	wait_hd_interrupt();
+
+	port_read(IDE1_DATA, buf, counts * SECTOR_SIZE);
+}
+
+void hd_write_sectors(int lba, void *buf, int counts,int hd_num){
+	/* 写扇区 */
+	struct IDE_DISK_DRIVER *hd = (struct IDE_DISK_DRIVER *) IDE_HD_DRIVER_ADDR;
+	struct IDE_HARD_DISK *hda = (struct IDE_HARD_DISK *) HDA_ADDR;
+	struct IDE_HARD_DISK *hdb = (struct IDE_HARD_DISK *) HDB_ADDR;
+	
+	wait_hd_status(STATUS_BUSY, STATUS_BUSY);
+
+	hd->disk_interrupt = 0;
+	io_out8(IDE1_NSECTOR, counts);
+	io_out8(IDE1_LBA_LOW, lba);
+	io_out8(IDE1_LBA_MID, lba>>8);
+	io_out8(IDE1_LBA_HIGH, lba>>16);
+	if(hd_num == 0){
+		io_out8(IDE1_DEVICE, MAKE_DEVICE_REG(1, hda->drive, (lba >> 24) & 0xF));
+	} else {
+		io_out8(IDE1_DEVICE, MAKE_DEVICE_REG(1, hdb->drive, (lba >> 24) & 0xF));
+	}
+	wait_hd_status(STATUS_READY, STATUS_READY);
+
+	io_out8(REG_DEV_CTRL, 0x08);
+	io_out8(REG_CMD, ATA_WRITE);
+	
+	wait_hd_status(STATUS_DRQ, STATUS_DRQ);
+
+	wait_hd_interrupt();
+	
+	port_write(IDE1_DATA, buf, counts * SECTOR_SIZE);
 }

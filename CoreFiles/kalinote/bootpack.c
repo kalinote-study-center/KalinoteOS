@@ -22,8 +22,8 @@ void KaliMain(void){
 	struct SHEET *sht_back, *sht_mouse, *sht_task_bar, *sht_debug_cons; /* , *btn_sht */
 	struct TASK *task_a, *task;
 	int key_shift = 0, key_leds = (binfo->leds >> 4) & 7, keycmd_wait = -1;
-	int j, x, y, mmx = -1, mmy = -1, mmx2 = 0, subx, suby;
-	struct SHEET *sht = 0, *subsht = 0, *point_sht = 0, *key_win, *sht2;/* , *subsht_back; */			/* point_sht是用来处理鼠标移动时指向的层的 */
+	int j, x, y, mmx = -1, mmy = -1, mmx2 = 0;/* , subx, suby; */
+	struct SHEET *sht = 0,/* *subsht = 0, */ *point_sht = 0, *key_win, *sht2;/* , *subsht_back; */			/* point_sht是用来处理鼠标移动时指向的层的 */
 	int *fat_ch, *fat_jp;
 	unsigned char *chinese, *nihongo;
 	struct FILEINFO *finfo_ch;
@@ -92,6 +92,11 @@ void KaliMain(void){
 	*((int *) 0x0fe4) = (int) shtctl;		/* 把shtctl的值存到地址0xfe4的地方 */
 	task_a->langmode = 0;
 
+	/* DEBUG cons */
+	*((int *) DEBUG_ADDR) = (int)open_console(shtctl, memtotal, 1);
+	sht_debug_cons = (struct SHEET *) *((int *) DEBUG_ADDR);
+	sht_debug_cons->flags = SHEET_DEBUG_CONS;
+
 	/* sht_back */
 	sht_back  = sheet_alloc(shtctl);
 	buf_back  = (unsigned int *) memman_alloc_4k(memman, binfo->scrnx * binfo->scrny * 4);
@@ -139,11 +144,6 @@ void KaliMain(void){
 	mx = (binfo->scrnx - 16) / 2;								/* 将鼠标的位置置于画面中央 */
 	my = (binfo->scrny - 28 - 16) / 2;
 	sht_mouse->flags = SHEET_MOUSE;
-
-	/* DEBUG cons */
-	*((int *) DEBUG_ADDR) = (int)open_console(shtctl, memtotal, 1);
-	sht_debug_cons = (struct SHEET *) *((int *) DEBUG_ADDR);
-	sht_debug_cons->flags = SHEET_DEBUG_CONS;
 
 	sheet_slide(sht_back,  0,  0);
 	sheet_slide(sht_task_bar, 0, binfo->scrny - 28);
@@ -432,6 +432,10 @@ void KaliMain(void){
 												*                       需要进一步检查内存释放                 *
 												***************************************************************/
 												memman_free_4k(memman, (unsigned int)(sht->win), sizeof (struct WINDOW));
+												if(sht->flags == SHEET_DEBUG_CONS) {
+													/* DEBUG窗口不处理 */
+													break;
+												}
 												if (/*sht->flags == SHEET_USE || */sht->flags == SHEET_APIWIN) {		/* 是否为应用程序窗口 */
 													task = sht->task;
 													cons_putstr0(task->cons, "\nBreak(mouse) :\n");

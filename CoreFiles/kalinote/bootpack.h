@@ -411,6 +411,7 @@ void keywin_off(struct SHEET *key_win);																// 控制窗口标题栏颜色和光
 void keywin_on(struct SHEET *key_win);																// 控制窗口标题栏颜色和光标激活状态
 void close_console(struct SHEET *sht);																// 关闭命令窗口
 void close_constask(struct TASK *task);																// 结束任务
+void debug_print(char *format, ...);																// 输出到DEBUG窗口
 
 /* file.c(文件处理) */
 struct FILEINFO {
@@ -506,7 +507,7 @@ struct IDE_HARD_DISK {
 #define	IDE_HD_DRIVER_ADDR		0x3F0000							// struct IDE_DISK_DRIVER hd位置
 #define HDA_ADDR				0x3F1000							// hda结构体
 #define HDB_ADDR				0x3F2000							// hdb结构体
-#define STATUS_WAIT_TIMEOUT		0x100000							// 等待寄存器超时值
+#define STATUS_WAIT_TIMEOUT		0x10000								// 等待寄存器超时值
 #define	STATUS_READY			0x40								// 磁盘驱动器已就绪
 #define	STATUS_BUSY				0x80								// 磁盘驱动器忙碌
 #define	STATUS_DFSE	·			0x20								// 磁盘驱动器写入错误
@@ -520,6 +521,8 @@ struct IDE_HARD_DISK {
 #define REG_DRV_ADDR			0x3f7								// 数字输入寄存器(与软盘合用)
 #define REG_CMD					IDE0_STATUS							// 指令执行寄存器
 #define ATA_IDENTIFY			0xec								// 获取硬盘信息的指令
+#define ATA_READ				0x20								// 读扇区指令
+#define ATA_WRITE				0x30								// 写扇区指令
 
 #define	MAKE_DEVICE_REG(lba,drv,lba_highest) (((lba) << 6) |\
 					      ((drv) << 4) |\
@@ -531,6 +534,8 @@ void wait_hd_interrupt(void);										// 等待硬盘中断
 void hd_identify(struct CONSOLE *cons, struct IDE_HARD_DISK *disk);	// 获取硬盘信息
 void print_identify_info(struct CONSOLE *cons,
 	struct IDE_HARD_DISK *disk, unsigned short *hdinfo);			// 显示获取的硬盘信息
+void hd_read_sectors(int lba, void *buf, int counts, int hd_num);	// 读取硬盘扇区
+void hd_write_sectors(int lba, void *buf, int counts,int hd_num);	// 写扇区
 
 /* taskbar.c(低端任务栏) */
 struct MENU *init_taskbar(struct MEMMAN *memman, int *vram, int x, int y);							//初始化任务栏
