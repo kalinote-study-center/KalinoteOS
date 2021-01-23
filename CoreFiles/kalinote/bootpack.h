@@ -13,11 +13,11 @@ struct SYSINFO {
 #define SHTCTL_ADDR		0x0fe4				// 系统图层管理结构体地址
 
 //asmhead.nas(bootpack.c的前面部分)
-struct BOOTINFO {	/* 0x0ff0-0x0fff */
+struct BOOTINFO {		/* 0x0ff0-0x0fff */
 	/*启动信息 - 此处原内容在第89页*/
-	char cyls;	/*启动区读取硬盘位置*/
-	char leds;	/*启动时键盘的LED状态*/
-	char vmode;	/*显卡模式*/
+	char cyls;			/*启动区读取硬盘位置*/
+	char leds;			/*启动时键盘的LED状态*/
+	char vmode;			/*显卡模式*/
     char reserve;
 	short scrnx, scrny;	/*画面分辨率*/
 	int *vram;
@@ -266,14 +266,15 @@ struct TASK {
 	int sel, flags; 										// sel用来存放GDT编号
 	int level, priority;									// priority是进程优先级
 	struct FIFO32 fifo;										// 任务FIFO缓冲区，如果有需要以后也可以加个list(双链表)
-	struct TSS32 tss;
-	struct SEGMENT_DESCRIPTOR ldt[2];
-	struct CONSOLE *cons;
+	struct TSS32 tss;										// 任务状态段
+	struct SEGMENT_DESCRIPTOR ldt[2];						
+	struct CONSOLE *cons;									// 任务对应的console
 	int ds_base, cons_stack;
 	struct FILEHANDLE *fhandle;
 	int *fat;
 	char *cmdline;
 	unsigned char langmode, langbyte1;
+	// char *task_name;										// 任务名称
 };
 struct TASKLEVEL {
 	int running; /* 正在运行的任务数量 */
@@ -281,10 +282,10 @@ struct TASKLEVEL {
 	struct TASK *tasks[MAX_TASKS_LV];
 };
 struct TASKCTL {
-	int now_lv; 			/* 现在活动中的任务等级 */
-	char lv_change; 		/* 下次任务切换时是否需要改变level */
-	struct TASKLEVEL level[MAX_TASKLEVELS];
-	struct TASK tasks0[MAX_TASKS];
+	int now_lv; 									/* 现在活动中的任务等级 */
+	char lv_change; 								/* 下次任务切换时是否需要改变level */
+	struct TASKLEVEL level[MAX_TASKLEVELS];			/* 任务level结构体数组 */
+	struct TASK tasks0[MAX_TASKS];					/* 任务结构体数组 */
 };
 extern struct TASKCTL *taskctl;
 extern struct TIMER *task_timer;
@@ -338,8 +339,8 @@ struct BUTTON {
 };
 struct BUTTON *make_button(struct MEMMAN *memman, int width, int height,
 	int buttonx, int buttony, char *title, int back_color, void(*onButtonClick)());					// 创建一个按钮
-void show_button(struct SHEET *sht, struct MEMMAN *memman, struct BUTTON *button);		// 绘制按钮
-void change_button(struct BUTTON *button, struct SHEET *sht, char click);							// 更改按钮凸起和按下(或禁用)
+void show_button(struct SHEET *sht, struct MEMMAN *memman, struct BUTTON *button);					// 绘制按钮
+void change_button(struct BUTTON *button, struct SHEET *fsht, char click);							// 更改按钮凸起和按下(或禁用)
 void click_button(struct BUTTON *button);															// 点击按钮
 
 /* menu.c(菜单栏) */
@@ -476,21 +477,21 @@ unsigned int get_mon_hex();							// 取当前月份
 unsigned int get_year();							// 取当前年份
 
 /* ide.c(ide硬盘驱动) */
-struct IDE_DISK_DRIVER {
-	/* IDE硬盘控制数据结构体 */
-	unsigned char disk_num;							// 硬盘数量
-	unsigned char disk_interrupt;					// 硬盘中断(?)
-	unsigned char reg_status;						// 寄存器状态(+7端口获取到的状态)
-	unsigned int *buf;								// 读取数据缓冲区
-	unsigned int hda_sectors;						// hda扇区
-	unsigned int hdb_sectors;						// hdb扇区
-};
-struct IDE_HARD_DISK {
-	/* 硬盘数据结构体 */
-	unsigned int sectors;							// 硬盘扇区数
-	unsigned int drive;								// 主盘还是从盘
-	unsigned int *buf;								// 硬盘读写缓冲区
-};
+// struct IDE_DISK_DRIVER {
+	// /* IDE硬盘控制数据结构体 */
+	// unsigned char disk_num;							// 硬盘数量
+	// unsigned char disk_interrupt;					// 硬盘中断(?)
+	// unsigned char reg_status;						// 寄存器状态(+7端口获取到的状态)
+	// unsigned int *buf;								// 读取数据缓冲区
+	// unsigned int hda_sectors;						// hda扇区
+	// unsigned int hdb_sectors;						// hdb扇区
+// };
+// struct IDE_HARD_DISK {
+	// /* 硬盘数据结构体 */
+	// unsigned int sectors;							// 硬盘扇区数
+	// unsigned int drive;								// 主盘还是从盘
+	// unsigned int *buf;								// 硬盘读写缓冲区
+// };
 #define	IDE0_DATA				0x170								// IDE控制器0数据端口，用来传送读/写的数据(其内容是正在传输的一个字节的数据)
 #define	IDE0_ERRCODE			0x171								// IDE控制器0错误码端口，用来读取错误码
 #define	IDE0_NSECTOR			0x172								// IDE控制器0读写的扇区数量
@@ -529,18 +530,15 @@ struct IDE_HARD_DISK {
 #define ATA_READ				0x20								// 读扇区指令
 #define ATA_WRITE				0x30								// 写扇区指令
 
-#define	MAKE_DEVICE_REG(lba,drv,lba_highest) (((lba) << 6) |\
-					      ((drv) << 4) |\
-					      (lba_highest & 0xF) | (0xA0))
 void inthandler2e(int *esp);										// 硬盘中断程序
-void init_ide_hd();													// 初始化IDE硬盘控制程序
-void wait_hd_status(unsigned char reg, unsigned char status);		// 等待硬盘状态
-void wait_hd_interrupt(void);										// 等待硬盘中断
-void hd_identify(struct CONSOLE *cons, struct IDE_HARD_DISK *disk);	// 获取硬盘信息
-void print_identify_info(struct CONSOLE *cons,
-	struct IDE_HARD_DISK *disk, unsigned short *hdinfo);			// 显示获取的硬盘信息
-void hd_read_sectors(int lba, void *buf, int counts, int hd_num);	// 读取硬盘扇区
-void hd_write_sectors(int lba, void *buf, int counts,int hd_num);	// 写扇区
+// void init_ide_hd();													// 初始化IDE硬盘控制程序
+// void wait_hd_status(unsigned char reg, unsigned char status);		// 等待硬盘状态
+// void wait_hd_interrupt(void);										// 等待硬盘中断
+// void hd_identify(struct CONSOLE *cons, struct IDE_HARD_DISK *disk);	// 获取硬盘信息
+// void print_identify_info(struct CONSOLE *cons,
+	// struct IDE_HARD_DISK *disk, unsigned short *hdinfo);			// 显示获取的硬盘信息
+void hd_read_sectors(int lba, char *buf, int counts, int hd_num);	// 读取硬盘扇区
+void hd_write_sectors(int lba, char *buf, int counts,int hd_num);	// 写扇区
 
 /* taskbar.c(低端任务栏) */
 struct MENU *init_taskbar(struct MEMMAN *memman, int *vram, int x, int y);							// 初始化任务栏

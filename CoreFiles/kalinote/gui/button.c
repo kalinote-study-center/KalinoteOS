@@ -58,52 +58,53 @@ void show_button(struct SHEET *sht, struct MEMMAN *memman, struct BUTTON *button
 	} else {
 		sheet_updown(button->sht, button->sht->ctl->top);
 	}
-	return btn_sht;
+	return;
 }
 
-void change_button(struct BUTTON *button, struct SHEET *sht, char click) {
+void change_button(struct BUTTON *button, struct SHEET *fsht, char click) {
 	/* 更改按钮凸起和按下或禁用的效果 */
 	
 	/****************************************
 	*         这里还有问题需要解决          *
 	****************************************/
-	// if(button->click_old == click) {
-		// /* 不用改变 */
-		// return;
-	// }
-	// if(button->show == 0) {
-		// /* 不可视 */
-		// button->click_old = click;
-		// return;
-	// }
-	// if(click == 0) {
-		// /* 没有按下 */
-		// button->click_old = click;
-		// /* 画按钮 */
-		// boxfill8(sht->buf,	button->width,	button->back_color,					0,					0,		 	 button->width,			button->height);			/* 背景板 */
-		// boxfill8(sht->buf,	button->width,			 COL_WHITE,					0, 					0,						 0,		button->height - 1);			/* 白色左竖线 */
-		// boxfill8(sht->buf,	button->width,			 COL_WHITE,					0, 					0,		 button->width - 1,						 0);			/* 白色上横线 */
-		// boxfill8(sht->buf,	button->width,			 COL_DGREY, button->width - 2,					0,		 button->width - 1,		button->height - 1);			/* 灰色右竖线 */
-		// boxfill8(sht->buf,	button->width,			 COL_DGREY, 				0, button->height - 2,		 button->width - 1,		button->height - 2);			/* 灰色下横线 */
-		// boxfill8(sht->buf,	button->width,			 COL_BLACK,	button->width - 1,					0,		 button->width - 1,		button->height - 1);			/* 黑色右竖线 */
-		// boxfill8(sht->buf,	button->width,			 COL_BLACK, 				0, button->height - 1,		 button->width - 1,		button->height - 1);			/* 黑色下横线 */
-		// /* 写标题 */
-		// putfonts8_asc(button->sht->buf, button->width, 2, ((button->height) / 2) - 8, COL_BLACK, button->title);
-	// } else {
-		// /* 按下 */
-		// button->click_old = click;
-		// /* 画按钮 */
-		// boxfill8(sht->buf,	button->width,	button->back_color,					0,					0,		 	 button->width,			button->height);			/* 背景板 */
-		// boxfill8(sht->buf,	button->width,			 COL_BLACK,					0, 					0,						 0,		button->height - 1);			/* 黑色左竖线 */
-		// boxfill8(sht->buf,	button->width,			 COL_BLACK,					0, 					0,		 button->width - 1,						 0);			/* 黑色上横线 */
-		// boxfill8(sht->buf,	button->width,			 COL_DGREY, 				1,					1,		 button->width - 2,						 1);			/* 灰色上横线 */
-		// boxfill8(sht->buf,	button->width,			 COL_DGREY, 				1, 					1,						 1,		button->height - 2);			/* 灰色左竖线 */
-		// boxfill8(sht->buf,	button->width,			 COL_WHITE,	button->width - 1,					0,		 button->width - 1,		button->height - 1);			/* 白色右竖线 */
-		// boxfill8(sht->buf,	button->width,			 COL_WHITE, 				0, button->height - 1,		 button->width - 1,		button->height - 1);			/* 白色下横线 */
-		// /* 写标题 */
-		// putfonts8_asc(sht->buf, button->width, 2, ((button->height) / 2) - 8, COL_BLACK, button->title);
-	// }
-	// sheet_refresh(sht,0,0,sht->bxsize,sht->bysize);
+	if(button->click_old == click) {
+		/* 不用改变 */
+		return;
+	}
+	if(button->show == 0) {
+		/* 不可视 */
+		button->click_old = click;
+		return;
+	}
+	if(click == 0) {
+		/* 没有按下 */
+		button->click_old = click;
+		/* 画按钮 */
+		boxfill8(button->sht->buf,	button->width,	button->back_color,					0,					0,		 	 button->width,			button->height);			/* 背景板 */
+		boxfill8(button->sht->buf,	button->width,			 COL_WHITE,					0, 					0,						 0,		button->height - 1);			/* 白色左竖线 */
+		boxfill8(button->sht->buf,	button->width,			 COL_WHITE,					0, 					0,		 button->width - 1,						 0);			/* 白色上横线 */
+		boxfill8(button->sht->buf,	button->width,			 COL_DGREY, button->width - 2,					0,		 button->width - 1,		button->height - 1);			/* 灰色右竖线 */
+		boxfill8(button->sht->buf,	button->width,			 COL_DGREY, 				0, button->height - 2,		 button->width - 1,		button->height - 2);			/* 灰色下横线 */
+		boxfill8(button->sht->buf,	button->width,			 COL_BLACK,	button->width - 1,					0,		 button->width - 1,		button->height - 1);			/* 黑色右竖线 */
+		boxfill8(button->sht->buf,	button->width,			 COL_BLACK, 				0, button->height - 1,		 button->width - 1,		button->height - 1);			/* 黑色下横线 */
+		/* 写标题 */
+		putfonts8_asc(button->sht->buf, button->width, 2, ((button->height) / 2) - 8, COL_BLACK, button->title);
+	} else {
+		/* 按下 */
+		button->click_old = click;
+		/* 画按钮 */
+		boxfill8(button->sht->buf,	button->width,	button->back_color,					0,					0,		 	 button->width,			button->height);			/* 背景板 */
+		boxfill8(button->sht->buf,	button->width,			 COL_BLACK,					0, 					0,						 0,		button->height - 1);			/* 黑色左竖线 */
+		boxfill8(button->sht->buf,	button->width,			 COL_BLACK,					0, 					0,		 button->width - 1,						 0);			/* 黑色上横线 */
+		boxfill8(button->sht->buf,	button->width,			 COL_DGREY, 				1,					1,		 button->width - 2,						 1);			/* 灰色上横线 */
+		boxfill8(button->sht->buf,	button->width,			 COL_DGREY, 				1, 					1,						 1,		button->height - 2);			/* 灰色左竖线 */
+		boxfill8(button->sht->buf,	button->width,			 COL_WHITE,	button->width - 1,					0,		 button->width - 1,		button->height - 1);			/* 白色右竖线 */
+		boxfill8(button->sht->buf,	button->width,			 COL_WHITE, 				0, button->height - 1,		 button->width - 1,		button->height - 1);			/* 白色下横线 */
+		/* 写标题 */
+		putfonts8_asc(button->sht->buf, button->width, 2, ((button->height) / 2) - 8, COL_BLACK, button->title);
+	}
+	sheet_refresh(button->sht,0,0,button->sht->bxsize,button->sht->bysize);		/* 刷新子图层 */
+	sheet_refresh(fsht, button->sht->vx0, button->sht->vy0, button->sht->vx0 + button->sht->bxsize, button->sht->vy0 + button->sht->bysize);		/* 刷新父图层 */
 	return;
 }
 

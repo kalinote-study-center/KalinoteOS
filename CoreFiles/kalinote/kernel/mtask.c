@@ -73,7 +73,7 @@ void task_idle(void){
 }
 
 struct TASK *task_init(struct MEMMAN *memman){
-	/* 任务初始化 */
+	/* 任务管理器初始化 */
 	int i;
 	struct TASK *task, *idle;
 	struct SEGMENT_DESCRIPTOR *gdt = (struct SEGMENT_DESCRIPTOR *) ADR_GDT;
@@ -91,14 +91,14 @@ struct TASK *task_init(struct MEMMAN *memman){
 		taskctl->level[i].now = 0;
 	}
 	
-	task = task_alloc();
-	task->flags = 2;	/* 活动中标志 */
-	task->priority = 2; /* 优先级2(0.02秒进行任务切换) */
-	task->level = 0;	/* 最高等级(后面还可以通过task_run重新设置level) */
-	task_add(task);
-	task_switchsub();	/* level设定 */
+	task = task_alloc();					/* 系统主进程 */
+	task->flags = 2;						/* 活动中标志 */
+	task->priority = 10; 					/* 优先级10(0.1秒进行任务切换) */
+	task->level = 0;						/* 最高等级(后面还可以通过task_run重新设置level) */
+	task_add(task);			
+	task_switchsub();						/* level设定 */
 	load_tr(task->sel);
-	task_timer = timer_alloc();
+	task_timer = timer_alloc();				/* 用于控制任务切换的timer */
 	timer_settime(task_timer, task->priority);
 
 	idle = task_alloc();
@@ -121,6 +121,7 @@ struct TASK *task_alloc(void){
 	struct TASK *task;
 	for (i = 0; i < MAX_TASKS; i++) {
 		if (taskctl->tasks0[i].flags == 0) {
+			/* 寻找一个没有使用的任务结构体 */
 			task = &taskctl->tasks0[i];
 			task->flags = 1; /* 正在使用的标志 */
 			task->tss.eflags = 0x00000202; /* IF = 1; */
@@ -152,7 +153,7 @@ void task_run(struct TASK *task, int level, int priority){
 		/* 
 		* 这里判定了传入的priority是否大于0，如果大于0则可以更改优先级
 		* 如果小于等于0就不改变进程优先级
-		* 同时使用task_now()也可以对于正在运行的进程仅修改优先级
+		* 同时使用task_run()也可以对于正在运行的进程仅修改优先级
 		* 优先级工作原理是设定进程切换时间，以10ms为单位，如果优先级为1则是10ms进行进程切换
 		* 如果是2则是20ms进行进程切换，以此类推
 		*/

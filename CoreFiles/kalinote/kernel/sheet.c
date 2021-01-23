@@ -215,10 +215,15 @@ void sheet_updown(struct SHEET *sht, int height){
 }
 
 void sheet_refresh(struct SHEET *sht, int bx0, int by0, int bx1, int by1){
-	if (sht->height >= 1) { /* 如果正在显示，则按新图层信息刷新画面 */
+	if (sht->height >= 0) { /* 如果正在显示，则按新图层信息刷新画面 */
 		sheet_refreshsub(sht->ctl, sht->vx0 + bx0, sht->vy0 + by0, sht->vx0 + bx1, sht->vy0 + by1, sht->height, sht->height);
 	}
 	return;
+}
+
+void sheet_refreshall(struct SHEET *sht, int bx0, int by0, int bx1, int by1) {
+	/* 从子图册到父图层全部刷新 */
+	
 }
 
 void sheet_slide(struct SHEET *sht, int vx0, int vy0){
@@ -238,7 +243,7 @@ void sheet_slide(struct SHEET *sht, int vx0, int vy0){
 
 void sheet_free(struct SHEET *sht){
 	/* 释放已使用的图层 */
-	if (sht->height >= 2) {
+	if (sht->height >= 1 && sht->flags != SHEET_TASKBAR) {
 		/* 不是sht_back或she_task_bar */
 		sheet_updown(sht, -1); /* 如果处于显示状态，则先设定为隐藏 */
 	}

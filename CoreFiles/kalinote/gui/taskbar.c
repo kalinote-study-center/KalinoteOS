@@ -3,7 +3,7 @@
 #include "../bootpack.h"
 
 void onOpenConsoleClick(void);			/* 命令台选项被单击 */
-// void onShutdownClick(void);				/* 关机选项被单击 */
+void onShutdownClick(void);				/* 关机选项被单击 */
 void onUselessClick(void);				/* 没用的选项 */
 struct MENU *start_menu;				/* 开始菜单 */
 
@@ -13,12 +13,12 @@ struct MENU *init_taskbar(struct MEMMAN *memman, int *vram, int x, int y){
 	boxfill8(vram, x, COL_WHITE,  0,     y - 27, x -  1, y - 27);
 	boxfill8(vram, x, COL_BGREY,  0,     y - 26, x -  1, y -  1);
 	
-	boxfill8(vram, x, COL_WHITE,  3,     y - 24, 74,     y - 24);			/* 白色上横线 */
-	boxfill8(vram, x, COL_WHITE,  2,     y - 24,  2,     y -  4);			/* 白色左竖线 */
-	boxfill8(vram, x, COL_DGREY,  3,     y -  4, 74,     y -  4);			/* 灰色右竖线 */
-	boxfill8(vram, x, COL_DGREY, 74,     y - 23, 74,     y -  5);			/* 灰色下横线 */
-	boxfill8(vram, x, COL_BLACK,  2,     y -  3, 74,     y -  3);
-	boxfill8(vram, x, COL_BLACK, 75,     y - 24, 75,     y -  3);
+	// boxfill8(vram, x, COL_WHITE,  3,     y - 24, 74,     y - 24);			/* 白色上横线 */
+	// boxfill8(vram, x, COL_WHITE,  2,     y - 24,  2,     y -  4);			/* 白色左竖线 */
+	// boxfill8(vram, x, COL_DGREY,  3,     y -  4, 74,     y -  4);			/* 灰色右竖线 */
+	// boxfill8(vram, x, COL_DGREY, 74,     y - 23, 74,     y -  5);			/* 灰色下横线 */
+	// boxfill8(vram, x, COL_BLACK,  2,     y -  3, 74,     y -  3);
+	// boxfill8(vram, x, COL_BLACK, 75,     y - 24, 75,     y -  3);
 	
 	boxfill8(vram, x, COL_DGREY, x - 75, y - 24, x -  4, y - 24);
 	boxfill8(vram, x, COL_DGREY, x - 75, y - 23, x - 75, y -  4);
@@ -55,10 +55,10 @@ void onOpenConsoleClick(void) {
 	return;
 }
 
-// void onShutdownClick(void) {
-	// /* 关机选项被单击 */
-	// cmd_shutdown();
-// }
+void onShutdownClick(void) {
+	/* 关机选项被单击 */
+	cmd_shutdown();
+}
 
 void onUselessClick(void) {
 	/* 没用的选项 */

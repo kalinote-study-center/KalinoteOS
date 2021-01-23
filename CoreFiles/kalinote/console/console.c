@@ -351,6 +351,7 @@ void cons_runcmd(char *cmdline, struct CONSOLE *cons, int *fat, unsigned int mem
 		cmd_hdinfo(cons, cmdline);
 	} else if (strcmp(cmdline,"test") == 0) {
 		/* 测试专用 */
+		cmd_systest(cons);
 	} else if (cmdline[0] != 0) {
 		/* 执行cmd_app(),如果不是一个应用，会返回0 */
 		if (cmd_app(cons, fat, cmdline) == 0) {
@@ -726,6 +727,7 @@ int *inthandler0d(int *esp){
 }
 
 int *inthandler0c(int *esp){
+	/* 栈异常中断 */
 	struct TASK *task = task_now();
 	struct CONSOLE *cons = task->cons;
 	char s[30], msg[512];
