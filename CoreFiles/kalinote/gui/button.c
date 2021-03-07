@@ -11,7 +11,7 @@ struct BUTTON *make_button(struct MEMMAN *memman, int width, int height, int but
 	button->buttonx = buttonx;						/* 按钮X坐标 */
 	button->buttony = buttony;						/* 按钮Y坐标 */
 	button->back_color = back_color;				/* 按钮背景颜色 */
-	button->flags = 1;								/* 启用(0是禁用) */
+	button->flags = -1;								/* 未创建图层状态(0是禁用,1是启用) */
 	button->click_old = 0;							/* (上一次)没有按下 */
 	button->show = 0;								/* 不可视 */
 	button->onButtonClick = onButtonClick;			/* 设置按钮功能 */
@@ -24,6 +24,15 @@ void show_button(struct SHEET *sht, struct MEMMAN *memman, struct BUTTON *button
 	unsigned int *btn_buf;
 	
 	button->show = 1;			/* 设置可视 */
+	
+	if(button->flags != -1) {
+		/* 已经创建好图层，直接显示 */
+		button->show = 1;				/* 可视 */
+		button->flags = 1;				/* 启用 */
+		sheet_updown(button->sht, button->sht->ctl->top + 1);	/* 显示图层 */
+		sheet_refresh(button->sht,0,0,button->sht->bxsize,button->sht->bysize);		/* 刷新子图层 */
+		return;
+	}
 	
 	/* 分配缓冲区和sheet */
 	/* 按钮的sheet是在窗口或其他图层内的子sheet */
@@ -56,24 +65,23 @@ void show_button(struct SHEET *sht, struct MEMMAN *memman, struct BUTTON *button
 		/* 如果还没有图层 */
 		sheet_updown(button->sht, 0);
 	} else {
-		sheet_updown(button->sht, button->sht->ctl->top);
+		sheet_updown(button->sht, button->sht->ctl->top + 1);
 	}
+	
+	button->flags = 1;		/* 启用 */
 	return;
 }
 
 void change_button(struct BUTTON *button, struct SHEET *fsht, char click) {
 	/* 更改按钮凸起和按下或禁用的效果 */
 	
-	/****************************************
-	*         这里还有问题需要解决          *
-	****************************************/
 	if(button->click_old == click) {
 		/* 不用改变 */
 		return;
 	}
 	if(button->show == 0) {
 		/* 不可视 */
-		button->click_old = click;
+		// button->click_old = click;
 		return;
 	}
 	if(click == 0) {
@@ -108,14 +116,31 @@ void change_button(struct BUTTON *button, struct SHEET *fsht, char click) {
 	return;
 }
 
-void hide_button() {
+void hide_button(struct BUTTON *button) {
 	/* 隐藏按钮 */
-	
+	button->show = 0;				/* 不可视 */
+	button->flags = 0;				/* 禁用 */
+	sheet_updown(button->sht, -1);	/* 隐藏图层 */
+	sheet_refresh(button->sht,0,0,button->sht->bxsize,button->sht->bysize);		/* 刷新子图层 */
+	return;
+}
+
+void release_button(struct BUTTON *button) {
+	/* 释放按钮 */
+	/* 释放图层、图层所占内存以及按钮结构体所占内存 */
+	struct MEMMAN *man = (struct MEMMAN *) MEMMAN_ADDR;
+	sheet_free(button->sht);
+	// memman_free_4k(man, (unsigned int)button, sizeof(struct BUTTON));
+	memman_free_4k(man, (int)button, sizeof(struct BUTTON));
+	return;
 }
 
 void click_button(struct BUTTON *button) {
 	/* 点击按钮 */
 	
-	/* 运行程序 */
-	(*(button->onButtonClick))();
+	if(button->flags != 0) {
+		/* 如果没有禁用则运行程序 */
+		(*(button->onButtonClick))();
+	}
+	return;
 }

@@ -60,7 +60,7 @@ int mouse_decode(struct MOUSE_DEC *mdec, unsigned char dat){
 		/* 等待鼠标第三字节的阶段 */
 		mdec->buf[2] = dat;
 		mdec->phase = 1;
-		mdec->btn = mdec->buf[0] & 0x07;
+		mdec->btn = mdec->buf[0] & 0x07;		/* 关于P/S2鼠标的按键信息只有第一字节数据的第3位，通过和0x07(0b111)进行与运算取得低三位 */
 		mdec->x = mdec->buf[1];
 		mdec->y = mdec->buf[2];
 		if ((mdec->buf[0] & 0x10) != 0) {

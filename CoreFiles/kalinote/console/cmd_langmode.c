@@ -5,6 +5,7 @@ void cmd_langmode(struct CONSOLE *cons, char *cmdline){
 	/* 切换系统语言模式 */
 	struct TASK *task = task_now();
 	unsigned char mode = cmdline[9] - '0';
+	debug_print("command>run langmode at %d\n",cons);
 	if (mode <= 3) {
 		if (mode == 0) {
 			task->langmode = mode;

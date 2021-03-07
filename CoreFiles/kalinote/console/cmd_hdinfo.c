@@ -3,5 +3,5 @@
 
 void cmd_hdinfo(struct CONSOLE *cons, char *cmdline) {
 	/* ÏÔÊ¾Ó²ÅÌÐÅÏ¢ */
-
+	debug_print("command>run hdinfo at %d\n",cons);
 }

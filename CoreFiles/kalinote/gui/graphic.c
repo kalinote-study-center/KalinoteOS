@@ -81,6 +81,7 @@ void init_screen8(int *vram, int x, int y, int bc){
 	
 	sprintf(s,"DrawMode = 0x%05x", bc);
 	putfonts8_asc(vram, x, 8, 16, COL_BRED, s);
+	putfonts8_asc(vram, x, 775, 715, COL_BRED, "@Kalinote All Rights Reserved");
 	return;
 }
 

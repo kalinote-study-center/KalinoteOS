@@ -42,9 +42,9 @@ void console_task(struct SHEET *sheet, unsigned int memtotal){
 	}
 	task->langbyte1 = 0;
 
-	/*
-	* 这里关于系统模式切换还需要改进
-	*/
+	/*****************************************************
+	*         这里关于系统模式切换还需要改进             *
+	*****************************************************/
 	if(cons.sht->flags != SHEET_DEBUG_CONS){
 		/* DEBUG窗口不操作 */
 		if (sysinfo->sysmode == 0) {
@@ -57,7 +57,7 @@ void console_task(struct SHEET *sheet, unsigned int memtotal){
 			/* 未知系统模式 */
 			cons_putchar(&cons, 10002, 1);
 		}
-	}	
+	}
 
 	for (;;) {
 		io_cli();
@@ -129,7 +129,7 @@ void console_task(struct SHEET *sheet, unsigned int memtotal){
 					cons_putchar(&cons, ' ', 0);
 					if (sysinfo->sysmode == 0) {
 						/* 普通模式 */
-						cmdline[cons.cur_x / 8 - 2] = 0;		//命令提示符
+						cmdline[cons.cur_x / 8 - 2] = 0;				//命令提示符
 					} else if (sysinfo->sysmode == 1) {
 						/* 调试模式 */
 						cmdline[cons.cur_x / 8 - 8] = 0;
@@ -145,7 +145,7 @@ void console_task(struct SHEET *sheet, unsigned int memtotal){
 					/* 显示提示符 */
 					if (sysinfo->sysmode == 0) {
 						/* 普通模式 */
-						cons_putchar(&cons, '>', 1);			//命令提示符
+						cons_putchar(&cons, '>', 1);					//命令提示符
 					} else if (sysinfo->sysmode == 1) {
 						/* 调试模式 */
 						cons_putchar(&cons, 10001, 1);
@@ -197,7 +197,6 @@ void cons_putchar(struct CONSOLE *cons, int chr, char move){
 				putfonts8_asc_sht(cons->sht, cons->cur_x, cons->cur_y, COL_WHITE, COL_BLACK, " ", 1);
 			}
 			cons->cur_x += 8;
-			//if (cons->cur_x == 8 + 240) {
 			if (cons->cur_x == 8 + 512) {
 				cons_newline(cons);
 			}
@@ -384,6 +383,8 @@ int cmd_app(struct CONSOLE *cons, int *fat, char *cmdline){
 	}
 	name[i] = 0; /* 暂且将文件名后面置0 */
 
+	debug_print("application>try run %s at %d\n", name, cons);
+
 	/* 寻找文件 */
 	finfo = file_search(name, (struct FILEINFO *) (ADR_DISKIMG + 0x002600), 224);
 	if (finfo == 0 && name[i - 1] != '.') {
@@ -404,9 +405,9 @@ int cmd_app(struct CONSOLE *cons, int *fat, char *cmdline){
 			/*  这里的几个判断，第一个是kal头文件为36字节，所以kal应用程序一定会大于36字节，第二个是检查是否有kal应用签名 */
 			/* 处理kal文件头(这里以后可能还需要修改一下) */
 			segsiz = *((int *) (p + 0x0000));					/* stack+.data+heap(数据段，函数外定义的数据，以及字符串等)的大小(4K的倍数) */
-			esp    = *((int *) (p + 0x000c));					/* 堆栈初始值和.data传输目的地 */
-			datsiz = *((int *) (p + 0x0010));					/* .data的大小 */
-			datkal = *((int *) (p + 0x0014));					/* .data的初始值列在文件中的位置 */
+			esp    = *((int *) (p + 0x000c));					/* 堆栈初始值和.data传输目的地 */			/* 新标为14 */
+			datsiz = *((int *) (p + 0x0010));					/* .data的大小 */							/* 新标为1A */
+			datkal = *((int *) (p + 0x0014));					/* .data的初始值列在文件中的位置 */			/* 新标为20 */
 			q = (char *) memman_alloc_4k(memman, segsiz);		/* 分配应用程序段内存空间(数据段) */
 			task->ds_base = (int) q;
 			set_segmdesc(task->ldt + 0, finfo->size - 1, (int) p, AR_CODE32_ER + 0x60);				/* 段定义加上0x60(01100000)可以将该段权限设置为应用程序使用 */	/* 可读可执行不可写 */
@@ -415,7 +416,7 @@ int cmd_app(struct CONSOLE *cons, int *fat, char *cmdline){
 				/* 将Kal应用中的数据部分复制到数据段 */
 				q[esp + i] = p[datkal + i];
 			}
-			start_app(0x1b, 0 * 8 + 4, esp, 1 * 8 + 4, &(task->tss.esp0));							/* 调用汇编写的用于启动应用程序的函数，其中0x1b是KaliMain程序入口(这里有一个JMP指令，跳转到真正的程序入口) */
+			start_app(0x1b, 0 * 8 + 4, esp, 1 * 8 + 4, &(task->tss.esp0));							/* 调用汇编写的用于启动应用程序的函数，其中0x1b是KaliMain程序入口(这里有一个JMP指令，跳转到真正的程序入口，新标的入口地址为27) */
 			shtctl = (struct SHTCTL *) *((int *) SHTCTL_ADDR);
 			for (i = 0; i < MAX_SHEETS; i++) {
 				sht = &(shtctl->sheets0[i]);
@@ -465,7 +466,7 @@ int *kal_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int 
 	struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;
 	struct WINDOW *window;
 	int *reg = &eax + 1;	/* eax后面的地址 */
-		/* 强行改写通过PUSHAD保存的值 */
+		/* 强行改写通过PUSHAD保存的值，用于返回数值 */
 		/* reg[0] : EDI,   reg[1] : ESI,   reg[2] : EBP,   reg[3] : ESP */
 		/* reg[4] : EBX,   reg[5] : EDX,   reg[6] : ECX,   reg[7] : EAX */
 
@@ -490,7 +491,7 @@ int *kal_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int 
 		window = make_window8(sht, esi, edi, TIT_ACT_DEFAULT, TIT_DEACT_DEFAULT, (char *) ecx + ds_base, 0);
 		sheet_slide(sht, ((shtctl->xsize - esi) / 2) & ~3, (shtctl->ysize - edi) / 2);
 		sheet_updown(sht, shtctl->top); /* 将窗口图层高度指定为当前鼠标所在图层的高度，鼠标移到上层 */
-		reg[7] = window->whandle;			/* (通过EAX寄存器)返回窗口句柄((int)sht) */
+		reg[7] = window->whandle;			/* (通过EAX寄存器)返回窗口句柄((int)sht) */		/* 有空把这里改成直接返回window结构体((int) window) */
 	} else if (edx == 6) {
 		//在窗口上绘制字符
 		sht = (struct SHEET *) (ebx & 0xfffffffe);
@@ -548,6 +549,7 @@ int *kal_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int 
 		}
 	} else if (edx == 14) {
 		/* 关闭窗口 */
+		taskbar_removewin(((struct WINDOW *)(((struct SHEET *) ebx)->win))->tskwinbtn);
 		sheet_free((struct SHEET *) ebx);
 	} else if (edx == 15) {
 		/* 键盘数据 */
@@ -698,7 +700,7 @@ int *kal_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int 
 		/* 绘制icon */
 		
 	} else if (edx == 29) {
-		/* 清空命令台 */
+		/* 清空命令台(有问题) */
 		cmd_cls(cons);
 	}
 	return 0;
@@ -820,6 +822,7 @@ void keywin_on(struct SHEET *key_win){
 }
 
 struct TASK *open_constask(struct SHEET *sht, unsigned int memtotal){
+	/* 仅启动任务，而不打开命令行窗口 */
 	struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;
 	struct TASK *task = task_alloc();
 	int *cons_fifo = (int *) memman_alloc_4k(memman, 128 * 4);
@@ -840,6 +843,7 @@ struct TASK *open_constask(struct SHEET *sht, unsigned int memtotal){
 }
 
 struct SHEET *open_console(struct SHTCTL *shtctl, unsigned int memtotal, int debug){
+	/* 打开新的命令行窗口 */
 	struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;
 	struct SHEET *sht = sheet_alloc(shtctl);
 	struct WINDOW *window;
@@ -848,7 +852,7 @@ struct SHEET *open_console(struct SHTCTL *shtctl, unsigned int memtotal, int deb
 	//sheet_setbuf(sht, buf, 256, 165, -1); /* 无透明色 */
 	sheet_setbuf(sht, buf, 525, 479, -1); /* 无透明色 */
 	if(debug == 1) {
-		window = make_window8(sht, 525, 479, COL_BRED, COL_DRED, "DEBUG consle", 0);
+		window = make_window8(sht, 525, 479, COL_BRED, COL_DRED, "DEBUG console", 0);
 	} else {
 		window = make_window8(sht, 525, 479, TIT_ACT_DEFAULT, TIT_DEACT_DEFAULT, "console", 0);
 	}
@@ -860,6 +864,7 @@ struct SHEET *open_console(struct SHTCTL *shtctl, unsigned int memtotal, int deb
 }
 
 void close_constask(struct TASK *task){
+	/* 结束任务，而不关闭命令行窗口(对于无命令行窗口的应用使用) */
 	struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;
 	task_sleep(task);
 	memman_free_4k(memman, task->cons_stack, 64 * 1024);
@@ -869,6 +874,7 @@ void close_constask(struct TASK *task){
 }
 
 void close_console(struct SHEET *sht){
+	/* 关闭命令行窗口 */
 	struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;
 	struct TASK *task = sht->task;
 	memman_free_4k(memman, (int) sht->buf, 256 * 165 * 4);

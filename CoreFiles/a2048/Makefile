@@ -1,5 +1,5 @@
 APP      = a2048
-STACK    = 1k
-MALLOC   = 1k
+STACK    = 10k
+MALLOC   = 10k
 
 include ../app_make.txt

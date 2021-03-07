@@ -23,6 +23,10 @@ void KaliMain(void){
 		// }
 		// api_boxfilwin(win, i, 20, i + 10, 120, 0x000000);
 	// }
-	*((char *) 0x00102600) = 0;			/* 一般保护异常测试 */
+	// *((char *) 0x00102600) = 0;			/* 一般保护异常测试 */
+	// api_end();
+	
+	/* 如果使用return，会触发一般保护异常*/
+	printf("测试应用\n");
 	api_end();
 }

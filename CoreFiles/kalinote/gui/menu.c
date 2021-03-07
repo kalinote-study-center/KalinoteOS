@@ -21,6 +21,10 @@ struct MENU *make_menu(struct MEMMAN *memman, int menux, int menuy) {
 
 void release_menu(struct MEMMAN *man, struct MENU *menu) {
 	/* 释放菜单占用的内存空间 */
+	if(menu->flags != 0) {
+		/* 如果没有关闭先关闭 */
+		hide_menu(man, menu);
+	}
 	memman_free_4k(man, (unsigned int)&menu, sizeof(struct MENU));
 }
 

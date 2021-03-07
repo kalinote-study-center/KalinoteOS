@@ -28,9 +28,10 @@ void KaliMain(void){
 	struct FILEINFO *finfo_jp;
 	extern char fonts[4096];
 	struct SYSINFO sysinfo;
-	struct MENU *start_menu; /* , *desktop_menu; */
+	// struct MENU *start_menu; /* , *desktop_menu; */
 	/* struct WINDOW *debug_window; */
-	struct BUTTON *start_button;
+	// struct BUTTON *start_button;
+	// struct BUTTON *tbutton1, *tbutton2, *tbutton3, *tbutton4, *tbutton5, *tbutton6, *tbutton7;
 	static char keytable0[0x80] = {
 		0,   0,   '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', 0x08, 0,
 		'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', '[', ']', 0x0a, 0, 'A', 'S',
@@ -120,15 +121,32 @@ void KaliMain(void){
 
 	/* sht_taskbar */
 	//init_taskbar(buf_back, binfo->scrnx, binfo->scrny);
-	sht_task_bar = sheet_alloc(shtctl);
+	*((int *) TASKBAR_ADDR) = (int)sheet_alloc(shtctl);
+	sht_task_bar = (struct SHEET *) *((int *) TASKBAR_ADDR);
 	buf_task_bar = (unsigned int *) memman_alloc_4k(memman, binfo->scrnx * 28 * 4);			/* 如果后面要创建关于task_bar的结构体，可以把task_bar的y高度放进去，不过现在先使用固定值28(包括下面的sheet_setbuf) */
 	sheet_setbuf(sht_task_bar, buf_task_bar, binfo->scrnx, 28, -1);
-	start_menu = init_taskbar(memman, buf_task_bar, binfo->scrnx, 28);
+	init_taskbar(memman, sht_task_bar);
 	// putfonts8_asc_sht(sht_task_bar, 6, 8, COL_BLACK, COL_BGREY, "Function", 8);
 	sht_task_bar->flags = SHEET_TASKBAR;
 	/* Function按钮 */
-	start_button = make_button(memman, 70, 23, 2, 4, "Function", COL_BGREY, onStartButtonClick);
-	show_button(sht_task_bar, memman, start_button);
+	// start_button = make_button(memman, 70, 23, 2, 4, "Function", COL_BGREY, onStartButtonClick);
+	// show_button(sht_task_bar, memman, start_button);
+	/* 测试代码 */
+	// tbutton1 = make_button(memman, 105, 23, 85, 4, "window1", COL_BGREY, onStartButtonClick);
+	// show_button(sht_task_bar, memman, tbutton1);
+	// tbutton2 = make_button(memman, 105, 23, 85 + 110*1 , 4, "window2", COL_BGREY, onStartButtonClick);
+	// show_button(sht_task_bar, memman, tbutton2);
+	// tbutton3 = make_button(memman, 105, 23, 85 + 110*2 , 4, "window3", COL_BGREY, onStartButtonClick);
+	// show_button(sht_task_bar, memman, tbutton3);
+	// tbutton4 = make_button(memman, 105, 23, 85 + 110*3 , 4, "window4", COL_BGREY, onStartButtonClick);
+	// show_button(sht_task_bar, memman, tbutton4);
+	// tbutton5 = make_button(memman, 105, 23, 85 + 110*4 , 4, "window5", COL_BGREY, onStartButtonClick);
+	// show_button(sht_task_bar, memman, tbutton5);
+	// tbutton6 = make_button(memman, 105, 23, 85 + 110*5 , 4, "window6", COL_BGREY, onStartButtonClick);
+	// show_button(sht_task_bar, memman, tbutton6);
+	// tbutton7 = make_button(memman, 105, 23, 85 + 110*6 , 4, "window7", COL_BGREY, onStartButtonClick);
+	// show_button(sht_task_bar, memman, tbutton7);
+	/* 测试代码 */
 	
 	/* sht_cons */
 	key_win = open_console(shtctl, memtotal, 0);
@@ -152,6 +170,11 @@ void KaliMain(void){
 	sheet_updown(sht_mouse, 3);
 	sheet_updown(sht_debug_cons, -1);
 	keywin_on(key_win);
+	
+	/* 让系统切换到DEBUG模式 */
+	sysinfo.sysmode = 1;
+	sheet_updown(sht_debug_cons, sht_debug_cons->ctl->top);
+	cons_putstr0(sht_debug_cons->task->cons,"DEBUG MODE\n");
 	
 	/* 测试代码 */
 	/* 刷新测试 */
@@ -385,7 +408,7 @@ void KaliMain(void){
 					// putfonts8_asc_sht(sht_back, 0, 0, COL_WHITE, COL_LDBLUE, s, 10);
 					/* 启用鼠标位置显示会导致画面卡顿 */
 					sheet_slide(sht_mouse, mx, my); /* 包含sheet_refresh */
-					/* 处理当前鼠标指向图层 */
+					/* 处理当前鼠标指向图层(菜单栏聚焦位置) */
 					for (j = shtctl->top - 1; j > 0; j--) {
 						/* 从上到下寻找 */
 						point_sht = shtctl->sheets[j];
@@ -397,13 +420,14 @@ void KaliMain(void){
 								if(point_sht->flags == SHEET_MENU) {
 									/* 如果是菜单层 */
 									option_change((struct MENU *)(point_sht->win), y);
+									break;
 								}
 							}
 						}
-
 					}
 					if ((mdec.btn & 0x01) != 0) {
 						/* 按下左键 */
+						// debug_print("mouse>point at x:%d, y:%d\n", mx, my);
 						if (mmx < 0) {
 							/* 如果处于通常模式 */
 							/* 按照从上到下的顺序寻找鼠标所指的图层 */
@@ -438,9 +462,13 @@ void KaliMain(void){
 												memman_free_4k(memman, (unsigned int)(sht->win), sizeof (struct WINDOW));
 												if(sht->flags == SHEET_DEBUG_CONS) {
 													/* DEBUG窗口不处理 */
+													debug_print("DEBUG>Cannot close DEBUG window!\n");
+													debug_print("DEBUG>You can use sysmode 0 to switch to normal mode!\n");
 													break;
 												}
 												if (/*sht->flags == SHEET_USE || */sht->flags == SHEET_APIWIN) {		/* 是否为应用程序窗口 */
+													/* 释放任务栏按钮 */
+													taskbar_removewin(((struct WINDOW *)(sht->win))->tskwinbtn);
 													task = sht->task;
 													cons_putstr0(task->cons, "\nBreak(mouse) :\n");
 													io_cli();	/* 禁止在强制结束处理时切换任务 */
@@ -449,13 +477,15 @@ void KaliMain(void){
 													io_sti();
 													task_run(task, -1, 0);
 												} else {	/* 命令行窗口 */
+													/* 释放任务栏按钮 */
+													//taskbar_removewin(((struct WINDOW *)(sht->win))->tskwinbtn);
 													task = sht->task;
 													sheet_updown(sht, -1); /* 隐藏图层 */
 													keywin_off(key_win);
 													key_win = shtctl->sheets[shtctl->top - 1];
 													keywin_on(key_win);
 													io_cli();
-													fifo32_put(&task->fifo, 4);
+													fifo32_put(&task->fifo, 4);		/* 这里会调用exit */
 													io_sti();
 												}
 											}
@@ -465,9 +495,11 @@ void KaliMain(void){
 								} else if (sht->flags == SHEET_TASKBAR) {
 									/* task_bar */
 									if(0 <= x && x < sht->bxsize && 0 <= y && y < sht->bysize) {/* 如果鼠标指针在图层范围内 */
-										debug_print("taskbar> sht->subctl->top = %d\n",sht->subctl->top);
+										debug_print("taskbar>sht->subctl->top = %d\n",sht->subctl->top);
+										// debug_print("taskbar>%d\n",sizeof(struct TASKBARCTL));
 										for(j = sht->subctl->top; j > -1; j--) {
 											/* 从上到下寻找子图层(最底层是0) */
+											/* 按照道理来说这里似乎只能找到一层子图层，所以这里以后还需要改进 */
 											subsht = sht->subctl->sheets[j];
 											subx = x - subsht->vx0;				/* 指针在子图层位置 */
 											suby = y - subsht->vy0;
@@ -486,7 +518,7 @@ void KaliMain(void){
 											}
 										}
 										// if (3 <= x && x < 75 && sht->bysize - 23 <= y && y < sht->bysize - 4) {
-											// /* 点击[开始]按钮 */
+											// /* 点击[开始]按钮(现在已经使用按钮组件来代替) */
 											// switch(start_menu->flags) {
 												// case 0:show_menu(shtctl, memman, start_menu);break;
 												// case 1:hide_menu(memman, start_menu);break;
@@ -512,7 +544,7 @@ void KaliMain(void){
 						}
 					} else if ((mdec.btn & 0x02) != 0) {
 						/* 按下右键 */
-						
+						debug_print("mouse>right click at x:%d, y:%d\n", mx, my);
 					} else {
 						/* 没有按下任何按键 */
 						mmx = -1;	/* 返回通常模式 */
@@ -523,16 +555,21 @@ void KaliMain(void){
 					}
 				}
 			} else if (768 <= i && i <= 1023) {	/* 命令行窗口关闭处理 */
+				sht2 = shtctl->sheets0 + (i - 768);
+				/* 释放任务栏按钮 */
+				taskbar_removewin(((struct WINDOW *)(sht2->win))->tskwinbtn);
 				/* 释放窗口结构体内存 */
-				memman_free_4k(memman, (unsigned int)((shtctl->sheets0 + (i - 768))->win), sizeof (struct WINDOW));
-				close_console(shtctl->sheets0 + (i - 768));
-			} else if (1024 <= i && i <= 2023) {
+				memman_free_4k(memman, (unsigned int)(sht2->win), sizeof (struct WINDOW));
+				close_console(sht2);
+			} else if (1024 <= i && i <= 2023) {/* 命令窗口已经被关闭，仅结束任务 */
 				close_constask(taskctl->tasks0 + (i - 1024));
-			} else if (2024 <= i && i <= 2279) {	/* 只关闭命令行窗口 */
+			} else if (2024 <= i && i <= 2279) {	/* 只关闭命令行窗口，不结束任务 */
 				sht2 = shtctl->sheets0 + (i - 2024);
 				/* 释放窗口结构体内存 */
 				memman_free_4k(memman, (unsigned int)(sht2->win), sizeof (struct WINDOW));
 				memman_free_4k(memman, (int) sht2->buf, 256 * 165);
+				/* 释放任务栏按钮 */
+				taskbar_removewin(((struct WINDOW *)(sht2->win))->tskwinbtn);
 				sheet_free(sht2);
 			}
 		}

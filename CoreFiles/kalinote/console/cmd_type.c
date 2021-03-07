@@ -7,6 +7,7 @@ void cmd_type(struct CONSOLE *cons, int *fat, char *cmdline){
 	struct FILEINFO *finfo = file_search(cmdline + 5, (struct FILEINFO *) (ADR_DISKIMG + 0x002600), 224);
 	char *p;
 	int i;
+	debug_print("command>run type at %d\n",cons);
 	if (finfo != 0) {
 		/* 找到文件的情况 */
 		p = (char *) memman_alloc_4k(memman, finfo->size);

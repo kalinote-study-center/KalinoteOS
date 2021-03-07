@@ -94,7 +94,7 @@ keystatus:
 
 		MOV		AL,0xff
 		OUT		0x21,AL
-		NOP						; 停顿一下，防止BUG(作者说某些机型如果连续UOT会死掉)
+		NOP						; 停顿一下，防止BUG(这个对于现在来说没有太大的必要性 )
 		OUT		0xa1,AL
 
 		CLI						; 禁止CPU级别中断
@@ -168,7 +168,7 @@ pipelineflush:
 		CALL	memcpy
 skip:
 		MOV		ESP,[EBX+12]	; 堆栈初始值
-		JMP		DWORD 2*8:0x0000001b	;KaliMain入口的地址
+		JMP		DWORD 2*8:0x0000001b	;KaliMain入口的地址		;新标的入口地址为0x00000027
 
 waitkbdout:
 		IN		 AL,0x64

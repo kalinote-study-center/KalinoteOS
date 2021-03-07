@@ -125,8 +125,8 @@ int fifo32_status(struct FIFO32 *fifo);																//查询缓冲区状态
 
 //mouse.c(鼠标控制)
 struct MOUSE_DEC {
-	unsigned char buf[3], phase;
-	int x, y, btn;
+	unsigned char buf[3], phase;				// buf[3]是数据缓冲区，P/S2鼠标一次传递3字节数据，phase是接受第几字节的数据
+	int x, y, btn;								// x,y，btn是解析鼠标数据后获得的坐标和按钮数据
 };
 void inthandler2c(int *esp);																		//鼠标监听中断
 void enable_mouse(struct FIFO32 *fifo, int data0, struct MOUSE_DEC *mdec);							//激活鼠标
@@ -312,6 +312,7 @@ struct WINDOW {
 	int xsize,ysize;								// 窗口大小
 	struct WINCOLORS wcolor;						// 窗口颜色
 	int whandle;									// 窗口句柄(可以在这里存放SHEET结构体)
+	int tskwinbtn;									// 任务栏按钮index
 };
 // struct WINDOW *make_window8(unsigned int *buf, int xsize, int ysize, char *title, char act);		// 生成一个窗口(旧)
 struct WINDOW *make_window8(struct SHEET *sht, int xsize, int ysize,
@@ -330,7 +331,7 @@ struct BUTTON {
 	char *title;									// 按钮标题
 	int buttonx, buttony;							// 按钮位置
 	int height,width;								// 按钮大小(高宽)
-	int flags;										// 按钮激活状态
+	int flags;										// 按钮状态
 	int back_color;									// 按钮背景色
 	struct SHEET *sht;								// 按钮图像sheet
 	char click_old;									// 上一次是否按下(1为按下，0为未按)
@@ -342,6 +343,8 @@ struct BUTTON *make_button(struct MEMMAN *memman, int width, int height,
 void show_button(struct SHEET *sht, struct MEMMAN *memman, struct BUTTON *button);					// 绘制按钮
 void change_button(struct BUTTON *button, struct SHEET *fsht, char click);							// 更改按钮凸起和按下(或禁用)
 void click_button(struct BUTTON *button);															// 点击按钮
+void hide_button(struct BUTTON *button);															// 隐藏按钮
+void release_button(struct BUTTON *button);															// 释放按钮
 
 /* menu.c(菜单栏) */
 #define	MAX_OPTIONS			255						// 最大选项数量
@@ -372,6 +375,30 @@ void show_menu(struct SHTCTL *shtctl, struct MEMMAN *memman, struct MENU *menu);
 void hide_menu(struct MEMMAN *memman, struct MENU *menu);											// 隐藏菜单
 void option_change(struct MENU *menu, int mouse_y);													// 鼠标移动时选项变色处理
 void menu_click(struct MENU *menu, int mouse_y);													// 菜单栏被单击
+
+/* taskbar.c(底端任务栏) */
+#define TASKBAR_ADDR	0x30100			/* 任务栏图层地址 */
+#define TASKBARCTL_ADDR	0x30200			/* 任务栏管理结构体地址 */
+#define MAX_TSKWINBTN	256				/* 最多同时显示256个窗口在taskbar上 */
+struct TSKWINBTN {
+	/* 每个任务栏按钮选项 */
+	int index;					/* 窗口在任务栏的按钮的index */
+	int flags;					/* 当前结构体的使用状态(未使用、最小化、打开分别为0，1，2) */
+	int row;					/* 窗口在任务连第几排(从第0排开始，每排最多7个窗口) */
+	struct WINDOW *win;			/* 对应的窗口 */
+	struct BUTTON *button;		/* 对应的任务栏按钮 */
+};
+struct TASKBARCTL {
+	/* 任务栏管理结构体 */
+	int num;										/* 窗口数量 */
+	int now_row,total_row;							/* 当前显示排数和总排数-1 */
+	struct MENU *menu;								/* 开始菜单 */
+	struct BUTTON *button;							/* Function按钮 */
+	struct TSKWINBTN tskwinbtns[MAX_TSKWINBTN];		/* 任务栏按钮选项结构体 */
+};
+void init_taskbar(struct MEMMAN *memman, struct SHEET *sht);					// 初始化任务栏
+int taskbar_addwin(struct WINDOW *window);										// 向任务栏增加一个窗口按钮
+void taskbar_removewin(int index);												// 从任务栏删除一个按钮
 
 /* console.c(命令台) */
 #define DEBUG_ADDR		0x30000				// DEBUG console位置
@@ -540,6 +567,23 @@ void inthandler2e(int *esp);										// 硬盘中断程序
 void hd_read_sectors(int lba, char *buf, int counts, int hd_num);	// 读取硬盘扇区
 void hd_write_sectors(int lba, char *buf, int counts,int hd_num);	// 写扇区
 
-/* taskbar.c(低端任务栏) */
-struct MENU *init_taskbar(struct MEMMAN *memman, int *vram, int x, int y);							// 初始化任务栏
-void onStartButtonClick(void);																		// 单击开始按钮
+/* list.c(双链表结构) */
+struct list_elem {
+	/* list节点，用于保存前一个节点和后一个节点的地址 */
+	struct list_elem* prev; // 前躯结点
+	struct list_elem* next; // 后继结点
+};
+struct list {
+	/* head是队首,是固定不变的，不是第1个元素,第1个元素为head.next */
+	struct list_elem head;
+	/* tail是队尾,同样是固定不变的 */
+	struct list_elem tail;
+};
+void list_init(struct list* list);												// 初始化链表
+void list_insert_before(struct list_elem* before, struct list_elem* elem);		// 将链表元素elem插入到before之前
+void list_push(struct list* plist, struct list_elem* elem);						// 添加元素到列表队首,类似栈push操作
+void list_append(struct list* plist, struct list_elem* elem);					// 追加元素到链表队尾,类似队列的先进先出操作
+void list_remove(struct list_elem* pelem);										// 使元素pelem脱离链表
+struct list_elem* list_pop(struct list* plist);									// 将链表第一个元素弹出并返回,类似栈的pop操作
+int elem_find(struct list* plist, struct list_elem* obj_elem);					// 从链表中查找元素obj_elem,成功时返回所在位置,失败时返回-1
+int list_empty(struct list* plist);												// 判断链表是否为空,空时返回1,否则返回0

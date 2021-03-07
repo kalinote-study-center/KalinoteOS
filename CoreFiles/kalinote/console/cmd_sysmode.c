@@ -9,7 +9,7 @@ void cmd_sysmode(struct CONSOLE *cons, char *cmdline) {
 	char mode = cmdline[8] - '0';
 	char s[64];
 	struct SHEET *sht_debug_cons = (struct SHEET *) *((int *) DEBUG_ADDR);
-	
+	debug_print("command>run sysmode at %d\n",cons);
 	if(sysinfo->sysmode == mode) {
 		/* ²»±ä */
 		cons_putstr0(cons,"System mode has no change\n");

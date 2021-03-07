@@ -1,10 +1,10 @@
 /* 窗口相关程序 */
 
 #include "../bootpack.h"
+#include <string.h>
 
 struct WINDOW *make_window8(struct SHEET *sht, int xsize, int ysize, int act_color, int deact_color, char *title, char act){
 	/* 窗口窗体 */
-	/* 暂时还没有引入窗口结构体 */
 	struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;		/* 内存管理程序 */
 	struct WINDOW *window;
 	window = (struct WINDOW *) memman_alloc_4k(memman, sizeof (struct WINDOW));			/* 给窗口信息结构体分配一段内存 */
@@ -27,6 +27,15 @@ struct WINDOW *make_window8(struct SHEET *sht, int xsize, int ysize, int act_col
 	boxfill8(sht->buf, xsize,					COL_DGREY, 1,         ysize - 2, xsize - 2, ysize - 2);
 	boxfill8(sht->buf, xsize,					COL_WHITE, 0,         ysize - 1, xsize - 1, ysize - 1);
 	make_wtitle8(window, act);
+	
+	/* 向任务栏添加按钮 */
+	if(strcmp(title, "DEBUG console") != 0){
+		/* 不是DEBUG console */
+		window->tskwinbtn = taskbar_addwin(window);
+	}
+	
+	debug_print("window>create new window,index:%d\n",window->tskwinbtn);
+	
 	return window;
 }
 
