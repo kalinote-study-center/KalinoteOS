@@ -58,6 +58,12 @@ void KaliMain(void){
 	sysinfo.sysmode = 0;
 	sysinfo.sysmmainver = 1;
 	sysinfo.sysver = 400;
+	sysinfo.year = get_year();
+	sysinfo.month = get_mon_hex();
+	sysinfo.day = get_day_of_month();
+	sysinfo.hour = get_hour_hex();
+	sysinfo.min = get_min_hex();
+	sysinfo.sec = get_sec_hex();
 
 	/* 初始化 */
 	init_gdtidt();													// 初始化GDT和IDT
@@ -171,7 +177,7 @@ void KaliMain(void){
 	sheet_updown(sht_debug_cons, -1);
 	keywin_on(key_win);
 	
-	/* 让系统切换到DEBUG模式 */
+	/* 让系统切换到DEBUG模式(这里的代码与sysmode 1指令相同) */
 	sysinfo.sysmode = 1;
 	sheet_updown(sht_debug_cons, sht_debug_cons->ctl->top);
 	cons_putstr0(sht_debug_cons->task->cons,"DEBUG MODE\n");
@@ -275,16 +281,43 @@ void KaliMain(void){
 				/* 更新时间 */
 				/*右下角时间显示*/
 				/*
+				*  理论上来说定时器是一秒触发一次，但实际上因为系统运行速度较慢，似乎触发的时间远远大于一秒
+				*/
+				timer_init(timer, &fifo, 1);		/* 设置一个定时器，下一秒再次更新 */
+				timer_settime(timer, 100);
+				sysinfo.sec += 1;
+				if(sysinfo.sec == 60) {
+					/* 分钟进一 */
+					sysinfo.sec = 0;
+					sysinfo.min += 1;
+				}
+				if(sysinfo.min == 60) {
+					/* 小时进一 */
+					sysinfo.min = 0;
+					sysinfo.hour += 1;
+				}
+				if(sysinfo.hour == 24) {
+					/* 24点重新查询cmos进行校准 */
+					sysinfo.year = get_year();
+					sysinfo.month = get_mon_hex();
+					sysinfo.day = get_day_of_month();
+					sysinfo.hour = get_hour_hex();
+					sysinfo.min = get_min_hex();
+					sysinfo.sec = get_sec_hex();
+					
+				}
+				/*
 				* 这里还可以优化一下，可以把时分秒分别显示和刷新，避免不必要的画面刷新
 				*/
-				timer_init(timer, &fifo, 1);		/* 设置一个定时器，下一秒再次提醒 */
-				timer_settime(timer, 100);
-				sprintf(s,"%02d:%02d:%02d",get_hour_hex(), get_min_hex(), get_sec_hex());
+				// timer_init(timer, &fifo, 1);		/* 设置一个定时器，下一秒再次提醒 */
+				// timer_settime(timer, 100);
+				sprintf(s,"%02d:%02d:%02d",sysinfo.hour, sysinfo.min, sysinfo.sec);
 				putfonts8_asc_sht(sht_task_bar, sht_task_bar->bxsize - 70, sht_task_bar->bysize - 20, COL_BLACK, COL_BGREY, s, 8);
-				/* 日期 */
-				sprintf(s,"%d/%d/%d",get_year(), get_mon_hex(), get_day_of_month());
-				putfonts8_asc_sht(sht_task_bar, sht_task_bar->bxsize - 160, sht_task_bar->bysize - 20, COL_BLACK, COL_BGREY, s, 10);
-				sheet_refresh(sht_task_bar, sht_task_bar->bxsize - 160, sht_task_bar->bysize - 20, sht_task_bar->bxsize - 70 + 8 * 8, sht_task_bar->bysize - 50 + 16);
+				sheet_refresh(sht_task_bar, sht_task_bar->bxsize - 70, sht_task_bar->bysize - 20, sht_task_bar->bxsize - 70 + 8 * 8, sht_task_bar->bysize - 50 + 16);		/* 暂时不显示日期了 */
+				// /* 日期 */
+				// sprintf(s,"%d/%d/%d",get_year(), get_mon_hex(), get_day_of_month());
+				// putfonts8_asc_sht(sht_task_bar, sht_task_bar->bxsize - 160, sht_task_bar->bysize - 20, COL_BLACK, COL_BGREY, s, 10);
+				// sheet_refresh(sht_task_bar, sht_task_bar->bxsize - 160, sht_task_bar->bysize - 20, sht_task_bar->bxsize - 70 + 8 * 8, sht_task_bar->bysize - 50 + 16);
 			} else if (i == 2) {
 				/* 打开新的命令窗口 */
 				/* 这里的代码实际上跟Shift+F2是一样的 */
@@ -386,6 +419,7 @@ void KaliMain(void){
 			} else if (512 <= i && i <= 767) { /* 鼠标数据 */
 				if (mouse_decode(&mdec, i - 512) != 0) {
 					/* 鼠标指针移动 */
+					/* 坐标加上偏移量 */
 					mx += mdec.x;
 					my += mdec.y;
 					//限制鼠标指针边界
@@ -495,7 +529,7 @@ void KaliMain(void){
 								} else if (sht->flags == SHEET_TASKBAR) {
 									/* task_bar */
 									if(0 <= x && x < sht->bxsize && 0 <= y && y < sht->bysize) {/* 如果鼠标指针在图层范围内 */
-										debug_print("taskbar>sht->subctl->top = %d\n",sht->subctl->top);
+										// debug_print("taskbar>sht->subctl->top = %d\n",sht->subctl->top);
 										// debug_print("taskbar>%d\n",sizeof(struct TASKBARCTL));
 										for(j = sht->subctl->top; j > -1; j--) {
 											/* 从上到下寻找子图层(最底层是0) */

@@ -142,7 +142,7 @@ void taskbar_removewin(int index) {
 	/* 同时重新计算每个窗口新的排数，重新计算tbctl的总排数，重新显示 */
 	/* 由于现在是将index和窗口绑定，所以在调整完按钮以后要记得修改窗口对应的index，这很重要！！！！ */
 	int i;
-	
+	struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;
 	struct TASKBARCTL *tbctl = (struct TASKBARCTL *) *((int *) TASKBARCTL_ADDR);
 	struct SHEET *sht = (struct SHEET *) *((int *) TASKBAR_ADDR);
 	release_button(tbctl->tskwinbtns[index].button);
@@ -163,6 +163,10 @@ void taskbar_removewin(int index) {
 		sheet_slide(tbctl->tskwinbtns[i].button->sht, tbctl->tskwinbtns[i].button->buttonx, tbctl->tskwinbtns[i].button->buttony);		/* 移动按钮位置 */
 	}
 	
+	/* 把最后一个的flags置0 */
+	tbctl->tskwinbtns[tbctl->num - 1].flags = 0;		/* 未使用 */
+	tbctl->num -= 1;
+
 	/* 
 	* 这里加入判断是否是一排最后一个的代码，如果是最后一个，则将上一排的全部显示
 	* 且total_row-1
@@ -170,10 +174,16 @@ void taskbar_removewin(int index) {
 	* 同样，找到最后一排的按钮index的方法为tbctl->total_row*7到(tbctl->total_row*7)+6
 	* 比如第0排的index是0-6
 	*/
-	
-	/* 把最后一个的flags置0 */
-	tbctl->tskwinbtns[tbctl->num - 1].flags = 0;		/* 未使用 */
-	tbctl->num -= 1;
+	if((tbctl->num % 7 == 0)&&(tbctl->total_row != 0)) {
+		/* 剩下的窗口刚好是7的倍数，且不为0(一整排) */
+		/* 因为是执行删除操作，所以理论上来说，删除以后刚好是7的倍数时，肯定减少一行 */
+		tbctl->total_row -= 1;
+		tbctl->now_row = tbctl->total_row;
+		/* 显示最后一排所有按钮(tbctl->now_row*7到tbctl->now_row*7+6) */
+		for(i = (tbctl->now_row)*7; i <= ((tbctl->now_row)*7)+6; i++) {
+			show_button(sht, memman, tbctl->tskwinbtns[i].button);
+		}
+	}
 	
 	/* 刷新父图层 */
 	sheet_refresh(sht, 85, 4, (85 + (110 * 6)) + 105, 4 + 23);

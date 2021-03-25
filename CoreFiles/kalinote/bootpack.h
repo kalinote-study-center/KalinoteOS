@@ -6,6 +6,8 @@ struct SYSINFO {
 	unsigned char ide_hd_num;		/* 计算机IDE硬盘数量 */
 	unsigned int free_mem;			/* 系统剩余内存容量 */
 	unsigned int memtotal;			/* 系统总内存 */
+	int year, month, day;			/* 系统日期 */
+	int hour, min, sec;				/* 系统时间 */
 };
 #define	SYS_MEMORY		0x00400000			// 系统占用内存
 #define FIFO_ADDR		0x0fec				// FIFO地址
