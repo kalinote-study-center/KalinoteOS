@@ -165,6 +165,7 @@ void KaliMain(void){
 	my = (binfo->scrny - 28 - 16) / 2;
 	sht_mouse->flags = SHEET_MOUSE;
 
+	/* 这里处理背景，任务栏，初始命令窗口，debug窗口，鼠标的图层 */
 	sheet_slide(sht_back,  0,  0);
 	sheet_slide(sht_task_bar, 0, binfo->scrny - 28);
 	sheet_slide(key_win,   32, 4);
@@ -267,7 +268,7 @@ void KaliMain(void){
 				io_sti();
 			}
 		} else {
-			i = fifo32_get(&fifo); /* 从fifo中取出数据 */
+			i = fifo32_get(&fifo); /* 从fifo中取出数据，不同的i值范围表示的数据作用不同，详见《系统支持文档》4.2，队列(FIFO)数据缓冲区一节 */
 			io_sti();
 			if (key_win != 0 && key_win->flags == 0) {	/* 窗口被关闭 */
 				if (shtctl->top == 2) {	/* 只剩鼠标、背景和任务栏时 */

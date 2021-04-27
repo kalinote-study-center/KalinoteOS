@@ -243,6 +243,9 @@ void putfonts8_asc(int *vram, int xsize, int x, int y, int c, unsigned char *s)
 
 void init_mouse_cursor8(int *mouse, int bc){
 	/* 准备鼠标指针(16x16) - 此处原内容在第99页*/
+	/* 
+	* 在这个函数中，int *mouse为鼠标指针的图形缓冲区，int bc是鼠标指针背景色
+	*/
 	static char cursor[16][16] = {
 		"*...............",
 		"**..............",
