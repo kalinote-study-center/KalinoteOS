@@ -18,6 +18,9 @@ void print(void)/*显示游戏界面*/
 {
     int i,j;
 	char s[40];
+	/* 清屏 */
+	api_cls();
+	
     api_putstr0("W━上  S━下  A━左  D━右  0━退出\n");
 	sprintf(s,"分数:%d  移动次数:%d\n",score,move);
     api_putstr0(s);

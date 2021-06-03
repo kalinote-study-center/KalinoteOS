@@ -454,7 +454,7 @@ int cmd_app(struct CONSOLE *cons, int *fat, char *cmdline){
 int *kal_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int eax){
 	/* 开放给外部程序的系统API */
 	/* 这个函数的传入参数的寄存器是按照PUSHAD来写的 */
-	int i;
+	int i, x, y;
 	struct TASK *task = task_now();
 	int ds_base = task->ds_base;
 	struct CONSOLE *cons = task->cons;
@@ -700,7 +700,7 @@ int *kal_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int 
 		/* 绘制icon */
 		
 	} else if (edx == 29) {
-		/* 清空命令台(有问题) */
+		/* 清空命令台 */
 		cmd_cls(cons);
 	}
 	return 0;

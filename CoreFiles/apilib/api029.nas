@@ -10,3 +10,4 @@
 _api_cls:		; void api_cls(void);
 		MOV		EDX,29
 		INT		0x40
+		RET

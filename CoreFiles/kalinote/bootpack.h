@@ -257,6 +257,14 @@ void timer_cancelall(struct FIFO32 *fifo);															// 取消所有定时器
 #define TASK_GDT0		3																			// 定义从GDT的几号开始分配给TSS
 #define MAX_TASKS_LV	250																			// 每层最多任务数
 #define MAX_TASKLEVELS	10																			// 最高任务层数(321页)
+/*下面这些是任务状态码，暂时还没有用到(2021.6.3) */
+#define	TESK_UNUSED					0					/* 未使用 */
+#define TASK_UNINTERRUPTIBLE		1					/* 可中断睡眠状态 */
+#define TASK_RUNNING				2					/* 正在运行 */
+#define	TASK_INTERRUPTIBLE			3					/* 不可中断睡眠状态 */
+#define	TASK_ZOMBIE					4					/* 僵死状态 */
+#define	TASK_STOPPED				5					/* 已停止 */
+/*************************************************/
 struct TSS32 {
 	/* 任务状态段(104字节)，用于切换任务时保存寄存器数据，这个是32位版，如果以后系统会升级到64位则更新64位版 */
 	int backlink, esp0, ss0, esp1, ss1, esp2, ss2, cr3;
@@ -265,7 +273,7 @@ struct TSS32 {
 	int ldtr, iomap;
 };
 struct TASK {
-	int sel, flags; 										// sel用来存放GDT编号
+	int sel, flags; 										// sel用来存放GDT编号，flags是任务状态，后面可以定义不同的任务状态
 	int level, priority;									// priority是进程优先级
 	struct FIFO32 fifo;										// 任务FIFO缓冲区，如果有需要以后也可以加个list(双链表)
 	struct TSS32 tss;										// 任务状态段

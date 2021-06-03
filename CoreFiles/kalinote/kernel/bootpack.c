@@ -32,6 +32,7 @@ void KaliMain(void){
 	/* struct WINDOW *debug_window; */
 	// struct BUTTON *start_button;
 	// struct BUTTON *tbutton1, *tbutton2, *tbutton3, *tbutton4, *tbutton5, *tbutton6, *tbutton7;
+	/* 英文键盘字符代码映射表 */
 	static char keytable0[0x80] = {
 		0,   0,   '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', 0x08, 0,
 		'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', '[', ']', 0x0a, 0, 'A', 'S',
@@ -93,9 +94,9 @@ void KaliMain(void){
 	shtctl = shtctl_init(memman, binfo->vram, binfo->scrnx, binfo->scrny);			// 初始化图层管理器
 	task_a = task_init(memman);														// 初始化多任务管理器
 	fifo.task = task_a;																// 系统底层任务
-	task_run(task_a, 0, 2);						/* 系统主进程 */
+	task_run(task_a, 0, 2);						/* 系统底部进程(task_a) */
 	*((int *) SHTCTL_ADDR) = (int) shtctl;		/* 把shtctl的值存到地址0xfe4的地方 */
-	task_a->langmode = 0;						/* ASCII英文 */
+	task_a->langmode = 0;						/* 将task_a的语言模式设置为ASCII英文 */
 
 	/* DEBUG cons初始化 */
 	*((int *) DEBUG_ADDR) = (int)open_console(shtctl, memtotal, 1);
