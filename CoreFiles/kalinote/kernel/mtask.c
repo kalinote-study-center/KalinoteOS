@@ -112,6 +112,8 @@ struct TASK *task_init(struct MEMMAN *memman){
 	idle->tss.gs = 1 * 8;
 	task_run(idle, MAX_TASKLEVELS - 1, 1);
 
+	taskctl->task_fpu = 0;		/* 先把FPU对应任务置0 */
+
 	return task;
 }
 
@@ -138,6 +140,13 @@ struct TASK *task_alloc(void){
 			task->tss.gs = 0;
 			task->tss.iomap = 0x40000000;		/* 固定值 */
 			task->tss.ss0 = 0;
+            task->tss.ss0 = 0;
+            task->fpu[0] = 0x037f; 				/* CW(control word) */
+            task->fpu[1] = 0x0000; 				/* SW(status word)  */
+            task->fpu[2] = 0xffff; 				/* TW(tag word)     */
+            for (i = 3; i < 108 / 4; i++) {
+                task->fpu[i] = 0;
+            }
 			return task;
 		}
 	}
@@ -209,4 +218,20 @@ void task_sleep(struct TASK *task)
 		}
 	}
 	return;
+}
+
+int *inthandler07(int *esp){
+	/* FPU中断函数 */
+    struct TASK *now = task_now();
+    io_cli();
+    clts();
+    if (taskctl->task_fpu != now) {
+        if (taskctl->task_fpu != 0) {
+            fnsave(taskctl->task_fpu->fpu);
+        }
+        frstor(now->fpu);
+        taskctl->task_fpu = now;
+    }
+    io_sti();
+    return 0;
 }

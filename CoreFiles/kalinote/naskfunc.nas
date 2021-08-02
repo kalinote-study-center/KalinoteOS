@@ -15,6 +15,8 @@
 		GLOBAL	_load_gdtr, _load_idtr
 		GLOBAL	_load_cr0, _store_cr0
 		GLOBAL	_load_tr
+		GLOBAL  _clts, _fnsave, _frstor
+		GLOBAL	_asm_inthandler07
 		GLOBAL	_asm_inthandler20, _asm_inthandler21
 		GLOBAL	_asm_inthandler26
 		GLOBAL	_asm_inthandler27, _asm_inthandler2c
@@ -24,6 +26,7 @@
 		GLOBAL	_farjmp, _farcall
 		GLOBAL	_asm_kal_api, _start_app
 		GLOBAL  _asm_shutdown
+		EXTERN  _inthandler07
 		EXTERN	_inthandler20, _inthandler21
 		EXTERN	_inthandler26
 		EXTERN	_inthandler27, _inthandler2c
@@ -138,6 +141,39 @@ _store_cr0:						; void store_cr0(int cr0);
 _load_tr:		; void load_tr(int tr);
 		LTR		[ESP+4]			; tr
 		RET
+
+_clts:          ; void clts(void);
+        CLTS
+        RET
+
+_fnsave:        ; void fnsave(int *addr);
+        MOV     EAX,[ESP+4]     ; addr
+        FNSAVE  [EAX]
+        RET
+
+_frstor:        ; void frstor(int *addr);
+        MOV     EAX,[ESP+4]     ; addr
+        FRSTOR  [EAX]
+        RET
+
+_asm_inthandler07:				; FPU
+        STI
+        PUSH    ES
+        PUSH    DS
+        PUSHAD
+        MOV     EAX,ESP
+        PUSH    EAX
+        MOV     AX,SS
+        MOV     DS,AX
+        MOV     ES,AX
+        CALL    _inthandler07
+        CMP     EAX,0
+        JNE     _asm_end_app
+        POP     EAX
+        POPAD
+        POP     DS
+        POP     ES
+        IRETD                   ; INT07中ESP+=4；不需要
 
 _asm_inthandler20:
 		PUSH	ES

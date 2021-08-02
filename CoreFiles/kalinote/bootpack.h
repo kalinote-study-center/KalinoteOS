@@ -28,7 +28,7 @@ struct SYSINFO {
 #define TRUE   (1)							// ¶¨ÒåTRUE
 #endif
 
-//asmhead.nas(bootpack.cµÄÇ°Ãæ²¿·Ö)
+/* asmhead.nas(bootpack.cµÄÇ°Ãæ²¿·Ö) ÒÔ¼° naskfunc.nas */
 struct BOOTINFO {		/* 0x0ff0-0x0fff */
 	/*Æô¶¯ĞÅÏ¢ - ´Ë´¦Ô­ÄÚÈİÔÚµÚ89Ò³*/
 	char cyls;			/*Æô¶¯Çø¶ÁÈ¡Ó²ÅÌÎ»ÖÃ*/
@@ -60,6 +60,7 @@ void load_idtr(int limit, int addr);					// ¼ÓÔØIDTR¼Ä´æÆ÷(IDTR¼Ä´æÆ÷ÓÃÓÚ±£´æIDT
 int load_cr0(void);										// ¼ÓÔØCR0¼Ä´æÆ÷
 void store_cr0(int cr0);								// ´æÈëCR0¼Ä´æÆ÷
 void load_tr(int tr);									// ¼ÓÔØTR¼Ä´æÆ÷
+void asm_inthandler07(void);							// 07ºÅÖĞ¶Ï£¬FPU
 void asm_inthandler0c(void);							// 0cºÅÖĞ¶Ï£¬ÓÃÓÚ´¦ÀíÕ»Òì³£
 void asm_inthandler0d(void);							// 0dºÅÖĞ¶Ï£¬ÓÃÓÚ´¦ÀíÒì³£³ÌĞò
 void asm_inthandler20(void);							// 20ºÅÖĞ¶Ï£¬ÓÃÓÚtimer
@@ -78,6 +79,9 @@ void start_app(int eip, int cs,
 	int esp, int ds, int *tss_esp0);					//Æô¶¯Ó¦ÓÃ³ÌĞò
 void asm_end_app(void);									//½áÊøÓ¦ÓÃ³ÌĞò
 void asm_shutdown(void);								//¹Ø»ú¹¦ÄÜ
+void clts(void);
+void fnsave(int *addr);
+void frstor(int *addr);
 
 //dsctbl.c(GDT,IDT)
 struct SEGMENT_DESCRIPTOR {
@@ -290,6 +294,7 @@ struct TASK {
 	int level, priority;									// priorityÊÇ½ø³ÌÓÅÏÈ¼¶
 	struct FIFO32 fifo;										// ÈÎÎñFIFO»º³åÇø£¬Èç¹ûÓĞĞèÒªÒÔºóÒ²¿ÉÒÔ¼Ó¸ölist(Ë«Á´±í)
 	struct TSS32 tss;										// ÈÎÎñ×´Ì¬¶Î
+	int fpu[108 / 4];										// TASKÊ¹ÓÃFPU¼Ä´æÆ÷Ê±µÄ´æ´¢Î»ÖÃºÍ¶ÁÈ¡Ô´
 	struct SEGMENT_DESCRIPTOR ldt[2];						
 	struct CONSOLE *cons;									// ÈÎÎñ¶ÔÓ¦µÄconsole
 	int ds_base, cons_stack;
@@ -306,6 +311,7 @@ struct TASKLEVEL {
 };
 struct TASKCTL {
 	int now_lv; 									/* ÏÖÔÚ»î¶¯ÖĞµÄÈÎÎñµÈ¼¶ */
+	struct TASK *task_fpu;							/* ¼ÇÂ¼µ±Ç°FPU¼Ä´æÆ÷ÊôÓÚÄÄ¸öÈÎÎñ */
 	char lv_change; 								/* ÏÂ´ÎÈÎÎñÇĞ»»Ê±ÊÇ·ñĞèÒª¸Ä±älevel */
 	struct TASKLEVEL level[MAX_TASKLEVELS];			/* ÈÎÎñlevel½á¹¹ÌåÊı×é */
 	struct TASK tasks0[MAX_TASKS];					/* ÈÎÎñ½á¹¹ÌåÊı×é */
@@ -320,6 +326,7 @@ struct TASK *task_now(void);																		// ·µ»ØÏÖÔÚÕıÔÚ»î¶¯ÖĞµÄTASK½á¹¹Ìåµ
 void task_run(struct TASK *task, int level, int priority);											// ÔËĞĞ³ÌĞò
 void task_switch(void);																				// ÇĞ»»³ÌĞò
 void task_sleep(struct TASK *task);																	// ³ÌĞòË¯Ãß
+int *inthandler07(int *esp);																		// FPUÖĞ¶Ï
 
 /* window.c(´°¿Ú»æÖÆ) */
 #define TIT_ACT_DEFAULT		0x00ffc1c1				// Ä¬ÈÏ´°¿Ú±êÌâÀ¸Ñ¡ÖĞÑÕÉ«	

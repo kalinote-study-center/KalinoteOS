@@ -897,7 +897,13 @@ void close_constask(struct TASK *task){
 	task_sleep(task);
 	memman_free_4k(memman, task->cons_stack, 64 * 1024);
 	memman_free_4k(memman, (int) task->fifo.buf, 128 * 4);
+	/* FPU */
+    io_cli();
 	task->flags = SHEET_NO_USE; /* ÓÃÀ´Ìæ´útask_free(task); */
+    if (taskctl->task_fpu == task) {
+        taskctl->task_fpu = 0;
+    }
+    io_sti();
 	return;
 }
 

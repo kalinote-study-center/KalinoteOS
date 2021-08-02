@@ -27,6 +27,7 @@ void init_gdtidt(void){
 	/* IDT的设定(中断注册) */
 	/* 这里的2<<3表示中断段号为2，左移3位是因为最低3位有其他作用 */
 	/* 注册方法：set_gatedesc(idt + 中断号, 偏移量(offset，中断程序标签), 中断段号(固定2 << 3), 权限(系统中断一般为AR_INTGATE32，应用程序需要加上0x60(01100000))); */
+	set_gatedesc(idt + 0x07, (int) asm_inthandler07, 2 << 3, AR_INTGATE32);						/* FPU中断 */
 	set_gatedesc(idt + 0x0c, (int) asm_inthandler0c, 2 << 3, AR_INTGATE32);						/* 栈异常中断 */
 	set_gatedesc(idt + 0x0d, (int) asm_inthandler0d, 2 << 3, AR_INTGATE32);						/* 一般保护异常中断 */
 	set_gatedesc(idt + 0x20, (int) asm_inthandler20, 2 << 3, AR_INTGATE32);						/* 时钟中断 */
