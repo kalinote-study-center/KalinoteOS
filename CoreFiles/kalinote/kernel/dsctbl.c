@@ -1,4 +1,4 @@
-/*此文件负责GDT,IDT等的处理*/
+ /*此文件负责GDT,IDT等的处理*/
 
 #include "../bootpack.h"
 
@@ -31,6 +31,7 @@ void init_gdtidt(void){
 	set_gatedesc(idt + 0x0d, (int) asm_inthandler0d, 2 << 3, AR_INTGATE32);						/* 一般保护异常中断 */
 	set_gatedesc(idt + 0x20, (int) asm_inthandler20, 2 << 3, AR_INTGATE32);						/* 时钟中断 */
 	set_gatedesc(idt + 0x21, (int) asm_inthandler21, 2 << 3, AR_INTGATE32);						/* 键盘中断 */
+	set_gatedesc(idt + 0x26, (int) asm_inthandler26, 2 << 3, AR_INTGATE32);						/* 软盘中断 */
 	set_gatedesc(idt + 0x27, (int) asm_inthandler27, 2 << 3, AR_INTGATE32);						/* 没用的中断，仅为了避免老硬件发生错误 */
 	set_gatedesc(idt + 0x2c, (int) asm_inthandler2c, 2 << 3, AR_INTGATE32);						/* 鼠标中断 */
 	set_gatedesc(idt + 0x2e, (int) asm_inthandler2e, 2 << 3, AR_INTGATE32);						/* IDE硬盘中断 */

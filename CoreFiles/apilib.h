@@ -1,4 +1,4 @@
-/* KalinoteOSϵͳAPI */
+/* KalinoteOS syscall */
 void api_putchar(int c);
 void api_putstr0(char *s);
 void api_putstr1(char *s, int l);
@@ -27,3 +27,10 @@ int api_fread(char *buf, int maxsize, int fhandle);
 int api_cmdline(char *buf, int maxsize);
 int api_getlang(void);
 void api_cls(void);
+unsigned int api_get_year(void);
+unsigned int api_get_mon_hex(void);
+unsigned int api_get_day_of_week(void);
+unsigned int api_get_day_of_month(void);
+unsigned int api_get_hour_hex(void);
+unsigned int api_get_min_hex(void);
+unsigned int api_get_sec_hex(void);

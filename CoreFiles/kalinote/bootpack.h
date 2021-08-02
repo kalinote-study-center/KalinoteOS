@@ -1,3 +1,11 @@
+/* 
+ * KalinoteOS主头文件
+ * 目前所有文件的函数都在此头文件中进行声明
+ * 本头文件中的所有函数、变量、结构体等，都已经按照文件进行分类
+ * 如果有需要，可以方便地拆分成不同头文件
+ */
+
+/* 系统全局定义 */
 //sysinfo(bootpack.c系统全局信息)
 struct SYSINFO {
 	char sysmode;					/* 系统模式 */
@@ -13,6 +21,12 @@ struct SYSINFO {
 #define FIFO_ADDR		0x0fec				// FIFO地址
 #define SYSINFO_ADDR	0x10000				// 系统信息地址
 #define SHTCTL_ADDR		0x0fe4				// 系统图层管理结构体地址
+#undef	NULL			
+#define NULL ((void*)0)						// 重新定义NULL
+#ifndef FALSE
+#define FALSE  (0)							// 定义FALSE
+#define TRUE   (1)							// 定义TRUE
+#endif
 
 //asmhead.nas(bootpack.c的前面部分)
 struct BOOTINFO {		/* 0x0ff0-0x0fff */
@@ -26,8 +40,6 @@ struct BOOTINFO {		/* 0x0ff0-0x0fff */
 };
 #define ADR_BOOTINFO	0x00000ff0						// bootinfo位置
 #define ADR_DISKIMG		0x00100000						// 文件位置(软盘，内存中)
-#undef	NULL			
-#define NULL ((void*)0)									// 重新定义NULL
 void io_hlt(void);										// 暂停处理器
 //void write_mem8(int addr, int data);					// 写入内存(被指针取代)
 void io_cli(void);										// 禁止中断
@@ -52,6 +64,7 @@ void asm_inthandler0c(void);							// 0c号中断，用于处理栈异常
 void asm_inthandler0d(void);							// 0d号中断，用于处理异常程序
 void asm_inthandler20(void);							// 20号中断，用于timer
 void asm_inthandler21(void);							// 21号中断，注册在0x21
+void asm_inthandler26(void);							// 26号中断，用于处理软盘
 void asm_inthandler27(void);							// 27号中断，注册在0x27
 void asm_inthandler2c(void);							// 2c号中断，注册在0x2c
 void asm_inthandler2e(void);							// IDE硬盘中断
@@ -134,7 +147,7 @@ void inthandler2c(int *esp);																		//鼠标监听中断
 void enable_mouse(struct FIFO32 *fifo, int data0, struct MOUSE_DEC *mdec);							//激活鼠标
 int mouse_decode(struct MOUSE_DEC *mdec, unsigned char dat);										//获取鼠标的三个字节信息，并解码
 
-//keyb .c(键盘控制)
+//keyboard.c(键盘控制)
 void inthandler21(int *esp);																		//键盘监听中断
 void wait_KBC_sendready(void);																		//等待键盘控制电路准备完毕
 void init_keyboard(struct FIFO32 *fifo, int data0);													//初始化键盘控制电路
@@ -443,6 +456,8 @@ void cmd_echo(struct CONSOLE *cons, char *cmdline);													// CMD：系统输出
 void cmd_hdnum(struct CONSOLE *cons);																// CMD：查询系统硬盘数量
 void cmd_hdinfo(struct CONSOLE *cons, char *cmdline);												// CMD：查询IDE硬盘信息
 void cmd_systest(struct CONSOLE *cons);																// CMD：测试系统功能专用
+void cmd_fdread(struct CONSOLE *cons);																// CMD：测试软盘读取功能
+void cmd_fdwrite(struct CONSOLE *cons);																// CMD：测试软盘写入功能
 int cmd_app(struct CONSOLE *cons, int *fat, char *cmdline);											// 外部应用程序
 int *kal_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int eax);				// 通过edx查找API
 int *inthandler0d(int *esp);																		// 0d号中断，用于处理异常程序
@@ -454,6 +469,7 @@ void keywin_off(struct SHEET *key_win);																// 控制窗口标题栏颜色和光
 void keywin_on(struct SHEET *key_win);																// 控制窗口标题栏颜色和光标激活状态
 void close_console(struct SHEET *sht);																// 关闭命令窗口
 void close_constask(struct TASK *task);																// 结束任务
+void cons_printf(struct CONSOLE *cons, char *format, ...);											// 格式化输出到指定cons窗口
 void debug_print(char *format, ...);																// 输出到DEBUG窗口
 
 /* file.c(文件处理) */
@@ -469,7 +485,7 @@ void file_readfat(int *fat, unsigned char *img);													// 解码FAT
 void file_loadfile(int clustno, int size, char *buf, int *fat, char *img);							// 加载文件
 char *file_loadfile2(int clustno, int *psize, int *fat);											// 加载kca压缩文件
 
-/* jpeg.c(读取jpg图片) */
+/* jpeg.c(处理jpg图片) */
 struct DLL_STRPICENV{
 	int work[64 * 1024 / 4];
 };
@@ -512,6 +528,99 @@ unsigned int get_day_of_month();					// 取当前日期
 unsigned int get_day_of_week();						// 取当前星期
 unsigned int get_mon_hex();							// 取当前月份
 unsigned int get_year();							// 取当前年份
+
+/* fd.c(软盘驱动) */
+typedef struct {
+	/* 
+	* 软盘信息结构体
+	* 这里的结构基本上和file.c中的FILEINFO结构体差不多，
+	* 因为都是FAT12文件系统，格式处理方式相同
+	*/
+	unsigned char name[8], ext[3], type, reserve[10];
+	unsigned short time, date, clustno;
+	unsigned int size;
+} FDINFO;
+typedef struct FDHANDLE {
+	/* 这个结构体用于文件处理 */
+	FDINFO* finfo;
+	int pos;
+	short cluster;
+	char modified;
+} FDHANDLE;
+/* https://wenku.baidu.com/view/e8a621e94afe04a1b071def5.html */
+#define MAX_CLUSTER  (2880)
+#define CLUSTER_SIZE  (512)
+#define FINFO_TOP  ((FDINFO*)(ADR_DISKIMG + 0x002600))
+#define FINFO_MAX  (224)
+#define DISK_FAT           ((unsigned char*)(ADR_DISKIMG + 0x000200))
+#define DISK_CLUSTER_DATA  ((unsigned char*)(ADR_DISKIMG + 0x003e00))
+#define CLUSTNO_FAT1     (1)							// FAT1:    0x000200 - 0x001400  ( 1~ 9)
+#define CLUSTNO_FAT2     (10)							// FAT2:    0x001400 - 0x002600  (10~18)
+#define CLUSTNO_ROOTDIR  (19)							// ROOTDIR: 0x002600 - 0x004200  (19~32)
+#define CLUSTNO_ENTITY   (33 - 2)						// ENTITY:  0x004200 -           (33~)  (Cluster starts from 2)
+#define	DMA_DATABUF				1024					// DMA数据缓冲区
+#define FDC_RESULT_MAXCOUNT 	0x10					// 软盘控制器计数最大值
+#define	DMA_ADD_SEC				0x04					// 低位地址(通道2)
+#define	DMA_CNT_SEC				0x05					// 计数地址(通道2)
+#define	DMA_TOP					0x81					// 高位地址(通道2)
+#define DMA_CMD_PRI				0xD0					// 相关指令地址，具体功能后续补充
+#define DMA_CMD_SEC				0x08                    // 相关指令地址，具体功能后续补充
+#define DMA_REQ_PRI				0xD2                    // 相关指令地址，具体功能后续补充
+#define DMA_REQ_SEC				0x09                    // 相关指令地址，具体功能后续补充
+#define DMA_SGL_MSK_PRI			0xD4                    // 相关指令地址，具体功能后续补充
+#define DMA_SGL_MSK_SEC			0x0A                    // 相关指令地址，具体功能后续补充
+#define DMA_MOD_PRI    			0xD6                    // 相关指令地址，具体功能后续补充
+#define DMA_MOD_SEC    			0x0B                    // 相关指令地址，具体功能后续补充
+#define DMA_CLR_FLP_PRI			0x0C                    // 相关指令地址，具体功能后续补充
+#define DMA_CLR_FLP_SEC			0xD8                    // 相关指令地址，具体功能后续补充
+#define DMA_MSR_CLR_PRI			0xDA                    // 相关指令地址，具体功能后续补充
+#define DMA_MSR_CLR_SEC			0x0D                    // 相关指令地址，具体功能后续补充
+#define DMA_CLR_MSK_PRI			0xDC                    // 相关指令地址，具体功能后续补充
+#define DMA_CLR_MSK_SEC			0x0E                    // 相关指令地址，具体功能后续补充
+#define DMA_ALL_MSK_PRI			0xDE                    // 相关指令地址，具体功能后续补充
+#define DMA_ALL_MSK_SEC			0x0F                    // 相关指令地址，具体功能后续补充
+#define FDC_SRA					0x3f0					// FDC 状态寄存器A (R)
+#define FDC_SRB					0x3f1					// FDC 状态寄存器B (R)
+#define FDC_DOR					0x3f2					// FDC 控制寄存器 (R/W)
+#define FDC_MSR					0x3f4					// FDC 状态寄存器 (R)
+#define FDC_DSR					0x3f4					// FDC 数据速率选择寄存器 (W)
+#define FDC_DAT					0x3f5					// FDC 数据(R/W)
+#define FDC_DIR					0x3f7					// FDC 数字输入寄存器 (R)
+#define FDC_CCR					0x3f7					// FDC 配置控制寄存器 (W)
+#define MSR_RQM					0x80					// MSR，具体功能后续补充
+#define MSR_DIO					0x40					// MSR，具体功能后续补充
+#define MSR_BUSY				0x10					// MSR，具体功能后续补充
+#define MSR_READY				0						// MSR，具体功能后续补充
+#define CMD_SPECIFY				0x03					// FDC指令
+#define CMD_RECALIBRATE			0x07					// FDC指令
+#define CMD_SENSE_INT_STS		0x08					// FDC指令
+#define CMD_SEEK				0x0f					// FDC指令
+#define CMD_READ				0x46					// FDC指令，MT=0,MF=1,SK=0
+#define CMD_WRITE				0x45					// FDC指令，MT=0,MF=1,SK=0
+#define CMD_SUB					0x00					// FDC指令，HD=0, US1 & US0 = 0
+/*
+  == FDC_CMD_SUB 格式 ==
+  x x x x x HD US1 US0
+  x 是 anyone.
+  HD 是 head number.
+  US1 和 US0 是软盘驱动号.
+  This cmd is used as the second byte of almost all command.
+  此cmd用作几乎所有命令的第二个字节。
+*/
+void inthandler26(int *esp);									// 26号中断(软盘控制器)
+void init_dma();												// 初始化DMA
+void init_fdc();												// 初始化FDC
+void *fdc_read(int head, int track, int sector);				// FDC读取
+int fdc_write(void* buf, int head, int cyl, int sector);		// FDC写入
+short get_next_cluster(short cluster);							// 获取下一个簇
+short allocate_cluster(void);									// 分配簇
+int fd_open(FDHANDLE* fh, const char* name);					// 打开
+int fd_writeopen(FDHANDLE* fh, const char* filename);           // 写
+int fd_read(FDHANDLE* fh, void* dst, int requestSize);          // 读取
+int fd_write(FDHANDLE* fh, const void* src, int requestSize);   // 写入
+void fd_seek(FDHANDLE* fh, int offset, int origin);             // 选择软盘
+void fd_close(FDHANDLE* fh);                                    // 关闭软盘
+int fd_delete(const char* filename);                            // 删除文件
 
 /* ide.c(ide硬盘驱动) */
 // struct IDE_DISK_DRIVER {
@@ -597,3 +706,6 @@ void list_remove(struct list_elem* pelem);										// 使元素pelem脱离链表
 struct list_elem* list_pop(struct list* plist);									// 将链表第一个元素弹出并返回,类似栈的pop操作
 int elem_find(struct list* plist, struct list_elem* obj_elem);					// 从链表中查找元素obj_elem,成功时返回所在位置,失败时返回-1
 int list_empty(struct list* plist);												// 判断链表是否为空,空时返回1,否则返回0
+
+/* util.c(通用工具包) */
+int read_rtc(unsigned char tt[5]);

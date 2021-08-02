@@ -91,40 +91,40 @@ void inthandler2e(int *esp){
 
 void hd_read_sectors(int lba, char *buf, int counts, int hd_num) {
 	/* 读扇区 */
-	unsigned char status = 0;
-	int timeout = STATUS_WAIT_TIMEOUT;
-	unsigned int x;
-	short inChar;
-	char first,second;
+	// unsigned char status = 0;
+	// int timeout = STATUS_WAIT_TIMEOUT;
+	// unsigned int x;
+	// short inChar;
+	// char first,second;
 	
-	io_out8(IDE1_NSECTOR, counts);
-	io_out8(IDE1_LBA_LOW, lba);
-	io_out8(IDE1_LBA_MID, lba>>8);
-	io_out8(IDE1_LBA_HIGH, (lba>>16)&0xff);
-	io_out8(IDE1_DEVICE, 0xe0 | (hd_num << 4));
-	io_out8(IDE1_STATUS, ATA_READ);
+	// io_out8(IDE1_NSECTOR, counts);
+	// io_out8(IDE1_LBA_LOW, lba);
+	// io_out8(IDE1_LBA_MID, lba>>8);
+	// io_out8(IDE1_LBA_HIGH, (lba>>16)&0xff);
+	// io_out8(IDE1_DEVICE, 0xe0 | (hd_num << 4));
+	// io_out8(IDE1_STATUS, ATA_READ);
 	
-	do{
-		status = io_in8(IDE1_STATUS);
-		if (timeout-- == 0) {
-			/* 读取失败 */
-			debug_print("ide> read err");
-			return;
-		}
-	} while ((status & 0x8) != 0x8);	/* 为0x8时数据准备好 */
+	// do{
+		// status = io_in8(IDE1_STATUS);
+		// if (timeout-- == 0) {
+			// /* 读取失败 */
+			// debug_print("ide> read err");
+			// return;
+		// }
+	// } while ((status & 0x8) != 0x8);	/* 为0x8时数据准备好 */
 	
-	for(x = 0; x < counts*SECTOR_SIZE; x+=2){
-		/* 一次读取两个字节 */
-		inChar = io_in16(IDE1_DATA);
-		first = (inChar << 8) >> 8;		/* 第一个字节 */
-		debug_print("ide read> %d:1st:%c\n",x,first);
-		second = inChar >> 8;		/* 第二个字节 */
-		debug_print("ide read> %d:2nd:%c\n",x+1,second);
-		buf[x] = first;
-		buf[x + 1] = second;
-	}
+	// for(x = 0; x < counts*SECTOR_SIZE; x+=2){
+		// /* 一次读取两个字节 */
+		// inChar = io_in16(IDE1_DATA);
+		// first = (inChar << 8) >> 8;		/* 第一个字节 */
+		// debug_print("ide read> %d:1st:%c\n",x,first);
+		// second = inChar >> 8;		/* 第二个字节 */
+		// debug_print("ide read> %d:2nd:%c\n",x+1,second);
+		// buf[x] = first;
+		// buf[x + 1] = second;
+	// }
 	
-	return;
+	// return;
 }
 
 void hd_write_sectors(int lba, char *buf, int counts,int hd_num) {

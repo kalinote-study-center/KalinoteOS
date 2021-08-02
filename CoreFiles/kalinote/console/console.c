@@ -16,6 +16,8 @@ void console_task(struct SHEET *sheet, unsigned int memtotal){
 	unsigned char *hzk = (char *) *((int *) 0x0fe8);
 	struct SYSINFO *sysinfo = (struct SYSINFO *) *((int *) SYSINFO_ADDR);
 
+	
+
 	cons.sht = sheet;
 	cons.cur_x =  8;
 	cons.cur_y = 28;
@@ -348,6 +350,10 @@ void cons_runcmd(char *cmdline, struct CONSOLE *cons, int *fat, unsigned int mem
 		cmd_hdnum(cons);
 	} else if (strncmp(cmdline, "hdinfo ", 7) == 0) {
 		cmd_hdinfo(cons, cmdline);
+	} else if (strcmp(cmdline, "fdread") == 0) {
+		cmd_fdread(cons);
+	} else if (strcmp(cmdline, "fdwrite") == 0) {
+		cmd_fdwrite(cons);
 	} else if (strcmp(cmdline,"test") == 0) {
 		/* 测试专用 */
 		cmd_systest(cons);
@@ -399,11 +405,12 @@ int cmd_app(struct CONSOLE *cons, int *fat, char *cmdline){
 
 	if (finfo != 0) {
 		/* 找到文件的情况 */
-		p = (char *) memman_alloc_4k(memman, finfo->size);											/* 给应用程序分配一段空内存空间(读取应用) */
+		p = (char *) memman_alloc_4k(memman, finfo->size);											/* 给应用程序分配一段空内存空间(读取应用到内存) */
 		file_loadfile(finfo->clustno, finfo->size, p, fat, (char *) (ADR_DISKIMG + 0x003e00));		/* 加载应用程序文件 */
 		if (finfo->size >= 36 && strncmp(p + 4, "Kali", 4) == 0 && *p == 0x00) {
 			/*  这里的几个判断，第一个是kal头文件为36字节，所以kal应用程序一定会大于36字节，第二个是检查是否有kal应用签名 */
 			/* 处理kal文件头(这里以后可能还需要修改一下) */
+			/* 注释里面有写到新标的相关位置，但是新标的编译器还没有做好，所以暂时用不上 */
 			segsiz = *((int *) (p + 0x0000));					/* stack+.data+heap(数据段，函数外定义的数据，以及字符串等)的大小(4K的倍数) */
 			esp    = *((int *) (p + 0x000c));					/* 堆栈初始值和.data传输目的地 */			/* 新标为14 */
 			datsiz = *((int *) (p + 0x0010));					/* .data的大小 */							/* 新标为1A */
@@ -454,7 +461,7 @@ int cmd_app(struct CONSOLE *cons, int *fat, char *cmdline){
 int *kal_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int eax){
 	/* 开放给外部程序的系统API */
 	/* 这个函数的传入参数的寄存器是按照PUSHAD来写的 */
-	int i, x, y;
+	int i;
 	struct TASK *task = task_now();
 	int ds_base = task->ds_base;
 	struct CONSOLE *cons = task->cons;
@@ -702,6 +709,27 @@ int *kal_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int 
 	} else if (edx == 29) {
 		/* 清空命令台 */
 		cmd_cls(cons);
+	} else if (edx == 30) {
+		/* 获取系统时间：年 */
+		reg[7] = get_year();
+	} else if (edx == 31) {
+		/* 获取系统时间：月 */
+		reg[7] = get_mon_hex();
+	} else if (edx == 32) {
+		/* 获取系统时间：星期 */
+		reg[7] = get_day_of_week();
+	} else if (edx == 33) {
+		/* 获取系统时间：日 */
+		reg[7] = get_day_of_month();
+	} else if (edx == 34) {
+		/* 获取系统时间：时 */
+		reg[7] = get_hour_hex();
+	} else if (edx == 35) {
+		/* 获取系统时间：分 */
+		reg[7] = get_min_hex();
+	} else if (edx == 36) {
+		/* 获取系统时间：秒 */
+		reg[7] = get_sec_hex();
 	}
 	return 0;
 }
@@ -880,6 +908,19 @@ void close_console(struct SHEET *sht){
 	memman_free_4k(memman, (int) sht->buf, 256 * 165 * 4);
 	sheet_free(sht);
 	close_constask(task);
+	return;
+}
+
+void cons_printf(struct CONSOLE *cons, char *format, ...) {
+	/* 格式化输出到指定cons窗口 */
+	char buf[1024];
+	int i;
+	va_list ap;
+	
+	va_start(ap, format);
+	i = vsprintf(buf, format, ap);
+	cons_putstr0(cons, buf);
+	va_end(ap);
 	return;
 }
 

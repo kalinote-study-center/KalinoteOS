@@ -1,4 +1,4 @@
-OBJS_API =	stdlib.obj malloc.obj stdio.obj ctype.obj string.obj
+OBJS_API =	stdlib.obj malloc.obj stdio.obj ctype.obj string.obj graphics.obj
 
 TOOLPATH = ../../z_tools/
 INCPATH  = ../../z_tools/kalinote/

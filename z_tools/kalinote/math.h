@@ -1,4 +1,4 @@
-/* copyright(C) 2003 H.Kawai (under KL-01). */
+/* math.h */
 
 #if (!defined(MATH_H))
 

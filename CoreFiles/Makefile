@@ -21,7 +21,7 @@ kalinote.img : kalinote/ipl40.bin kalinote/kalinote.sys Makefile \
 		beepdown/beepdown.kal beepup/beepup.kal sosu/sosu.kal \
 		cat/cat.kal chklang/chklang.kal \
 		notrec/notrec.kal bball/bball.kal calc/calc.kal \
-		a2048/a2048.kal testapp/testapp.kal
+		a2048/a2048.kal testapp/testapp.kal timeapp/timeapp.kal
 	$(EDIMG)   imgin:../z_tools/fdimg0at.tek \
 		wbinimg src:kalinote/ipl40.bin len:512 from:0 to:0 \
 		copy from:kalinote/kalinote.sys to:@: \
@@ -46,6 +46,7 @@ kalinote.img : kalinote/ipl40.bin kalinote/kalinote.sys Makefile \
 		copy from:resources/back.jpg to:@: \
 		copy from:a2048/a2048.kal to:@: \
 		copy from:testapp/testapp.kal to:@: \
+		copy from:timeapp/timeapp.kal to:@: \
 		imgout:kalinote.img
 
 # √¸¡Ó
@@ -81,6 +82,7 @@ full :
 	$(MAKE) -C calc
 	$(MAKE) -C a2048
 	$(MAKE) -C testapp
+	$(MAKE) -C timeapp
 	$(MAKE) kalinote.img
 	$(COPY) kalinote.img ..\z_tools\qemu\kalinoteos.bin
 	$(COPY) kalinote.img ..\z_tools\qemu\kalinoteos.vfd
@@ -136,6 +138,7 @@ clean_full :
 	$(MAKE) -C calc			clean
 	$(MAKE) -C a2048		clean
 	$(MAKE) -C testapp		clean
+	$(MAKE) -C timeapp		clean
 
 src_only_full :
 	$(MAKE) -C kalinote		src_only
@@ -158,6 +161,7 @@ src_only_full :
 	$(MAKE) -C calc			src_only
 	$(MAKE) -C a2048		src_only
 	$(MAKE) -C testapp		src_only
+	$(MAKE) -C timeapp		src_only
 	-$(DEL) kalinote.img
 
 refresh :

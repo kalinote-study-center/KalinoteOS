@@ -74,8 +74,8 @@ void KaliMain(void){
 	init_pit();														// 初始化定时器
 	init_keyboard(&fifo, 256);										// 初始化键盘FIFO缓冲区
 	enable_mouse(&fifo, 512, &mdec);								// 初始化鼠标FIFO缓冲区
-	io_out8(PIC0_IMR, 0xf8); 										// 允许PIT、PIC1和PS/2键盘(11111000)
-	io_out8(PIC1_IMR, 0xaf); 										// 允许PS/2鼠标和硬盘(10101111)
+	io_out8(PIC0_IMR, 0xb8); 										// 允许PIT、PIC1和PS/2键盘(11111000)
+	io_out8(PIC1_IMR, 0xef); 										// 允许PS/2鼠标(11101111)
 	
 	fifo32_init(&keycmd, 32, keycmd_buf, 0);
 	*((int *) FIFO_ADDR) = (int) &fifo;		/* 把fifo缓冲区存到0x0fec */
@@ -86,6 +86,9 @@ void KaliMain(void){
 	memman_free(memman, 0x00001000, 0x0009e000); /* 将0x00001000 - 0x0009efff清空，这一部分是是模式读取软盘的内容，在进入保护模式后，这部分内容被移动到0x00100000以后，这一段内存在启动完成后有其他用途 */
 	memman_free(memman, SYS_MEMORY, memtotal - SYS_MEMORY); /* 清空除了系统占用的所有保护模式扩展内存(0x00400000以后) */
 	sysinfo.memtotal = memtotal;
+	
+	/* 软盘 */
+	// init_fdc();
 	
 	/* 硬盘 */
 	// init_ide_hd(memman);															// 初始化IDE硬盘控制程序
