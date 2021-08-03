@@ -77,6 +77,7 @@ void KaliMain(void){
 	enable_mouse(&fifo, 512, &mdec);								// 初始化鼠标FIFO缓冲区
 	io_out8(PIC0_IMR, 0xb8); 										// 允许PIT、PIC1和PS/2键盘(11111000)
 	io_out8(PIC1_IMR, 0xef); 										// 允许PS/2鼠标(11101111)
+	init_acpi();													// 初始化ACPI
 	
 	fifo32_init(&keycmd, 32, keycmd_buf, 0);
 	*((int *) FIFO_ADDR) = (int) &fifo;		/* 把fifo缓冲区存到0x0fec */

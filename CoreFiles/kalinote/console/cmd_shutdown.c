@@ -3,5 +3,5 @@
 
 void cmd_shutdown(void){
 	/* ¹Ø»ú */
-	asm_shutdown();
+	acpi_shutdown();
 }

@@ -220,7 +220,7 @@ void onOpenConsoleClick(void) {
 
 void onShutdownClick(void) {
 	/* 关机选项被单击 */
-	cmd_shutdown();
+	acpi_shutdown();
 	return;
 }
 
