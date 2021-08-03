@@ -59,6 +59,7 @@ run :
 	$(COPY) kalinote.img ..\z_tools\qemu\kalinoteos.bin
 	$(COPY) kalinote.img ..\z_tools\qemu\kalinoteos.vfd
 	$(MAKE) -C ../z_tools/qemu
+	# qemu-system-i386 -m 2048 -drive file=kalinote.img,index=0,if=floppy,format=raw -boot a
 
 install :
 	$(MAKE) kalinote.img
@@ -97,6 +98,7 @@ run_full :
 	$(COPY) kalinote.img ..\z_tools\qemu\kalinoteos.bin
 	$(COPY) kalinote.img ..\z_tools\qemu\kalinoteos.vfd
 	$(MAKE) -C ../z_tools/qemu
+	# qemu-system-i386 -m 2048 -drive file=kalinote.img,index=0,if=floppy,format=raw -boot a
 
 install_full :
 	$(MAKE) full

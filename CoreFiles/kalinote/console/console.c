@@ -346,19 +346,8 @@ void cons_runcmd(char *cmdline, struct CONSOLE *cons, int *fat, unsigned int mem
 		cmd_sysmode(cons, cmdline);
 	} else if (strncmp(cmdline, "echo ", 5) == 0) {
 		cmd_echo(cons, cmdline);
-	} else if (strcmp(cmdline, "hdnum") == 0) {
-		cmd_hdnum(cons);
-	} else if (strncmp(cmdline, "hdinfo ", 7) == 0) {
-		cmd_hdinfo(cons, cmdline);
 	} else if (strcmp(cmdline, "getruntime") == 0) {
 		cmd_getruntime(cons);
-	} else if (strcmp(cmdline, "fdread") == 0) {
-		cmd_fdread(cons);
-	} else if (strcmp(cmdline, "fdwrite") == 0) {
-		cmd_fdwrite(cons);
-	} else if (strcmp(cmdline,"test") == 0) {
-		/* 测试专用 */
-		cmd_systest(cons);
 	} else if (cmdline[0] != 0) {
 		/* 执行cmd_app(),如果不是一个应用，会返回0 */
 		if (cmd_app(cons, fat, cmdline) == 0) {

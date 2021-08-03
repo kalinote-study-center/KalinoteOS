@@ -18,20 +18,16 @@
 		GLOBAL  _clts, _fnsave, _frstor
 		GLOBAL	_asm_inthandler07
 		GLOBAL	_asm_inthandler20, _asm_inthandler21
-		GLOBAL	_asm_inthandler26
 		GLOBAL	_asm_inthandler27, _asm_inthandler2c
 		GLOBAL	_asm_inthandler0c, _asm_inthandler0d
-		GLOBAL	_asm_inthandler2e
 		GLOBAL	_asm_end_app, _memtest_sub
 		GLOBAL	_farjmp, _farcall
 		GLOBAL	_asm_kal_api, _start_app
 		GLOBAL  _asm_shutdown
 		EXTERN  _inthandler07
 		EXTERN	_inthandler20, _inthandler21
-		EXTERN	_inthandler26
 		EXTERN	_inthandler27, _inthandler2c
 		EXTERN	_inthandler0c, _inthandler0d
-		EXTERN	_inthandler2e
 		EXTERN	_kal_api
 
 [SECTION .text]					; 目标文件中写了这些之后在写程序
@@ -206,23 +202,7 @@ _asm_inthandler21:
 		POP		DS
 		POP		ES
 		IRETD
-
-_asm_inthandler26:							; 软盘
-		PUSH	ES
-		PUSH	DS
-		PUSHAD
-		MOV		EAX,ESP
-		PUSH	EAX
-		MOV		AX,SS
-		MOV		DS,AX
-		MOV		ES,AX
-		CALL	_inthandler26
-		POP		EAX
-		POPAD
-		POP		DS
-		POP		ES
-		IRETD
-
+		
 _asm_inthandler27:
 		PUSH	ES
 		PUSH	DS
@@ -249,22 +229,6 @@ _asm_inthandler2c:
 		MOV		DS,AX
 		MOV		ES,AX
 		CALL	_inthandler2c
-		POP		EAX
-		POPAD
-		POP		DS
-		POP		ES
-		IRETD
-
-_asm_inthandler2e:
-		PUSH	ES
-		PUSH	DS
-		PUSHAD								; 这一句的功能相当于PUSH EAX,ECX,EDX,EBX,ESP,EBP,ESI,EDI，下面的POPAD同理，只是顺序相反
-		MOV		EAX,ESP
-		PUSH	EAX
-		MOV		AX,SS
-		MOV		DS,AX
-		MOV		ES,AX
-		CALL	_inthandler2e
 		POP		EAX
 		POPAD
 		POP		DS

@@ -15,6 +15,13 @@ void KaliMain(void)
 		{ 204, 129 }
 	};
 
+	static unsigned int colorset[16] = {
+		0xE60012, 0xF39800, 0xFCC800, 0xFFF100, 0x8FC31F, 
+		0x22AC38, 0x009944, 0x009E96, 0x00A0C1, 0x00A0E9, 
+		0x0068B7, 0x1D2088, 0x920783, 0xE4007F, 0xe5004F, 
+		0xE60033
+	};
+
 	win = api_openwin(buf, 216, 237, -1, "bball");
 	api_boxfilwin(win, 8, 29, 207, 228, 0);
 	for (i = 0; i <= 14; i++) {
@@ -24,7 +31,7 @@ void KaliMain(void)
 				dis = 15 - dis; /* ÄæÏò¼ÆÊý */
 			}
 			if (dis != 0) {
-				api_linewin(win, table[i].x, table[i].y, table[j].x, table[j].y, 0x00ffffff);
+				api_linewin(win, table[i].x, table[i].y, table[j].x, table[j].y, colorset[i]);
 			}
 		}
 	}

@@ -88,12 +88,6 @@ void KaliMain(void){
 	memman_free(memman, SYS_MEMORY, memtotal - SYS_MEMORY); /* 清空除了系统占用的所有保护模式扩展内存(0x00400000以后) */
 	sysinfo.memtotal = memtotal;
 	
-	/* 软盘 */
-	// init_fdc();
-	
-	/* 硬盘 */
-	// init_ide_hd(memman);															// 初始化IDE硬盘控制程序
-	
 	//init_palette();																// 初始化调色板
 	shtctl = shtctl_init(memman, binfo->vram, binfo->scrnx, binfo->scrny);			// 初始化图层管理器
 	task_a = task_init(memman);														// 初始化多任务管理器
