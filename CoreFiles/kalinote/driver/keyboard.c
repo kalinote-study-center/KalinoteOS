@@ -40,3 +40,10 @@ void init_keyboard(struct FIFO32 *fifo, int data0){
 	io_out8(PORT_KEYDAT, KBC_MODE);
 	return;
 }
+
+void reset_cpu(void){
+	/* ¸´Î»CPU */
+    wait_KBC_sendready();
+    io_out8(PORT_KEYCMD, 0xfe);
+    for (;;) { io_hlt(); }
+}

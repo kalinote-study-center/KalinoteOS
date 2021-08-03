@@ -65,6 +65,7 @@ void KaliMain(void){
 	sysinfo.hour = get_hour_hex();
 	sysinfo.min = get_min_hex();
 	sysinfo.sec = get_sec_hex();
+	sysinfo.time_counter = 0;
 
 	/* 初始化 */
 	init_gdtidt();													// 初始化GDT和IDT
@@ -288,6 +289,7 @@ void KaliMain(void){
 				/*
 				*  理论上来说定时器是一秒触发一次，但实际上因为系统运行速度较慢，似乎触发的时间远远大于一秒
 				*/
+				sysinfo.time_counter += 1;			/* 记录系统运行时间 */
 				timer_init(timer, &fifo, 1);		/* 设置一个定时器，下一秒再次更新 */
 				timer_settime(timer, 100);
 				sysinfo.sec += 1;

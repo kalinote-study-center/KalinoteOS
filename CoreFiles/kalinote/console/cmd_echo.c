@@ -1,4 +1,4 @@
-/* 系统输出 */
+/* 系统输出(等待完善) */
 #include "../bootpack.h"
 #include <stdio.h>
 

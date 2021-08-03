@@ -95,7 +95,7 @@ void change_button(struct BUTTON *button, struct SHEET *fsht, char click) {
 		boxfill8(button->sht->buf,	button->width,			 COL_DGREY, 				0, button->height - 2,		 button->width - 1,		button->height - 2);			/* 灰色下横线 */
 		boxfill8(button->sht->buf,	button->width,			 COL_BLACK,	button->width - 1,					0,		 button->width - 1,		button->height - 1);			/* 黑色右竖线 */
 		boxfill8(button->sht->buf,	button->width,			 COL_BLACK, 				0, button->height - 1,		 button->width - 1,		button->height - 1);			/* 黑色下横线 */
-		/* 写标题 */
+		/* 写标题(后续考虑使用图层) */
 		putfonts8_asc(button->sht->buf, button->width, 2, ((button->height) / 2) - 8, COL_BLACK, button->title);
 	} else {
 		/* 按下 */
@@ -108,7 +108,7 @@ void change_button(struct BUTTON *button, struct SHEET *fsht, char click) {
 		boxfill8(button->sht->buf,	button->width,			 COL_DGREY, 				1, 					1,						 1,		button->height - 2);			/* 灰色左竖线 */
 		boxfill8(button->sht->buf,	button->width,			 COL_WHITE,	button->width - 1,					0,		 button->width - 1,		button->height - 1);			/* 白色右竖线 */
 		boxfill8(button->sht->buf,	button->width,			 COL_WHITE, 				0, button->height - 1,		 button->width - 1,		button->height - 1);			/* 白色下横线 */
-		/* 写标题 */
+		/* 写标题(后续考虑使用图层) */
 		putfonts8_asc(button->sht->buf, button->width, 2, ((button->height) / 2) - 8, COL_BLACK, button->title);
 	}
 	sheet_refresh(button->sht,0,0,button->sht->bxsize,button->sht->bysize);		/* 刷新子图层 */
@@ -137,6 +137,7 @@ void release_button(struct BUTTON *button) {
 
 void click_button(struct BUTTON *button) {
 	/* 点击按钮 */
+	/* 运行按钮结构体绑定的函数 */
 	
 	if(button->flags != 0) {
 		/* 如果没有禁用则运行程序 */

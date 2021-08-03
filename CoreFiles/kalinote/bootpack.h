@@ -16,6 +16,7 @@ struct SYSINFO {
 	unsigned int memtotal;			/* 系统总内存 */
 	int year, month, day;			/* 系统日期 */
 	int hour, min, sec;				/* 系统时间 */
+	unsigned int time_counter;		/* 记录系统启动以来的时间 */
 };
 #define	SYS_MEMORY		0x00400000			// 系统占用内存
 #define FIFO_ADDR		0x0fec				// FIFO地址
@@ -137,24 +138,25 @@ struct FIFO32 {
 	int p, q, size, free, flags;				// p是下一次数据写入地址，q是下一次数据读入地址，size是缓冲区大小，free是缓冲区空闲字节数，flags是溢出标志(为1时发生溢出)
 	struct TASK *task;							// 有数据写入时需要唤醒的任务
 };
-void fifo32_init(struct FIFO32 *fifo, int size, int *buf, struct TASK *task);						//初始化FIFO缓冲区
-int fifo32_put(struct FIFO32 *fifo, int data);														//向FIFO传数据并保存
-int fifo32_get(struct FIFO32 *fifo);																//从FIFO获得一个数据
-int fifo32_status(struct FIFO32 *fifo);																//查询缓冲区状态
+void fifo32_init(struct FIFO32 *fifo, int size, int *buf, struct TASK *task);						// 初始化FIFO缓冲区
+int fifo32_put(struct FIFO32 *fifo, int data);														// 向FIFO传数据并保存
+int fifo32_get(struct FIFO32 *fifo);																// 从FIFO获得一个数据
+int fifo32_status(struct FIFO32 *fifo);																// 查询缓冲区状态
 
 //mouse.c(鼠标控制)
 struct MOUSE_DEC {
 	unsigned char buf[3], phase;				// buf[3]是数据缓冲区，P/S2鼠标一次传递3字节数据，phase是接受第几字节的数据
 	int x, y, btn;								// x,y，btn是解析鼠标数据后获得的坐标和按钮数据
 };
-void inthandler2c(int *esp);																		//鼠标监听中断
-void enable_mouse(struct FIFO32 *fifo, int data0, struct MOUSE_DEC *mdec);							//激活鼠标
-int mouse_decode(struct MOUSE_DEC *mdec, unsigned char dat);										//获取鼠标的三个字节信息，并解码
+void inthandler2c(int *esp);																		// 鼠标监听中断
+void enable_mouse(struct FIFO32 *fifo, int data0, struct MOUSE_DEC *mdec);							// 激活鼠标
+int mouse_decode(struct MOUSE_DEC *mdec, unsigned char dat);										// 获取鼠标的三个字节信息，并解码
 
 //keyboard.c(键盘控制)
-void inthandler21(int *esp);																		//键盘监听中断
-void wait_KBC_sendready(void);																		//等待键盘控制电路准备完毕
-void init_keyboard(struct FIFO32 *fifo, int data0);													//初始化键盘控制电路
+void inthandler21(int *esp);																		// 键盘监听中断
+void wait_KBC_sendready(void);																		// 等待键盘控制电路准备完毕
+void init_keyboard(struct FIFO32 *fifo, int data0);													// 初始化键盘控制电路
+void reset_cpu(void);																				// 复位CPU
 #define PORT_KEYDAT		0x0060
 #define PORT_KEYCMD		0x0064
 
@@ -168,13 +170,13 @@ struct MEMMAN {		/* 内存管理 */
 	int frees, maxfrees, lostsize, losts;
 	struct FREEINFO free[MEMMAN_FREES];
 };
-unsigned int memtest(unsigned int start, unsigned int end);											//测试CPU类型，以及内存容量
-void memman_init(struct MEMMAN *man);																//初始化内存管理程序
-unsigned int memman_total(struct MEMMAN *man);														//获取剩余内存大小
-unsigned int memman_alloc(struct MEMMAN *man, unsigned int size);									//分配内存
-int memman_free(struct MEMMAN *man, unsigned int addr, unsigned int size);							//释放内存
-unsigned int memman_alloc_4k(struct MEMMAN *man, unsigned int size);								//4K大空间分配内存
-int memman_free_4k(struct MEMMAN *man, unsigned int addr, unsigned int size);						//4K大空间释放内存
+unsigned int memtest(unsigned int start, unsigned int end);											// 测试CPU类型，以及内存容量
+void memman_init(struct MEMMAN *man);																// 初始化内存管理程序
+unsigned int memman_total(struct MEMMAN *man);														// 获取剩余内存大小
+unsigned int memman_alloc(struct MEMMAN *man, unsigned int size);									// 分配内存
+int memman_free(struct MEMMAN *man, unsigned int addr, unsigned int size);							// 释放内存
+unsigned int memman_alloc_4k(struct MEMMAN *man, unsigned int size);								// 4K大空间分配内存
+int memman_free_4k(struct MEMMAN *man, unsigned int addr, unsigned int size);						// 4K大空间释放内存
 
 //sheet.c(画面图层处理)
 #define MAX_SHEETS			256									// 最大图层数(包括鼠标、桌面、任务栏等)
@@ -406,6 +408,9 @@ void hide_menu(struct MEMMAN *memman, struct MENU *menu);											// 隐藏菜单
 void option_change(struct MENU *menu, int mouse_y);													// 鼠标移动时选项变色处理
 void menu_click(struct MENU *menu, int mouse_y);													// 菜单栏被单击
 
+/* textbox.c(输入框) */
+void make_textbox8(struct SHEET *sht, int x0, int y0, int sx, int sy, int c);						// 生成输入框
+
 /* taskbar.c(底端任务栏) */
 #define TASKBAR_ADDR	0x30100			/* 任务栏图层地址 */
 #define TASKBARCTL_ADDR	0x30200			/* 任务栏管理结构体地址 */
@@ -462,6 +467,7 @@ void cmd_sysmode(struct CONSOLE *cons, char *cmdline);												// CMD：切换系
 void cmd_echo(struct CONSOLE *cons, char *cmdline);													// CMD：系统输出
 void cmd_hdnum(struct CONSOLE *cons);																// CMD：查询系统硬盘数量
 void cmd_hdinfo(struct CONSOLE *cons, char *cmdline);												// CMD：查询IDE硬盘信息
+void cmd_getruntime(struct CONSOLE *cons);															// CMD：查询系统启动运行时间
 void cmd_systest(struct CONSOLE *cons);																// CMD：测试系统功能专用
 void cmd_fdread(struct CONSOLE *cons);																// CMD：测试软盘读取功能
 void cmd_fdwrite(struct CONSOLE *cons);																// CMD：测试软盘写入功能

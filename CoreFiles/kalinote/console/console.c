@@ -350,6 +350,8 @@ void cons_runcmd(char *cmdline, struct CONSOLE *cons, int *fat, unsigned int mem
 		cmd_hdnum(cons);
 	} else if (strncmp(cmdline, "hdinfo ", 7) == 0) {
 		cmd_hdinfo(cons, cmdline);
+	} else if (strcmp(cmdline, "getruntime") == 0) {
+		cmd_getruntime(cons);
 	} else if (strcmp(cmdline, "fdread") == 0) {
 		cmd_fdread(cons);
 	} else if (strcmp(cmdline, "fdwrite") == 0) {

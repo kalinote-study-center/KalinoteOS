@@ -1,4 +1,5 @@
 /* 软盘驱动程序 */
+/* 这个驱动还有一些问题，但是找不到资料解决 */
 #include "../bootpack.h"
 #include <string.h>
 
