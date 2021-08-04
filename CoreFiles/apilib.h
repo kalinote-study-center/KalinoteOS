@@ -34,3 +34,4 @@ unsigned int api_get_day_of_month(void);
 unsigned int api_get_hour_hex(void);
 unsigned int api_get_min_hex(void);
 unsigned int api_get_sec_hex(void);
+unsigned int api_get_system_runtime(void);

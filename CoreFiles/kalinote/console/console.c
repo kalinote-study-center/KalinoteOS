@@ -463,6 +463,7 @@ int *kal_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int 
 	struct FILEHANDLE *fh;
 	struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;
 	struct WINDOW *window;
+	struct SYSINFO *sysinfo = (struct SYSINFO *) *((int *) SYSINFO_ADDR);
 	int *reg = &eax + 1;	/* eax后面的地址 */
 		/* 强行改写通过PUSHAD保存的值，用于返回数值 */
 		/* reg[0] : EDI,   reg[1] : ESI,   reg[2] : EBP,   reg[3] : ESP */
@@ -721,6 +722,10 @@ int *kal_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int 
 	} else if (edx == 36) {
 		/* 获取系统时间：秒 */
 		reg[7] = get_sec_hex();
+	} else if (edx == 37) {
+		/* 获取系统运行时间(秒) */
+		/* 尚未测试 */
+		reg[7] = sysinfo->time_counter;
 	}
 	return 0;
 }
