@@ -221,7 +221,7 @@ void task_sleep(struct TASK *task)
 }
 
 int *inthandler07(int *esp){
-	/* FPU中断函数 */
+	/* FPU异常中断函数，FPU不存在时触发 */
     struct TASK *now = task_now();
     io_cli();
     clts();

@@ -1,7 +1,7 @@
 OBJS_BOOTPACK = kernel/bootpack.obj naskfunc.obj fonts.obj gui/graphic.obj kernel/dsctbl.obj \
 		kernel/int.obj kernel/fifo.obj driver/keyboard.obj driver/mouse.obj kernel/memory.obj kernel/sheet.obj driver/timer.obj \
 		kernel/mtask.obj gui/window.obj console/console.obj filesys/file.obj filesys/kca.obj gui/jpeg.obj driver/cmos.obj \
-		kernel/list.obj kernel/lock.obj gui/taskbar.obj gui/menu.obj gui/button.obj driver/acpi.obj \
+		kernel/list.obj kernel/lock.obj gui/taskbar.obj gui/menu.obj gui/button.obj driver/acpi.obj console/exception.obj \
 		kernel/util.obj gui/textbox.obj $(OBJS_CMD)
 
 OBJS_CMD = console/cmd_mem.obj console/cmd_cls.obj console/cmd_dir.obj console/cmd_type.obj console/cmd_exit.obj \

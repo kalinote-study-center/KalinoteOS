@@ -79,8 +79,11 @@ void init_screen8(int *vram, int x, int y, int bc){
 	file_readfat(fat, (unsigned char *) (ADR_DISKIMG + 0x000200));
 	read_wallpaper_32("back.jpg", x, y, fat, vram);
 	
-	sprintf(s,"DrawMode = 0x%05x", bc);
-	putfonts8_asc(vram, x, 8, 16, COL_BRED, s);
+	putfonts8_asc(vram, x, 8, 16, COL_BRED, "DEBUG INFO:");
+	sprintf(s,"DrawMode  = 0x%08x", bc);
+	putfonts8_asc(vram, x, 8, 32, COL_BRED, s);
+	sprintf(s,"VRAM_ADDR = 0x%08x", vram);
+	putfonts8_asc(vram, x, 8, 48, COL_BRED, s);
 	putfonts8_asc(vram, x, 775, 715, COL_BRED, "@Kalinote All Rights Reserved");
 	return;
 }

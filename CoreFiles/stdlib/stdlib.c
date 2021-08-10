@@ -4,7 +4,6 @@
 
 /* stdlib.h */
 void exit(int status){
+	/* ÍË³ö³ÌĞò */
 	api_end();
 }
-
-

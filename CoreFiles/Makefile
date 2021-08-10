@@ -22,7 +22,8 @@ kalinote.img : kalinote/ipl40.bin kalinote/kalinote.sys Makefile \
 		cat/cat.kal chklang/chklang.kal \
 		notrec/notrec.kal bball/bball.kal calc/calc.kal \
 		a2048/a2048.kal testapp/testapp.kal timeapp/timeapp.kal \
-		pi/pi.kal sincurve/sincurve.kal runtime/runtime.kal
+		pi/pi.kal sincurve/sincurve.kal runtime/runtime.kal \
+		divzero/divzero.kal
 	$(EDIMG)   imgin:../z_tools/fdimg0at.tek \
 		wbinimg src:kalinote/ipl40.bin len:512 from:0 to:0 \
 		copy from:kalinote/kalinote.sys to:@: \
@@ -51,6 +52,7 @@ kalinote.img : kalinote/ipl40.bin kalinote/kalinote.sys Makefile \
 		copy from:pi/pi.kal to:@: \
 		copy from:sincurve/sincurve.kal to:@: \
 		copy from:runtime/runtime.kal to:@: \
+		copy from:divzero/divzero.kal to:@: \
 		imgout:kalinote.img
 
 # √¸¡Ó
@@ -90,6 +92,7 @@ full :
 	$(MAKE) -C pi
 	$(MAKE) -C sincurve
 	$(MAKE) -C runtime
+	$(MAKE) -C divzero
 	$(MAKE) kalinote.img
 	$(COPY) kalinote.img ..\z_tools\qemu\kalinoteos.bin
 	$(COPY) kalinote.img ..\z_tools\qemu\kalinoteos.vfd
@@ -149,6 +152,7 @@ clean_full :
 	$(MAKE) -C pi			clean
 	$(MAKE) -C sincurve		clean
 	$(MAKE) -C runtime		clean
+	$(MAKE) -C divzero		clean
 
 src_only_full :
 	$(MAKE) -C kalinote		src_only
@@ -174,6 +178,7 @@ src_only_full :
 	$(MAKE) -C timeapp		src_only
 	$(MAKE) -C sincurve		src_only
 	$(MAKE) -C runtime		src_only
+	$(MAKE) -C divzero		src_only
 	-$(DEL) kalinote.img
 
 refresh :

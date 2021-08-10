@@ -16,6 +16,7 @@
 		GLOBAL	_load_cr0, _store_cr0
 		GLOBAL	_load_tr
 		GLOBAL  _clts, _fnsave, _frstor
+		GLOBAL	_asm_inthandler00
 		GLOBAL	_asm_inthandler07
 		GLOBAL	_asm_inthandler20, _asm_inthandler21
 		GLOBAL	_asm_inthandler27, _asm_inthandler2c
@@ -23,7 +24,8 @@
 		GLOBAL	_asm_end_app, _memtest_sub
 		GLOBAL	_farjmp, _farcall
 		GLOBAL	_asm_kal_api, _start_app
-		EXTERN  _inthandler07
+		EXTERN  _inthandler00
+		EXTERN	_inthandler07
 		EXTERN	_inthandler20, _inthandler21
 		EXTERN	_inthandler27, _inthandler2c
 		EXTERN	_inthandler0c, _inthandler0d
@@ -151,7 +153,26 @@ _frstor:        ; void frstor(int *addr);
         FRSTOR  [EAX]
         RET
 
-_asm_inthandler07:				; FPU
+_asm_inthandler00:				; 除零异常
+        STI
+        PUSH    ES
+        PUSH    DS
+        PUSHAD
+        MOV     EAX,ESP
+        PUSH    EAX
+        MOV     AX,SS
+        MOV     DS,AX
+        MOV     ES,AX
+        CALL    _inthandler00
+        CMP     EAX,0
+        JNE     _asm_end_app
+        POP     EAX
+        POPAD
+        POP     DS
+        POP     ES
+        IRETD
+
+_asm_inthandler07:				; FPU异常中断
         STI
         PUSH    ES
         PUSH    DS
@@ -337,7 +358,7 @@ _asm_end_app:
 		MOV		ESP,[EAX]
 		MOV		DWORD [EAX+4],0
 		POPAD
-		RET
+		RET			; 这里返回cmd_app
 
 _start_app:								; void start_app(int eip, int cs, int esp, int ds, int *tss_esp0);
 		PUSHAD							; 32位寄存器的值全部保存下来
@@ -352,8 +373,8 @@ _start_app:								; void start_app(int eip, int cs, int esp, int ds, int *tss_e
 		MOV		DS,BX
 		MOV		FS,BX
 		MOV		GS,BX
-;	下面调整栈，避免用RETF跳转到应用程序
-		OR		ECX,3					; 应用程序用的段号和3进行OR运算
+;	下面的操作是先把数据存入栈中，然后调用RETF跳转到应用程序执行
+		OR		ECX,3					; 应用程序用的段号和3进行OR运算(一个使用RETF跳转的小技巧)
 		OR		EBX,3					; 应用程序用的段号和3进行OR运算
 		PUSH	EBX						; 应用程序的SS
 		PUSH	EDX						; 应用程序的ESP

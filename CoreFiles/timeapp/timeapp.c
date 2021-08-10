@@ -13,18 +13,18 @@ void KaliMain(void) {
 	int *win_buf;	/* 窗口内存缓冲区 */
 	int win;		/* 窗口句柄 */
 	int i;			/* 角度 */
-	int x,y;		/* 坐标 */
-	int r = 50;		/* 半径 */
+	// int x,y;		/* 坐标 */
+	// int r = 50;		/* 半径 */
 
-	int center_x = Width/2, center_y = High/2;
+	// int center_x = Width/2, center_y = High/2;
 
-	int secondLength = Width/5;
-	int minuteLength = Width/6;
-	int hourLength = Width/7;
+	// int secondLength = Width/5;
+	// int minuteLength = Width/6;
+	// int hourLength = Width/7;
 
-	int secondEnd_x, secondEnd_y;
-	int minuteEnd_x, minuteEnd_y;
-	int hourEnd_x, hourEnd_y;
+	// int secondEnd_x, secondEnd_y;
+	// int minuteEnd_x, minuteEnd_y;
+	// int hourEnd_x, hourEnd_y;
 
 	api_initmalloc();						/* 初始化内存 */
 	win_buf = api_malloc(Width * High * 4);		/* 分配窗口内存缓冲区 */

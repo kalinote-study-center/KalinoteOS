@@ -61,7 +61,8 @@ void load_idtr(int limit, int addr);					// ¼ÓÔØIDTR¼Ä´æÆ÷(IDTR¼Ä´æÆ÷ÓÃÓÚ±£´æIDT
 int load_cr0(void);										// ¼ÓÔØCR0¼Ä´æÆ÷
 void store_cr0(int cr0);								// ´æÈëCR0¼Ä´æÆ÷
 void load_tr(int tr);									// ¼ÓÔØTR¼Ä´æÆ÷
-void asm_inthandler07(void);							// 07ºÅÖĞ¶Ï£¬FPU
+void asm_inthandler00(void);							// 00ºÅÖĞ¶Ï£¬³ıÁãÒì³£
+void asm_inthandler07(void);							// 07ºÅÖĞ¶Ï£¬FPUÒì³£ÖĞ¶Ï
 void asm_inthandler0c(void);							// 0cºÅÖĞ¶Ï£¬ÓÃÓÚ´¦ÀíÕ»Òì³£
 void asm_inthandler0d(void);							// 0dºÅÖĞ¶Ï£¬ÓÃÓÚ´¦ÀíÒì³£³ÌĞò
 void asm_inthandler20(void);							// 20ºÅÖĞ¶Ï£¬ÓÃÓÚtimer
@@ -327,7 +328,7 @@ struct TASK *task_now(void);																		// ·µ»ØÏÖÔÚÕıÔÚ»î¶¯ÖĞµÄTASK½á¹¹Ìåµ
 void task_run(struct TASK *task, int level, int priority);											// ÔËĞĞ³ÌĞò
 void task_switch(void);																				// ÇĞ»»³ÌĞò
 void task_sleep(struct TASK *task);																	// ³ÌĞòË¯Ãß
-int *inthandler07(int *esp);																		// FPUÖĞ¶Ï
+int *inthandler07(int *esp);																		// FPUÒì³£ÖĞ¶Ï
 
 /* window.c(´°¿Ú»æÖÆ) */
 #define TIT_ACT_DEFAULT		0x00ffc1c1				// Ä¬ÈÏ´°¿Ú±êÌâÀ¸Ñ¡ÖĞÑÕÉ«	
@@ -466,10 +467,9 @@ void cmd_sysmode(struct CONSOLE *cons, char *cmdline);												// CMD£ºÇĞ»»Ïµ
 void cmd_echo(struct CONSOLE *cons, char *cmdline);													// CMD£ºÏµÍ³Êä³ö
 void cmd_hdinfo(struct CONSOLE *cons, char *cmdline);												// CMD£º²éÑ¯IDEÓ²ÅÌĞÅÏ¢
 void cmd_getruntime(struct CONSOLE *cons);															// CMD£º²éÑ¯ÏµÍ³Æô¶¯ÔËĞĞÊ±¼ä
+void cmd_pciinfo(struct CONSOLE *cons);																// CMD£º²éÑ¯PCIÉè±¸ĞÅÏ¢
 int cmd_app(struct CONSOLE *cons, int *fat, char *cmdline);											// Íâ²¿Ó¦ÓÃ³ÌĞò
 int *kal_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int eax);				// Í¨¹ıedx²éÕÒAPI
-int *inthandler0d(int *esp);																		// 0dºÅÖĞ¶Ï£¬ÓÃÓÚ´¦ÀíÒì³£³ÌĞò
-int *inthandler0c(int *esp);																		// 0cºÅÖĞ¶Ï£¬ÓÃÓÚ´¦ÀíÕ»Òì³£
 void kal_api_linewin(struct SHEET *sht, int x0, int y0, int x1, int y1, int col);					// »æÖÆÒ»ÌõÖ±Ïß
 struct SHEET *open_console(struct SHTCTL *shtctl, unsigned int memtotal, int debug);				// ¿ªÆôÒ»¸öÃüÁî´°¿Ú
 struct TASK *open_constask(struct SHEET *sht, unsigned int memtotal);								// ¿ªÆôÒ»¸öÈÎÎñ
@@ -479,6 +479,11 @@ void close_console(struct SHEET *sht);																// ¹Ø±ÕÃüÁî´°¿Ú
 void close_constask(struct TASK *task);																// ½áÊøÈÎÎñ
 void cons_printf(struct CONSOLE *cons, char *format, ...);											// ¸ñÊ½»¯Êä³öµ½Ö¸¶¨cons´°¿Ú
 void debug_print(char *format, ...);																// Êä³öµ½DEBUG´°¿Ú
+
+/* exception.c(Òì³£ÖĞ¶Ï´¦Àí) */
+int *inthandler00(int *esp);																		// 00ºÅÖĞ¶Ï£¬ÓÃÓÚ´¦Àí³ıÁãÒì³£
+int *inthandler0c(int *esp);																		// 0cºÅÖĞ¶Ï£¬ÓÃÓÚ´¦ÀíÕ»Òì³£
+int *inthandler0d(int *esp);																		// 0dºÅÖĞ¶Ï£¬ÓÃÓÚ´¦ÀíÒ»°ãÒì³£
 
 /* file.c(ÎÄ¼ş´¦Àí) */
 struct FILEINFO {
@@ -670,3 +675,4 @@ unsigned int acpi_find_table(char *Signature);
 unsigned int *acpi_find_rsdp(void);
 char checksum(unsigned char *addr, unsigned int length);
 int acpi_shutdown(void);
+

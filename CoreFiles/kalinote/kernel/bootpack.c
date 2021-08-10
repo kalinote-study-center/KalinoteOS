@@ -55,7 +55,7 @@ void KaliMain(void){
 	};
 
 	/* 初始化sysinfo */
-	*((int *) SYSINFO_ADDR) = (int) &sysinfo;	
+	*((int *) SYSINFO_ADDR) = (int) &sysinfo;
 	sysinfo.sysmode = 0;
 	sysinfo.sysmmainver = 1;
 	sysinfo.sysver = 400;
@@ -96,7 +96,7 @@ void KaliMain(void){
 	task_run(task_a, 0, 2);						/* 系统底部进程(task_a) */
 	*((int *) SHTCTL_ADDR) = (int) shtctl;		/* 把shtctl的值存到地址0xfe4的地方 */
 	task_a->langmode = 0;						/* 将task_a的语言模式设置为ASCII英文 */
-
+	
 	/* DEBUG cons初始化 */
 	*((int *) DEBUG_ADDR) = (int)open_console(shtctl, memtotal, 1);
 	sht_debug_cons = (struct SHEET *) *((int *) DEBUG_ADDR);
