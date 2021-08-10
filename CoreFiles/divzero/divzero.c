@@ -5,9 +5,9 @@
 void KaliMain(void){
 	int i = 15;
 	if(i/0 < 0){
-		printf('A');
+		printf("AAAAA");
 	} else {
-		printf('B');
+		printf("BBBBB");
 	}
 	api_end();
 }

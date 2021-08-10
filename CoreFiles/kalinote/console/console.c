@@ -724,8 +724,15 @@ int *kal_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int 
 		reg[7] = get_sec_hex();
 	} else if (edx == 37) {
 		/* 获取系统运行时间(秒) */
-		/* 尚未测试 */
 		reg[7] = sysinfo->time_counter;
+	} else if (edx == 38) {
+		/* 显示图片 */
+		/* 尚未测试 */
+		/* EBX: 窗口句柄	ESI: 窗口x	EDI: 窗口y	EAX: 文件名 */
+		// debug_print("ebx:%d\nesi:%d\nedi:%d\neax:%s", ebx, esi, edi, ((char *) eax + ds_base));
+		sht = (struct SHEET *) (ebx & 0xfffffffe);
+		read_image_32((unsigned char *)((char *) eax + ds_base), esi, edi, task->fat, sht->buf);
+		sheet_refresh(sht, 0, 0, esi, edi);
 	}
 	return 0;
 }

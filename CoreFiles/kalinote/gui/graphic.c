@@ -2,8 +2,6 @@
 #include "../bootpack.h"
 #include <stdio.h>
 
-int read_wallpaper_32 (unsigned char *filename, int x, int y, int *fat, unsigned int *vram);
-
 // void init_palette(void){
 	// /* 调色板函数，预置15中基本颜色，可以自行添加 - 此处原内容在第75页 */
 	// /* 使用32位色彩模式后不再需要初始化调色板 */
@@ -77,7 +75,7 @@ void init_screen8(int *vram, int x, int y, int bc){
 	struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;
 	fat = (int *) memman_alloc_4k(memman, 4 * 1024 * 768);
 	file_readfat(fat, (unsigned char *) (ADR_DISKIMG + 0x000200));
-	read_wallpaper_32("back.jpg", x, y, fat, vram);
+	read_image_32("back.jpg", x, y, fat, vram);
 	
 	putfonts8_asc(vram, x, 8, 16, COL_BRED, "DEBUG INFO:");
 	sprintf(s,"DrawMode  = 0x%08x", bc);
@@ -297,7 +295,7 @@ void putblock8_8(int *vram, int vxsize, int pxsize,
 	return;
 }
 
-int read_wallpaper_32 (unsigned char *filename, int x, int y, int *fat, unsigned int *vram) {
+int read_image_32(unsigned char *filename, int x1, int y1, int *fat, unsigned int *vram) {
 	/* 32位色彩模式下读取壁纸(后面把这个函数改一下，写个图片显示API) */
 	int i, j, x0, y0, fsize, info[4];
 	unsigned char *filebuf, r, g, b;
@@ -305,7 +303,7 @@ int read_wallpaper_32 (unsigned char *filename, int x, int y, int *fat, unsigned
 	struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;
 	struct FILEINFO *finfo;
 	struct DLL_STRPICENV *env;
-	finfo = file_search("back.jpg", (struct FILEINFO *)(ADR_DISKIMG + 0x002600), 224);  /* 查找壁纸文件 */
+	finfo = file_search(filename, (struct FILEINFO *)(ADR_DISKIMG + 0x002600), 224);  /* 查找壁纸文件 */
 	if (finfo == 0) {
 		/* 读取文件失败 */
 		return -1;
@@ -317,14 +315,14 @@ int read_wallpaper_32 (unsigned char *filename, int x, int y, int *fat, unsigned
 	info_JPEG(env, info, fsize, filebuf);
 	picbuf = (struct RGB *) memman_alloc_4k(memman, info[2] * info[3] * sizeof(struct RGB) * 4);
 	decode0_JPEG(env, fsize, filebuf, 4, (unsigned char *) picbuf, 0);
-	x0 = (int) ((x - info[2]) / 2);
-	y0 = (int) ((y - info[3]) / 2);
+	x0 = (int) ((x1 - info[2]) / 2);
+	y0 = (int) ((y1 - info[3]) / 2);
 	for (i = 0; i < info[3]; i++) {
 		for (j = 0; j < info[2]; j++) {
 			r = picbuf[i * info[2] + j].r;
 			g = picbuf[i * info[2] + j].g;
 			b = picbuf[i * info[2] + j].b;
-			vram[(y0 + i) * x + (x0 + j)] = b | g << 8 | r << 16 | 0x00 << 24;
+			vram[(y0 + i) * x1 + (x0 + j)] = b | g << 8 | r << 16 | 0x00 << 24;
 		}
 	}
 	memman_free_4k(memman, (int) filebuf, fsize);
@@ -332,5 +330,3 @@ int read_wallpaper_32 (unsigned char *filename, int x, int y, int *fat, unsigned
 	memman_free_4k(memman, (int) env, sizeof(struct DLL_STRPICENV));
 	return 0;
 }
-
-

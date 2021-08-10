@@ -209,24 +209,25 @@ struct SHTCTL {
 	struct SHEET *sheets[MAX_SHEETS];						// 所有图层的地址(按照高度升序排列)
 	struct SHEET sheets0[MAX_SHEETS];						// 存放所有图层的图层信息
 };
-struct SHTCTL *shtctl_init(struct MEMMAN *memman, unsigned int *vram, int xsize, int ysize);		//初始化层
-struct SHEET *sheet_alloc(struct SHTCTL *ctl);														//获得未使用的新图层
-void sheet_setbuf(struct SHEET *sht, unsigned int *buf, int xsize, int ysize, int col_inv);			//设置缓冲区大小
-void sheet_updown(struct SHEET *sht, int height);													//调整sheet高度
-void sheet_refresh(struct SHEET *sht, int bx0, int by0, int bx1, int by1);							//刷新图层(区域)
-void sheet_slide(struct SHEET *sht, int vx0, int vy0);												//移动图层
-void sheet_free(struct SHEET *sht);																	//释放已使用的图层内存
-
-//graphic.c(画面显示)
-//void init_palette(void);																			//初始化调色板函数
-//void set_palette(int start, int end, unsigned char *rgb);											//设置调色板
-void boxfill8(unsigned int *vram, int xsize, unsigned int c, int x0, int y0, int x1, int y1);		//绘制方块
-void init_screen8(int *vram, int x, int y, int bc);													//初始化屏幕
-void putfont8(int *vram, int xsize, int x, int y, int c, char *font);								//绘制字体
-void putfonts8_asc(int *vram, int xsize, int x, int y, int c, unsigned char *s);					//绘制字符串
-void init_mouse_cursor8(int *mouse, int bc);														//初始化鼠标指针
-void putblock8_8(int *vram, int vxsize, int pxsize,
-	int pysize, int px0, int py0, int *buf, int bxsize);											//鼠标背景色处理
+struct SHTCTL *shtctl_init(struct MEMMAN *memman, unsigned int *vram, int xsize, int ysize);		// 初始化层
+struct SHEET *sheet_alloc(struct SHTCTL *ctl);														// 获得未使用的新图层
+void sheet_setbuf(struct SHEET *sht, unsigned int *buf, int xsize, int ysize, int col_inv);			// 设置缓冲区大小
+void sheet_updown(struct SHEET *sht, int height);													// 调整sheet高度
+void sheet_refresh(struct SHEET *sht, int bx0, int by0, int bx1, int by1);							// 刷新图层(区域)
+void sheet_slide(struct SHEET *sht, int vx0, int vy0);												// 移动图层
+void sheet_free(struct SHEET *sht);																	// 释放已使用的图层内存
+																									   
+//graphic.c(画面显示)                                                                                  
+//void init_palette(void);																			// 初始化调色板函数
+//void set_palette(int start, int end, unsigned char *rgb);											// 设置调色板
+void boxfill8(unsigned int *vram, int xsize, unsigned int c, int x0, int y0, int x1, int y1);		// 绘制方块
+void init_screen8(int *vram, int x, int y, int bc);													// 初始化屏幕
+void putfont8(int *vram, int xsize, int x, int y, int c, char *font);								// 绘制字体
+void putfonts8_asc(int *vram, int xsize, int x, int y, int c, unsigned char *s);					// 绘制字符串
+void init_mouse_cursor8(int *mouse, int bc);														// 初始化鼠标指针
+void putblock8_8(int *vram, int vxsize, int pxsize,                                                    
+	int pysize, int px0, int py0, int *buf, int bxsize);											// 鼠标背景色处理
+int read_image_32(unsigned char *filename, int x, int y, int *fat, unsigned int *vram);				// 32位色彩模式下读取图片
 // 15种颜色常数定义，此系统支持RGB全彩色，所以可以使用0xRGB(普通的RGB表示方法)来表示颜色
 #define COL_BLACK		0x00000000
 #define COL_BRED		0x00ff0000
@@ -505,8 +506,8 @@ struct DLL_STRPICENV{
 struct RGB{
 	unsigned char b,g,r,t;
 };
-int info_JPEG(struct DLL_STRPICENV*env,int *info,int size,unsigned char *fp);												// 获取JPG图片信息
-int decode0_JPEG(struct DLL_STRPICENV*env,int size,unsigned char *fp,int b_type,unsigned char *buf,int skip);				// JPG图片解码
+int info_JPEG(struct DLL_STRPICENV *env,int *info, int size,unsigned char *fp);												// 获取JPG图片信息
+int decode0_JPEG(struct DLL_STRPICENV *env,int size,unsigned char *fp,int b_type,unsigned char *buf,int skip);				// JPG图片解码
 
 /* bootpack.c */
 #define KEYCMD_LED		0xed
