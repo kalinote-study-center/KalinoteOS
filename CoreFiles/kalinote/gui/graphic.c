@@ -75,7 +75,7 @@ void init_screen8(int *vram, int x, int y, int bc){
 	struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;
 	fat = (int *) memman_alloc_4k(memman, 4 * 1024 * 768);
 	file_readfat(fat, (unsigned char *) (ADR_DISKIMG + 0x000200));
-	read_image_32("back.jpg", x, y, fat, vram);
+	read_image_32("back.jpg", 0, 0, x, fat, vram);
 	
 	putfonts8_asc(vram, x, 8, 16, COL_BRED, "DEBUG INFO:");
 	sprintf(s,"DrawMode  = 0x%08x", bc);
@@ -295,9 +295,9 @@ void putblock8_8(int *vram, int vxsize, int pxsize,
 	return;
 }
 
-int read_image_32(unsigned char *filename, int x1, int y1, int *fat, unsigned int *vram) {
-	/* 32位色彩模式下读取壁纸(后面把这个函数改一下，写个图片显示API) */
-	int i, j, x0, y0, fsize, info[4];
+int read_image_32(char *filename, int x0, int y0, int width, int *fat, unsigned int *vram) {
+	/* 以绝对位置的方式读取并绘制图片 */
+	int i, j, fsize, info[4];
 	unsigned char *filebuf, r, g, b;
 	struct RGB *picbuf;
 	struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;
@@ -315,14 +315,12 @@ int read_image_32(unsigned char *filename, int x1, int y1, int *fat, unsigned in
 	info_JPEG(env, info, fsize, filebuf);
 	picbuf = (struct RGB *) memman_alloc_4k(memman, info[2] * info[3] * sizeof(struct RGB) * 4);
 	decode0_JPEG(env, fsize, filebuf, 4, (unsigned char *) picbuf, 0);
-	x0 = (int) ((x1 - info[2]) / 2);
-	y0 = (int) ((y1 - info[3]) / 2);
 	for (i = 0; i < info[3]; i++) {
 		for (j = 0; j < info[2]; j++) {
 			r = picbuf[i * info[2] + j].r;
 			g = picbuf[i * info[2] + j].g;
 			b = picbuf[i * info[2] + j].b;
-			vram[(y0 + i) * x1 + (x0 + j)] = b | g << 8 | r << 16 | 0x00 << 24;
+			vram[(y0 + i) * width + (x0 + j)] = b | g << 8 | r << 16 | 0x00 << 24;
 		}
 	}
 	memman_free_4k(memman, (int) filebuf, fsize);

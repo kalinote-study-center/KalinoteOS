@@ -35,4 +35,4 @@ unsigned int api_get_hour_hex(void);
 unsigned int api_get_min_hex(void);
 unsigned int api_get_sec_hex(void);
 unsigned int api_get_system_runtime(void);
-void api_showjpeg_center(char *filename, int x, int y, int win);
+void api_showjpeg(char *filename, int x, int y, int win);

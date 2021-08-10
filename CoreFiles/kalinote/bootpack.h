@@ -227,7 +227,7 @@ void putfonts8_asc(int *vram, int xsize, int x, int y, int c, unsigned char *s);
 void init_mouse_cursor8(int *mouse, int bc);														// 初始化鼠标指针
 void putblock8_8(int *vram, int vxsize, int pxsize,                                                    
 	int pysize, int px0, int py0, int *buf, int bxsize);											// 鼠标背景色处理
-int read_image_32(unsigned char *filename, int x, int y, int *fat, unsigned int *vram);				// 32位色彩模式下读取图片
+int read_image_32(char *filename, int x0, int y0, int width, int *fat, unsigned int *vram);			// 32位色彩模式下读取图片
 // 15种颜色常数定义，此系统支持RGB全彩色，所以可以使用0xRGB(普通的RGB表示方法)来表示颜色
 #define COL_BLACK		0x00000000
 #define COL_BRED		0x00ff0000
@@ -436,7 +436,7 @@ void init_taskbar(struct MEMMAN *memman, struct SHEET *sht);					// 初始化任务栏
 int taskbar_addwin(struct WINDOW *window);										// 向任务栏增加一个窗口按钮
 void taskbar_removewin(int index);												// 从任务栏删除一个按钮
 
-/* console.c(命令台) */
+/* console.c(命令行) */
 #define DEBUG_ADDR		0x30000				// DEBUG console位置
 struct CONSOLE {
 	struct SHEET *sht;
@@ -470,8 +470,6 @@ void cmd_hdinfo(struct CONSOLE *cons, char *cmdline);												// CMD：查询IDE
 void cmd_getruntime(struct CONSOLE *cons);															// CMD：查询系统启动运行时间
 void cmd_pciinfo(struct CONSOLE *cons);																// CMD：查询PCI设备信息
 int cmd_app(struct CONSOLE *cons, int *fat, char *cmdline);											// 外部应用程序
-int *kal_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int eax);				// 通过edx查找API
-void kal_api_linewin(struct SHEET *sht, int x0, int y0, int x1, int y1, int col);					// 绘制一条直线
 struct SHEET *open_console(struct SHTCTL *shtctl, unsigned int memtotal, int debug);				// 开启一个命令窗口
 struct TASK *open_constask(struct SHEET *sht, unsigned int memtotal);								// 开启一个任务
 void keywin_off(struct SHEET *key_win);																// 控制窗口标题栏颜色和光标激活状态
@@ -480,6 +478,11 @@ void close_console(struct SHEET *sht);																// 关闭命令窗口
 void close_constask(struct TASK *task);																// 结束任务
 void cons_printf(struct CONSOLE *cons, char *format, ...);											// 格式化输出到指定cons窗口
 void debug_print(char *format, ...);																// 输出到DEBUG窗口
+
+/* kal_api.c(KalinoteOS 应用程序API接口) */
+int *kal_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int eax);				// 通过edx查找API
+void kal_api_linewin(struct SHEET *sht, int x0, int y0, int x1, int y1, int col);					// 绘制一条直线
+
 
 /* exception.c(异常中断处理) */
 int *inthandler00(int *esp);																		// 00号中断，用于处理除零异常

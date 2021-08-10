@@ -3,11 +3,11 @@
 [BITS 32]
 [FILE "api038.nas"]
 
-		GLOBAL	_api_showjpeg_center
+		GLOBAL	_api_showjpeg
 
 [SECTION .text]
 
-_api_showjpeg_center:	; void api_showjpeg_center(char *filename, int x, int y, int win);
+_api_showjpeg:	; void api_showjpeg(char *filename, int x, int y, int win);
 		PUSH	EDI
 		PUSH	ESI
 		PUSH	EBX

@@ -12,7 +12,7 @@ void KaliMain(void) {
 	buf = api_malloc(WIDTH * HEIGHT * 4);
 	win = api_openwin(buf, WIDTH, HEIGHT, -1, "amiya");
 	
-	api_showjpeg_center("amiya.jpg", WIDTH, HEIGHT, win);
+	api_showjpeg("amiya.jpg", 50, 100, win);
 	
 	for (;;) {
 		if (api_getkey(1) == 0x0a) {
