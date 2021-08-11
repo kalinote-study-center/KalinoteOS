@@ -1,4 +1,9 @@
 /* 兼容性标准函数 */
+
+/*
+* 等有空了把这些函数集成到golibc.lib(C语言标准函数库)中去
+*/
+
 /* string.h */
 int strchr(const char *str, char c);
 /* malloc.h(stdlib.h) */

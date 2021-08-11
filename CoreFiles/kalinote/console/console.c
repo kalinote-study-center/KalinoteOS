@@ -414,7 +414,12 @@ int cmd_app(struct CONSOLE *cons, int *fat, char *cmdline){
 				/* 将Kal应用中的数据部分复制到数据段 */
 				q[esp + i] = p[datkal + i];
 			}
-			start_app(0x1b, 0 * 8 + 4, esp, 1 * 8 + 4, &(task->tss.esp0));							/* 调用汇编写的用于启动应用程序的函数，其中0x1b是KaliMain程序入口(这里有一个JMP指令，跳转到真正的程序入口，新标的入口地址为27) */
+			
+			/* 启动应用程序 */
+			start_app(0x1b, 0 * 8 + 4, esp, 1 * 8 + 4, &(task->tss.esp0));
+			/* 调用汇编写的用于启动应用程序的函数，其中0x1b是KaliMain程序入口(这里有一个JMP指令，跳转到真正的程序入口，新标的入口地址为27) */
+			/* 这里指定的段号是0 * 8 + 4(=4)和1 * 8 + 4(=12), 前面与GDT一样，后面加了4，表示该段号不是GDT，而是LDT的段号 */
+			
 			shtctl = (struct SHTCTL *) *((int *) SHTCTL_ADDR);
 			for (i = 0; i < MAX_SHEETS; i++) {
 				sht = &(shtctl->sheets0[i]);
