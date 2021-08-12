@@ -23,7 +23,7 @@ kalinote.img : kalinote/ipl40.bin kalinote/kalinote.sys Makefile \
 		notrec/notrec.kal bball/bball.kal calc/calc.kal \
 		a2048/a2048.kal testapp/testapp.kal timeapp/timeapp.kal \
 		pi/pi.kal sincurve/sincurve.kal runtime/runtime.kal \
-		divzero/divzero.kal amiya/amiya.kal
+		divzero/divzero.kal amiya/amiya.kal randint/randint.kal
 	$(EDIMG)   imgin:../z_tools/fdimg0at.tek \
 		wbinimg src:kalinote/ipl40.bin len:512 from:0 to:0 \
 		copy from:kalinote/kalinote.sys to:@: \
@@ -55,6 +55,7 @@ kalinote.img : kalinote/ipl40.bin kalinote/kalinote.sys Makefile \
 		copy from:runtime/runtime.kal to:@: \
 		copy from:divzero/divzero.kal to:@: \
 		copy from:amiya/amiya.kal to:@: \
+		copy from:randint/randint.kal to:@: \
 		imgout:kalinote.img
 
 # √¸¡Ó
@@ -96,6 +97,7 @@ full :
 	$(MAKE) -C runtime
 	$(MAKE) -C divzero
 	$(MAKE) -C amiya
+	$(MAKE) -C randint
 	$(MAKE) kalinote.img
 	$(COPY) kalinote.img ..\z_tools\qemu\kalinoteos.bin
 	$(COPY) kalinote.img ..\z_tools\qemu\kalinoteos.vfd
@@ -157,6 +159,7 @@ clean_full :
 	$(MAKE) -C runtime		clean
 	$(MAKE) -C divzero		clean
 	$(MAKE) -C amiya		clean
+	$(MAKE) -C randint		clean
 
 src_only_full :
 	$(MAKE) -C kalinote		src_only
@@ -184,6 +187,7 @@ src_only_full :
 	$(MAKE) -C runtime		src_only
 	$(MAKE) -C divzero		src_only
 	$(MAKE) -C amiya		src_only
+	$(MAKE) -C randint		src_only
 	-$(DEL) kalinote.img
 
 refresh :
