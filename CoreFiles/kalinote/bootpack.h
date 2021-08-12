@@ -466,9 +466,7 @@ void cmd_langmode(struct CONSOLE *cons, char *cmdline);												// CMD£ºÇĞ»»Ó
 void cmd_shutdown(void);																			// CMD£º¹Ø»ú
 void cmd_sysmode(struct CONSOLE *cons, char *cmdline);												// CMD£ºÇĞ»»ÏµÍ³Ä£Ê½
 void cmd_echo(struct CONSOLE *cons, char *cmdline);													// CMD£ºÏµÍ³Êä³ö
-void cmd_hdinfo(struct CONSOLE *cons, char *cmdline);												// CMD£º²éÑ¯IDEÓ²ÅÌĞÅÏ¢
 void cmd_getruntime(struct CONSOLE *cons);															// CMD£º²éÑ¯ÏµÍ³Æô¶¯ÔËĞĞÊ±¼ä
-void cmd_pciinfo(struct CONSOLE *cons);																// CMD£º²éÑ¯PCIÉè±¸ĞÅÏ¢
 int cmd_app(struct CONSOLE *cons, int *fat, char *cmdline);											// Íâ²¿Ó¦ÓÃ³ÌĞò
 struct SHEET *open_console(struct SHTCTL *shtctl, unsigned int memtotal, int debug);				// ¿ªÆôÒ»¸öÃüÁî´°¿Ú
 struct TASK *open_constask(struct SHEET *sht, unsigned int memtotal);								// ¿ªÆôÒ»¸öÈÎÎñ
