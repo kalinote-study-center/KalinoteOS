@@ -290,7 +290,7 @@ struct TSS32 {
 	int backlink, esp0, ss0, esp1, ss1, esp2, ss2, cr3;
 	int eip, eflags, eax, ecx, edx, ebx, esp, ebp, esi, edi;						// 32位寄存器
 	int es, cs, ss, ds, fs, gs;														// 16位寄存器
-	int ldtr, iomap;										// 局部段号记录表
+	int ldtr, iomap;
 };
 struct TASK {
 	int sel, flags; 										// sel用来存放GDT编号，flags是任务状态，后面可以定义不同的任务状态
@@ -298,7 +298,7 @@ struct TASK {
 	struct FIFO32 fifo;										// 任务FIFO缓冲区，如果有需要以后也可以加个list(双链表)
 	struct TSS32 tss;										// 任务状态段
 	int fpu[108 / 4];										// TASK使用FPU寄存器时的存储位置和读取源
-	struct SEGMENT_DESCRIPTOR ldt[2];						// 局部段号记录表(LDT)
+	struct SEGMENT_DESCRIPTOR ldt[2];						
 	struct CONSOLE *cons;									// 任务对应的console
 	int ds_base, cons_stack;
 	struct FILEHANDLE *fhandle;
@@ -479,7 +479,7 @@ void close_constask(struct TASK *task);																// 结束任务
 void cons_printf(struct CONSOLE *cons, char *format, ...);											// 格式化输出到指定cons窗口
 void debug_print(char *format, ...);																// 输出到DEBUG窗口
 
-/* syscall.c(KalinoteOS 应用程序API接口) */
+/* kal_api.c(KalinoteOS 应用程序API接口) */
 int *kal_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int eax);				// 通过edx查找API
 void kal_api_linewin(struct SHEET *sht, int x0, int y0, int x1, int y1, int col);					// 绘制一条直线
 
