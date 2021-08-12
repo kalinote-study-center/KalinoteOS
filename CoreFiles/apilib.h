@@ -7,7 +7,7 @@ int api_openwin(int *buf, int xsiz, int ysiz, int col_inv, char *title);
 void api_putstrwin(int win, int x, int y, int col, int len, char *str);
 void api_boxfilwin(int win, int x0, int y0, int x1, int y1, int col);
 void api_initmalloc(void);
-int *api_malloc(int size);
+int *api_malloc(unsigned int size);
 void api_free(char *addr, int size);
 void api_point(int win, int x, int y, int col);
 void api_refreshwin(int win, int x0, int y0, int x1, int y1);

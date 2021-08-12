@@ -1,4 +1,4 @@
-/* copyright(C) 2003 H.Kawai (under KL-01). */
+/* C语言标准函数库 stdarg.h */
 
 #if (!defined(STDARG_H))
 

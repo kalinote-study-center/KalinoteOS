@@ -1,6 +1,6 @@
 /* 用于测试简单的动态窗口 */
 #include "apilib.h"
-#include "stdlib.h"
+#include <stdio.h>
 
 void KaliMain(void){
 	// int *buf;

@@ -1,6 +1,5 @@
 /* 图形时钟APP */
 #include "apilib.h"
-#include "stdlib.h"
 
 #include <stdio.h>
 #include <math.h>
