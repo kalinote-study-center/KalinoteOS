@@ -1,7 +1,6 @@
 TOOLPATH = ../../z_tools/
 INCPATH  = ../../z_tools/kalinote/
 APILIBPATH   = ../apilib/
-STDLIBPATH   = ../stdlib/
 HARIBOTEPATH = ../kalinote/
 
 MAKE     = $(TOOLPATH)make.exe -r
@@ -28,7 +27,7 @@ default :
 
 $(APP).bim : $(APP).obj $(APILIBPATH)apilib.lib Makefile ../app_make.txt
 	$(OBJ2BIM) @$(RULEFILE) out:$(APP).bim map:$(APP).map stack:$(STACK) \
-		$(APP).obj $(APILIBPATH)apilib.lib $(STDLIBPATH)stdlib.lib
+		$(APP).obj $(APILIBPATH)apilib.lib
 
 $(APP).kal : $(APP).bim Makefile ../app_make.txt
 	$(BIM2KAL) $(APP).bim $(APP).kal $(MALLOC)
@@ -69,12 +68,10 @@ run :
 
 full :
 	$(MAKE) -C $(APILIBPATH)
-	$(MAKE) -C $(STDLIBPATH)
 	$(MAKE) $(APP).kal
 
 run_full :
 	$(MAKE) -C $(APILIBPATH)
-	$(MAKE) -C $(STDLIBPATH)
 	$(MAKE) -C ../kalinote
 	$(MAKE) run
 

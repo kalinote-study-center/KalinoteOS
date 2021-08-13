@@ -213,6 +213,21 @@ void KaliMain(void){
 		}
 	}
 	*((int *) 0x10fe8) = (int) chinese;
+	
+    /* 执行启动脚本startup.kbs */
+    finfo_ch = file_search("startup.kbs", (struct FILEINFO *) (ADR_DISKIMG + 0x002600), 224);
+    if (finfo_ch != 0) {
+        char *ss;
+        i = finfo_ch->size;
+        ss = file_loadfile2(finfo_ch->clustno, &i, fat_ch);
+        for (x = 0; x < i; x++) {
+            if (ss[x] != 0x0d) {
+                fifo32_put(&key_win->task->fifo, ss[x] + 256);
+            }
+        }
+        memman_free_4k(memman, (int) ss, i);
+    }
+	
 	memman_free_4k(memman, (int) fat_ch, 4 * 2880);
 	
 	/* 载入nihongo字库 */

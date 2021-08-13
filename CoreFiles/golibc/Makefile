@@ -6,10 +6,12 @@ OBJS       = abs.obj atof.obj atoi.obj errno.obj frexp.obj ldexp.obj \
 	memchr.obj memcmp.obj memmove.obj memset.obj qsort.obj rand.obj \
 	sprintf.obj strcat.obj strcmp.obj strcpy.obj strcspn.obj strdup.obj \
 	strlen.obj strncat.obj strncmp.obj strncpy.obj strpbrk.obj strrchr.obj \
-	strspn.obj strstr.obj strtol.obj strtoul.obj strtoul0.obj vsprintf.obj
+	strspn.obj strstr.obj strtol.obj strtoul.obj strtoul0.obj vsprintf.obj \
+	malloc.obj free.obj printf.obj putchar.obj scanf.obj getchar.obj \
+	puts.obj gets.obj isdigit.obj isspace.obj
  
-# 以上5つはソースごとに書き換える
-# OBJSを書き換えると分割コンパイル対応
+KALIPATH	= ..\\..\\z_tools\\kalinote\\
+APILIBPATH	= ../apilib/
  
 TOOLPATH =
 INCPATH  = .
@@ -25,12 +27,14 @@ CPP0     = $(TOOLPATH)cpp0 -P -I$(INCPATH)
 ASKA     = $(TOOLPATH)aska
 NASKCNV  = $(TOOLPATH)naskcnv0 -l -s -w
 GOLIB    = $(TOOLPATH)golib00
+COPY     = copy
 DELE     = del
 
-# 以上の項目はあなたのディレクトリ構成にあわせて書き換える
 
 ALL :
 	$(MAKE) $(TARGET).lib
+	$(COPY)	$(TARGET).lib $(KALIPATH)$(TARGET).lib
+	$(COPY) *.h $(KALIPATH)
 
 %.ca : %.c Makefile
 	$(SJISCONV) $*.c $*.ca
@@ -57,7 +61,8 @@ ALL :
 	$(NASK) $*.nas $*.obj $*.lst
 
 $(TARGET).bim : $(OBJS) Makefile
-	$(OBJ2BIM) @$(RULEFILE) out:$(TARGET).bim stack:$(STACKSIZE) map:$(TARGET).map $(OBJS)
+	$(OBJ2BIM) @$(RULEFILE) out:$(TARGET).bim stack:$(STACKSIZE) map:$(TARGET).map $(OBJS) \
+		$(APILIBPATH)apilib.lib
 
 %.bin : %.bim Makefile
 	$(BIM2BIN) in:$*.bim out:$*.org malloc:$(MALLOCSIZE) mmarea:$(MMAREA)

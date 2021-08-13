@@ -1,6 +1,6 @@
 /* 除0测试 */
 #include "apilib.h"
-#include "stdlib.h"
+#include <stdio.h>
 
 void KaliMain(void){
 	int i = 15;

@@ -46,6 +46,7 @@ kalinote.img : kalinote/ipl40.bin kalinote/kalinote.sys Makefile \
 		copy from:bball/bball.kal to:@: \
 		copy from:calc/calc.kal to:@: \
 		copy from:resources/back.jpg to:@: \
+		copy from:resources/startup.kbs to:@: \
 		copy from:amiya/amiya.jpg to:@: \
 		copy from:a2048/a2048.kal to:@: \
 		copy from:testapp/testapp.kal to:@: \
@@ -73,7 +74,7 @@ install :
 full :
 	$(MAKE) -C kalinote
 	$(MAKE) -C apilib
-	$(MAKE) -C stdlib
+	$(MAKE) -C golibc
 	$(MAKE) -C hello4
 	$(MAKE) -C winhelo
 	$(MAKE) -C star
@@ -135,7 +136,7 @@ src_only :
 clean_full :
 	$(MAKE) -C kalinote		clean
 	$(MAKE) -C apilib		clean
-	$(MAKE) -C stdlib		clean
+	$(MAKE) -C golibc		clean
 	$(MAKE) -C hello4		clean
 	$(MAKE) -C winhelo		clean
 	$(MAKE) -C star			clean
@@ -164,7 +165,7 @@ clean_full :
 src_only_full :
 	$(MAKE) -C kalinote		src_only
 	$(MAKE) -C apilib		src_only
-	$(MAKE) -C stdlib		src_only
+	$(MAKE) -C golibc		clean
 	$(MAKE) -C hello4		src_only
 	$(MAKE) -C winhelo		src_only
 	$(MAKE) -C star			src_only
