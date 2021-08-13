@@ -1,4 +1,4 @@
-/* C语言标准函数库 stdio */
+/* copyright(C) 2003 H.Kawai (under KL-01). */
 
 #if (!defined(STDIO_H))
 
@@ -17,12 +17,6 @@
 /* golibc */
 int sprintf(char *s, const char *format, ...);
 int vsprintf(char *s, const char *format, va_list arg);
-int putchar(int c);
-int printf(char *format, ...);
-int scanf(const char *format, ...);
-int getchar();
-int puts(const char *str);
-char *gets(char *str);
 
 #if (defined(__cplusplus))
 	}

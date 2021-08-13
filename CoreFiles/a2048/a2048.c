@@ -1,5 +1,5 @@
 /* 2048сно╥ */
-#include <stdio.h>
+#include<stdio.h>
 #include "apilib.h"
 
 int rand(void);

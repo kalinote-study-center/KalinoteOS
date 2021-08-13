@@ -7,7 +7,7 @@
 
 [SECTION .text]
 
-_api_malloc:		; int *api_malloc(unsigned int size);
+_api_malloc:		; char *api_malloc(int size);
 		PUSH	EBX
 		MOV		EDX,9
 		MOV		EBX,[CS:0x0020]

@@ -1,15 +1,33 @@
-/* C语言标准函数库 scanf */
+/* stdio.h */
 #include "../apilib.h"
+#include "../stdlib.h"
 #include <stdio.h>
 #include <stdarg.h>
-#include <stdlib.h>
-#include <string.h>
-#include <ctype.h>
+// #include <string.h>
 
 #define MAX_BUF 1024
 
+long int strtol(const char *str, char **endptr, int base);
+
+
+int printf(char *format, ...){
+	va_list ap;
+	char s[1000];
+	int i;
+	
+	va_start(ap, format);
+	i = vsprintf(s, format, ap);
+	api_putstr0(s);
+	va_end(ap);
+	return i;
+}
+
+int putchar(int c){
+	api_putchar(c);
+	return c;
+}
+
 int scanf(const char *format, ...){
-	/* 未测试 */
     int count = 0, base = 0;
     char *temp, buffer[MAX_BUF];
     va_list ap;
@@ -75,4 +93,30 @@ int scanf(const char *format, ...){
 	}
 	va_end(ap);
     return (count);
+}
+
+int getchar(){
+	int c = api_getkey(1);
+	putchar(c);
+	return c;
+}
+
+int puts(const char *str){
+	api_putstr0((char *)str);
+	putchar('\n');
+	return strlen(str);
+}
+
+char *gets(char *str){
+	char *ptr = str;
+	while (1) {
+		char c = getchar();
+		if (c == '\r' || c == '\n') {
+			*ptr = '\0';
+			return str;
+		} else {
+			*ptr = c;
+			ptr++;
+		}
+	}
 }
