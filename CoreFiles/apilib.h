@@ -1,4 +1,12 @@
 /* KalinoteOS syscall */
+#if (!defined(APILIB_H))
+#define APILIB_H	1
+
+#if (defined(__cplusplus))
+	extern "C" {
+#endif
+
+/* apilib */
 void api_putchar(int c);
 void api_putstr0(char *s);
 void api_putstr1(char *s, int l);
@@ -36,3 +44,9 @@ unsigned int api_get_min_hex(void);
 unsigned int api_get_sec_hex(void);
 unsigned int api_get_system_runtime(void);
 void api_showjpeg(char *filename, int x, int y, int win);
+
+#if (defined(__cplusplus))
+	}
+#endif
+
+#endif

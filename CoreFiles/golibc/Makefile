@@ -8,7 +8,9 @@ OBJS       = abs.obj atof.obj atoi.obj errno.obj frexp.obj ldexp.obj \
 	strlen.obj strncat.obj strncmp.obj strncpy.obj strpbrk.obj strrchr.obj \
 	strspn.obj strstr.obj strtol.obj strtoul.obj strtoul0.obj vsprintf.obj \
 	malloc.obj free.obj printf.obj putchar.obj scanf.obj getchar.obj \
-	puts.obj gets.obj isdigit.obj isspace.obj
+	puts.obj gets.obj isdigit.obj isspace.obj isalnum.obj isalpha.obj \
+	iscntrl.obj isgraph.obj islower.obj isprint.obj ispunct.obj isupper.obj \
+	isxdigit.obj tolower.obj toupper.obj
  
 KALIPATH	= ..\\..\\z_tools\\kalinote\\
 APILIBPATH	= ../apilib/
