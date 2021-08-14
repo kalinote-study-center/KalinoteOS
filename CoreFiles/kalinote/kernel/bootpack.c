@@ -28,6 +28,7 @@ void KaliMain(void){
 	struct FILEINFO *finfo_jp;
 	extern char fonts[4096];
 	struct SYSINFO sysinfo;
+	int direction = 0;		/* 这个变量用来记录是否按下方向键，0为未按下，1为按下 */
 	// struct MENU *start_menu; /* , *desktop_menu; */
 	/* struct WINDOW *debug_window; */
 	// struct BUTTON *start_button;
@@ -41,7 +42,7 @@ void KaliMain(void){
 		0,   0,   0,   0,   0,   0,   0,   '7', '8', '9', '-', '4', '5', '6', '+', '1',
 		'2', '3', '0', '.', 0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
 		0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
-		0,   0,   0,   0x5c, 0,  0,   0,   0,   0,   0,   0,   0,   0,   0x5c, 0,  0
+		0,   0,   0,   0x5c,0,   0,   0,   0,   0,   0,   0,   0,   0,   0x5c, 0,  0
 	};
 	static char keytable1[0x80] = {
 		0,   0,   '!', '@', '#', '$', '%', 0x5e, 0x26, '*', '(', ')', '_', '+', 0x08, 0,
@@ -347,14 +348,38 @@ void KaliMain(void){
 				sheet_updown(key_win, shtctl->top);
 				keywin_on(key_win);
 			} else if (256 <= i && i <= 511) { /* 键盘数据 */
-				if (i < 0x80 + 256) { /* 将按键编码转换为字符编码 */
-					if (key_shift == 0) {
-						s[0] = keytable0[i - 256];
-					} else {
-						s[0] = keytable1[i - 256];
+				// debug_print("keyboard>0x%x\n", i);
+				if (direction == 1) {
+					if(i == 0x48 + 256) {
+						/* 上 */
+						// debug_print("keyboard>press UP\n");
 					}
+					if(i == 0x50 + 256) {
+						/* 下 */
+						// debug_print("keyboard>press DOWN\n");
+					}
+					if(i == 0x4b + 256) {
+						/* 左 */
+						// debug_print("keyboard>press LEFT\n");
+					}
+					if(i == 0x4d + 256) {
+						/* 右 */
+						// debug_print("keyboard>press RIGHT\n");
+					}
+					direction = 0;
 				} else {
-					s[0] = 0;
+					if (i < 0x80 + 256) { /* 将按键编码转换为字符编码 */
+						/* 如果是在方向键模式，则将74-77分别处理为上、下、左、右 */
+						if (key_shift == 0) {
+							/* shift未按下 */
+							s[0] = keytable0[i - 256];	
+						} else {
+							/* shift按下 */
+							s[0] = keytable1[i - 256];
+						}
+					} else {
+						s[0] = 0;
+					}
 				}
 				if ('A' <= s[0] && s[0] <= 'Z') {	/* 当输入字符为英文字母时 */
 					if (((key_leds & 4) == 0 && key_shift == 0) ||
@@ -425,6 +450,10 @@ void KaliMain(void){
 				}
 				if (i == 256 + 0x57 && shtctl->top > 2) {	/* F11 切换窗口 */
 					sheet_updown(shtctl->sheets[2], shtctl->top - 1);
+				}
+				if (i == 256 + 0xe0) {	/* 方向键 */
+					// debug_print("keyboard>direction key\n");
+					direction = 1;
 				}
 				if (i == 256 + 0xfa) {	/* 键盘成功接收到数据 */
 					keycmd_wait = -1;
