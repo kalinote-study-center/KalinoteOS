@@ -1,4 +1,4 @@
-/* copyright(C) 2003 H.Kawai (under KL-01). */
+/* C语言标准函数库 setjmp for KalinoteOS */
 
 #if (!defined(SETJMP_H))
 
@@ -7,6 +7,11 @@
 #if (defined(__cplusplus))
 	extern "C" {
 #endif
+
+/*
+* setjmp.h 头文件定义了宏 setjmp()、函数 longjmp() 和变量类型 jmp_buf，
+* 该变量类型会绕过正常的函数调用和返回规则。
+*/
 
 typedef int jmp_buf[3]; /* EBP, EIP, ESP */
 

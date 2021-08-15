@@ -7,8 +7,8 @@ void KaliMain(void)
 	char c, cmdline[30], *p;
 
 	api_cmdline(cmdline, 30);
-	for (p = cmdline; *p > ' '; p++) { }	/* ’µ?”V‘O“I“à—eC’¼“ž‹ö“ž‹óŠi */
-	for (; *p == ' '; p++) { }	/* ’µ?‹óŠi */
+	for (p = cmdline; *p > ' '; p++) { }
+	for (; *p == ' '; p++) { }
 	fh = api_fopen(p);
 	if (fh != 0) {
 		for (;;) {
