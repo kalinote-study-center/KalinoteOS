@@ -4,7 +4,9 @@
 #include <stdio.h>
 
 void KaliMain(void){
+	int r;
 	srand(api_get_system_runtime()+api_get_sec_hex()*api_get_min_hex());		/* 设置随机种子 */
-	printf("rand int:%d", rand());
+	r = rand();
+	printf("rand int:%d", r);
 	api_end();
 }

@@ -10,7 +10,9 @@
 
 /* stddef .h 头文件定义了各种变量类型和宏。这些定义中的大部分也出现在其它头文件中。 */
 
-#define NULL	((void *) 0)
+#if (!defined(NULL))
+	#define NULL	((void *) 0)
+#endif
 #define offsetof(TYPE, MEMBER) ((size_t) &((TYPE *)0)->MEMBER);
 /*
 * offsetof

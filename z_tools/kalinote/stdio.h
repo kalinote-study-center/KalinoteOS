@@ -37,7 +37,7 @@ int scanf(const char *format, ...);							// 从标准输入 stdin 读取格式�
 int getchar(void);											// 从标准输入 stdin 获取一个字符（一个无符号字符）。
 int puts(const char *str);									// 把一个字符串写入到标准输出 stdout，直到空字符，但不包括空字符。换行符会被追加到输出中。
 char *gets(char *str);										// 从标准输入 stdin 读取一行，并把它存储在 str 所指向的字符串中。当读取到换行符时，或者到达文件末尾时，它会停止，具体视情况而定。
-
+/* 文件的io函数暂时还没有做，等系统调用更完善再写 */
 
 #if (defined(__cplusplus))
 	}

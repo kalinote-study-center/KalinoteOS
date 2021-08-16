@@ -7,7 +7,7 @@ void free(void *ap){
 	int size;
 	if(q != 0){
 		q -= 16;
-		size = *((int *) q);
+		size = *((int *) q);		/* 从内存空间的前16字节取到内存空间大小 */
 		api_free(q,size + 16);
 	}
 	return;

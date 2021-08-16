@@ -1,4 +1,4 @@
-/* KalinoteOS 应用程序API接口 */
+/* KalinoteOS 系统调用 */
 #include "../bootpack.h"
 
 int *kal_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int eax){
@@ -287,6 +287,16 @@ int *kal_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int 
 			/* 读取失败不执行此句 */
 			sheet_refresh(sht, 0, 0, sht->bxsize, sht->bysize);
 		}
+	} else if (edx == 39) {
+		/* 执行系统指令(向cmd发送键值) */
+		unsigned char *p;
+        for (p = (unsigned char *) ebx + ds_base; *p != 0; p++) {
+            if (*p != 0x0d) {
+                io_cli();
+                fifo32_put(&task->fifo, *p + 256);
+                io_sti();
+            }
+        }
 	}
 	return 0;
 }
