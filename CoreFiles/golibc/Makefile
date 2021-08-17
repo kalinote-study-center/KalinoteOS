@@ -11,7 +11,8 @@ OBJS       = abs.obj atof.obj atoi.obj errno.obj frexp.obj ldexp.obj \
 	puts.obj gets.obj isdigit.obj isspace.obj isalnum.obj isalpha.obj \
 	iscntrl.obj isgraph.obj islower.obj isprint.obj ispunct.obj isupper.obj \
 	isxdigit.obj tolower.obj toupper.obj atol.obj calloc.obj system.obj \
-	fabs.obj atexit.obj bsearch.obj div.obj labs.obj ldiv.obj
+	fabs.obj atexit.obj bsearch.obj div.obj labs.obj ldiv.obj strcoll.obj \
+	asctime.obj
 
 # 有空把makefile整理以下，不然标准函数太多太乱
 

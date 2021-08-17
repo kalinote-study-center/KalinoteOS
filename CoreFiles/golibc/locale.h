@@ -27,7 +27,7 @@ typedef struct {
    char n_sep_by_space;     // 如果等于 1，则 currency_symbol 和负货币值之间使用空格分隔。如果等于 0，则 currency_symbol 和负货币值之间不使用空格分隔。
    char p_sign_posn;        // 表示正货币值中正号的位置。
    char n_sign_posn;        // 表示负货币值中负号的位置。
-} lconv
+} lconv;
 
 /*
 * 下面的值用于 p_sign_posn 和 n_sign_posn:
