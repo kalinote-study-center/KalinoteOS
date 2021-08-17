@@ -1,4 +1,4 @@
-/* K&R‚©‚ç‚Ù‚Ú‚»‚Ì‚Ü‚Üˆø—p */
+/* C?Œ¾?y”Ÿ”? stdlib.h qsort */
 
 #include <stddef.h>
 #include <stdio.h>
