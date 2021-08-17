@@ -26,7 +26,7 @@ typedef struct
 #if (!defined(NULL))
 	#define NULL	((void *) 0)
 #endif
-#define	RAND_MAX		·	0x7fff			// 这个宏是 rand 函数返回的最大值。
+#define	RAND_MAX			0x7fff			// 这个宏是 rand 函数返回的最大值。
 #define EXIT_SUCCESS		0				// 这是 exit 函数成功时要返回的值。
 #define EXIT_FAILURE		1				// 这是 exit 函数失败时要返回的值。
 
@@ -52,7 +52,7 @@ void free(void *ap);                                                    // 释�
 // void exit(int status);												// 由于某些原因，暂时没办法实现，可以使用api_end();系统调用
 // int atexit(void (*func)(void));										// 由于某些原因，暂时没办法实现
 // char *getenv(const char *name);										// KalinoteOS暂时还没办法实现这个功能:(
-
+int system(const char *command);										// 由 string 指定的命令传给要被命令处理器执行的主机环境。
 
 #if (defined(__cplusplus))
 	}

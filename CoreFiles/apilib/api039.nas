@@ -7,7 +7,7 @@
 
 [SECTION .text]
 
-_api_send_key_to_cmd:       ; int api_send_key_to_cmd(char *);
+_api_send_key_to_cmd:       ; int api_send_key_to_cmd(char *str);
         PUSH    EBX
         MOV     EDX,31
         MOV     EBX,[ESP+8]

@@ -1,4 +1,4 @@
-/* C语言标准函数 分配内存 */
+/* C语言标准函数 stdlib.h malloc */
 #include <stdlib.h>
 #include "../apilib.h"
 

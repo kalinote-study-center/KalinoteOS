@@ -1,5 +1,5 @@
 /* C语言标准函数 生成随机数 */
-
+#include <stdlib.h>
 unsigned int rand_seed = 1;
 
 void srand(int seed) {
@@ -8,5 +8,5 @@ void srand(int seed) {
 
 int rand(void){
 	rand_seed = rand_seed * 1103515245 + 12345;
-	return (unsigned int) (rand_seed >> 16) & 32767;
+	return (unsigned int) (rand_seed >> 16) & RAND_MAX;
 }

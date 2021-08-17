@@ -10,7 +10,8 @@ OBJS       = abs.obj atof.obj atoi.obj errno.obj frexp.obj ldexp.obj \
 	malloc.obj free.obj printf.obj putchar.obj scanf.obj getchar.obj \
 	puts.obj gets.obj isdigit.obj isspace.obj isalnum.obj isalpha.obj \
 	iscntrl.obj isgraph.obj islower.obj isprint.obj ispunct.obj isupper.obj \
-	isxdigit.obj tolower.obj toupper.obj atol.obj calloc.obj
+	isxdigit.obj tolower.obj toupper.obj atol.obj calloc.obj system.obj \
+	fabs.obj
 
 # 有空把makefile整理以下，不然标准函数太多太乱
 

@@ -8,11 +8,16 @@
 	extern "C" {
 #endif
 
+#define M_PI  (3.1415926535897932384626433832795)
+#define M_2PI  (M_PI * 2)
+#define M_PI_2  (M_PI / 2)
+
 double sin(double);
 double cos(double);
 double sqrt(double);
 double ldexp(double x, int n);
 double frexp(double x, int *exp);
+double fabs(double x);				 // 获取浮点数绝对值
 
 extern __inline__ double sin(double x)
 {

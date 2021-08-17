@@ -7,7 +7,7 @@ romimage: file="D:\OneDrive - mayx\Projects\OSProject\KalinoteOS\KalinoteOS1.0\z
 vgaromimage: file="D:\OneDrive - mayx\Projects\OSProject\KalinoteOS\KalinoteOS1.0\z_tools\qemu\vgabios.bin"
 boot: floppy
 floppy_bootsig_check: disabled=0
-floppya: type=1_44, 1_44="D:\OneDrive - mayx\Projects\OSProject\KalinoteOS\KalinoteOS1.0\CoreFiles\kalinote.img", status=inserted, write_protected=0
+floppya: type=1_44, 1_44="D:\OneDrive - mayx\Projects\OSProject\KalinoteOS\KalinoteOS1.0\z_tools\qemu\kalinoteos.bin", status=inserted, write_protected=0
 # no floppyb
 ata0: enabled=true, ioaddr1=0x1f0, ioaddr2=0x3f0, irq=14
 ata0-master: type=none
