@@ -1,5 +1,5 @@
 APP      = runtime
-STACK    = 0k
+STACK    = 2k
 MALLOC   = 0k
 
 include ../app_make.txt

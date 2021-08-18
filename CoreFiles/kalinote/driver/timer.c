@@ -12,10 +12,27 @@ void init_pit(void){
 	int i;
 	struct TIMER *t;
 	/* 改变PIT中断周期 */
-	io_out8(PIT_CTRL, 0x34); // 固定值
+	
+	/*
+	*                         PIC控制字定义
+	* D7		D6		D5		D4		D3		D2		D1		D0
+	* -------------------------------------------------------------
+	*     计数器    |    读写格式    |        工作方式       | 数制
+	* -------------------------------------------------------------
+	* SC1		SC0		RL1		RL0		M2		M1		M0		BCD
+	* -------------------------------------------------------------
+	*   00 计数器0   00 计数器锁存命令      000    方式0    0 二进制
+	*   01 计数器1   01 只读写低字节(*)     001    方式1    1 十进制
+	*   10 计数器2   10 只读写高字节(*)     010    方式2
+	*   11 非法      11 先读写低字节，      011    方式3
+	*                   后读写高字节        100    方式4
+	*                                       101    方式5
+	*/
+	
+	io_out8(PIT_CTRL, 0x34); // 固定值(控制字-计数器0-先读写低字节，后读写高字节-方式2-二进制)
 	io_out8(PIT_CNT0, 0x9c); // 中断周期低8位
 	io_out8(PIT_CNT0, 0x2e); // 中断周期高8位
-	/* 上面发送的终端周期为0x2e9c，换算成十进制是11932，设定这个值的中断频率为100Hz，即每10ms发生一次中断，每秒产生100次中断 */
+	/* 上面发送的终端周期为0x2e9b，换算成十进制是11931，设定这个值的中断频率为100Hz，即每10ms发生一次中断，每秒产生100次中断 */
 	timerctl.count = 0;
 	for (i = 0; i < MAX_TIMER; i++) {
 		timerctl.timers0[i].flags = 0; /* 未使用 */
@@ -92,8 +109,10 @@ void inthandler20(int *esp){
 	/* 时钟中断程序 */
 	struct TIMER *timer;
 	char ts = 0;
+	struct SYSINFO *sysinfo = (struct SYSINFO *) *((int *) SYSINFO_ADDR);
 	io_out8(PIC0_OCW2, 0x60);	/* 把IRQ-00信号接收完了的信息通知给中断(PIC)，0+0x60号端口 */
-	timerctl.count++;			//定时器计数
+	timerctl.count++;				// 定时器计数
+	sysinfo->time_counter++;		// 系统ticks
 	if (timerctl.next > timerctl.count) {
 		return; /* 还不到下一个时刻，所以结束 */
 	}

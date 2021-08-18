@@ -37,12 +37,12 @@ int api_getlang(void);                                                          
 void api_cls(void);                                                             // 清空命令行
 unsigned int api_get_year(void);                                                // 获取系统年
 unsigned int api_get_mon_hex(void);                                             // 获取系统月
-unsigned int api_get_day_of_week(void);                                         // 获取系统日
-unsigned int api_get_day_of_month(void);                                        // 获取系统星期
+unsigned int api_get_day_of_week(void);                                         // 获取系统星期
+unsigned int api_get_day_of_month(void);                                        // 获取系统日
 unsigned int api_get_hour_hex(void);                                            // 获取系统小时
 unsigned int api_get_min_hex(void);                                             // 获取系统分
 unsigned int api_get_sec_hex(void);                                             // 获取系统秒
-unsigned int api_get_system_runtime(void);                                      // 获取系统运行时间
+unsigned long api_get_system_runtime(void);                                     // 获取系统运行时间
 void api_showjpeg(char *filename, int x, int y, int win);                       // 在指定窗口的指定位置显示一张图片
 int api_send_key_to_cmd(char *str);                                                // 向命令行发送键值
 

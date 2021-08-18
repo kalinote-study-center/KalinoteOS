@@ -4,6 +4,7 @@
 #include "../apilib.h"
 
 int printf(char *format, ...){
+	/* printf需要分配1k的stack，所以调用该函数的kal需要配置1k以上的stack */
 	va_list ap;
 	char s[1000];
 	int i;

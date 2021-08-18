@@ -16,7 +16,7 @@ struct SYSINFO {
 	unsigned int memtotal;			/* 系统总内存 */
 	int year, month, day;			/* 系统日期 */
 	int hour, min, sec;				/* 系统时间 */
-	unsigned int time_counter;		/* 记录系统启动以来的时间 */
+	unsigned long time_counter;		/* 记录系统启动以来的ticks */
 };
 #define	SYS_MEMORY		0x00400000			// 系统占用内存
 #define FIFO_ADDR		0x0fec				// FIFO地址

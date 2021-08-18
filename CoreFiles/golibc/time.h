@@ -10,6 +10,8 @@
 
 #include <stddef.h>
 
+#define CLOCKS_PER_SEC		100
+
 struct tm {				/* 这是一个用来保存时间和日期的结构。 */
    int tm_sec;  		/* 秒，范围从 0 到 59        */
    int tm_min;  		/* 分，范围从 0 到 59        */
@@ -25,7 +27,10 @@ typedef unsigned long time_t;		/* 这是一个适合存储日历时间类型。 
 typedef unsigned long clock_t;		/* 这是一个适合存储处理器时间的类型。 */
 
 char *asctime(const struct tm *timeptr);				// 返回一个指向字符串的指针，它代表了结构 timeptr 的日期和时间。
-// clock_t clock(void);									// (做这个函数，可能需要修改api_get_system_runtime)返回程序执行起（一般为程序的开头），处理器时钟所使用的时间。
+clock_t clock(void);									// 返回程序执行起（一般为程序的开头），处理器时钟所使用的时间。
+time_t time(time_t *seconds);							// 计算当前日历时间，并把它编码成 time_t 格式
+char *ctime(const time_t *timer);						// 返回一个表示当地时间的字符串，当地时间是基于参数 timer。
+double difftime(time_t time1, time_t time2);			// 返回 time1 和 time2 之间相差的秒数 (time1-time2)。
 
 #if (defined(__cplusplus))
 	}

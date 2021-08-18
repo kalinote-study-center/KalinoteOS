@@ -255,7 +255,7 @@ void KaliMain(void){
 	/* 时钟更新定时器 */
 	timer = timer_alloc();
 	timer_init(timer, &fifo, 1);
-	timer_settime(timer, 100);	/* 每1秒更新一次时间 */
+	timer_settime(timer, 1);	/* 激活时间 */
 	
 	for(;;){
 		/***************************************************************
@@ -300,7 +300,7 @@ void KaliMain(void){
 				/*
 				*  理论上来说定时器是一秒触发一次，但实际上因为系统运行速度较慢，似乎触发的时间远远大于一秒
 				*/
-				sysinfo.time_counter += 1;			/* 记录系统运行时间 */
+				// sysinfo.time_counter += 1;			/* 记录系统运行时间 */
 				timer_init(timer, &fifo, 1);		/* 设置一个定时器，下一秒再次更新 */
 				timer_settime(timer, 100);
 				sysinfo.sec += 1;

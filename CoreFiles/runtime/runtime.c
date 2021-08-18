@@ -3,6 +3,6 @@
 #include <stdio.h>
 
 void KaliMain(void) {
-	printf("%u sec\n", api_get_system_runtime());
+	printf("%u ticks(10ms)\n", api_get_system_runtime());
 	api_end();
 }
