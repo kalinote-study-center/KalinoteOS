@@ -189,7 +189,7 @@ pipelineflush:
 		CALL	memcpy
 skip:
 		MOV		ESP,[EBX+12]	; 堆栈初始值
-		JMP		DWORD 2*8:0x0000001b	;KaliMain入口的地址		;新标的入口地址为0x00000027
+		JMP		DWORD 2*8:0x0000001b	;KaliMain入口的地址，从这里开始进入C语言		;新标的入口地址为0x00000027
 
 waitkbdout:
 		IN		 AL,0x64
@@ -219,7 +219,9 @@ GDT0:
 		; 写入8字节的GDT表
 		DW		0xffff,0x0000,0x9200,0x00cf	; 可读区段32bit					; CPU使用
 		DW		0xffff,0x0000,0x9a28,0x0047	; 可执行段32bit(用于bootpack)	; bootpack.kal使用
-		
+		; 这一段其实跟下面两句代码差不多(kernel/dsctbl.c)：
+		; set_segmdesc(gdt + 1, 0xffffffff,   0x00000000, AR_DATA32_RW);
+		; set_segmdesc(gdt + 2, LIMIT_BOTPAK, ADR_BOTPAK, AR_CODE32_ER);
 
 		DW		0
 GDTR0:

@@ -570,43 +570,44 @@ int read_rtc(unsigned char tt[5]);
 
 /* acpi.c(电源管理) */
 struct ACPI_RSDP {
+	/* RSDP结构 */
 	char Signature[8];
 	unsigned char Checksum;
 	char OEMID[6];
 	unsigned char Revision;
 	unsigned int RsdtAddress;
+	/* 上面是1.0的结构，下面是2.0的扩展结构	*/
 	unsigned int Length;
 	unsigned int XsdtAddress[2];
 	unsigned char ExtendedChecksum;
 	unsigned char Reserved[3];
 };
-
 struct ACPISDTHeader {
-  char Signature[4];
-  unsigned int Length;
-  unsigned char Revision;
-  unsigned char Checksum;
-  char OEMID[6];
-  char OEMTableID[8];
-  unsigned int OEMRevision;
-  unsigned int CreatorID;
-  unsigned int CreatorRevision;
+	/* RSDP结构 */
+	char Signature[4];
+	unsigned int Length;
+	unsigned char Revision;
+	unsigned char Checksum;
+	char OEMID[6];
+	char OEMTableID[8];
+	unsigned int OEMRevision;
+	unsigned int CreatorID;
+	unsigned int CreatorRevision;
 };
-
 struct ACPI_RSDT {
 	struct ACPISDTHeader header;
 	unsigned int Entry;
 };
-
 typedef struct {
-  unsigned char AddressSpace;
-  unsigned char BitWidth;
-  unsigned char BitOffset;
-  unsigned char AccessSize;
-  unsigned int Address[2];
+	unsigned char AddressSpace;
+	unsigned char BitWidth;
+	unsigned char BitOffset;
+	unsigned char AccessSize;
+	unsigned int Address[2];
 } GenericAddressStructure;
 
 struct ACPI_FADT {
+	/* Fixed ACPI Description Table数据结构 */
     struct   ACPISDTHeader h;
     unsigned int FirmwareCtrl;
     unsigned int Dsdt;
