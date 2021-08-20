@@ -2,7 +2,7 @@
 
 #include "../bootpack.h"
 
-void init_gdtidt(void){
+void init_gdtidt(void) {
 	/*初始化GDT和IDT*/
 	struct SEGMENT_DESCRIPTOR *gdt = (struct SEGMENT_DESCRIPTOR *) ADR_GDT;		//GDT(全局段号记录表)的地址位于0x270000~0x27ffff(8192条记录，每条记录8字节，一共是65536字节，也就是64KB)
 	struct GATE_DESCRIPTOR    *idt = (struct GATE_DESCRIPTOR    *) ADR_IDT;		//IDT(中断记录表)的地址位于0x26f800~0x26ffff(255条记录，每条记录8字节，一共2040字节，大约2KB)
@@ -14,7 +14,7 @@ void init_gdtidt(void){
 		set_segmdesc(gdt + i, 0, 0, 0);				/* 这里的gdt是指针，由于C语言特性，地址在进行加法时内部有隐含乘法，所以i每次+1，实际地址是+8(GDT结构体8字节) */
 	}
 	set_segmdesc(gdt + 1, 0xffffffff,   0x00000000, AR_DATA32_RW);			/* 段号为1的段，表示CPU管理内存大小，设置0xffffffff是4GB(32位最大识别内存)，地址为0 */
-	set_segmdesc(gdt + 2, LIMIT_BOTPAK, ADR_BOTPAK, AR_CODE32_ER);			/* 段号为2的段，包括了整个bootpack.h，大小为512KB */
+	set_segmdesc(gdt + 2, LIMIT_BOTPAK, ADR_BOTPAK, AR_CODE32_ER);			/* 段号为2的段，包括了整个bootpack.kal，大小为512KB，这个段是系统专用 */
 	load_gdtr(LIMIT_GDT, ADR_GDT);											/* 对GDTR寄存器进行设置 */
 
 	/* IDT初始化 */
@@ -43,6 +43,8 @@ void init_gdtidt(void){
 void set_segmdesc(struct SEGMENT_DESCRIPTOR *sd, unsigned int limit, int base, int ar){
 	/* 设置段描述符(Segement Discriptor,全局段号记录表,GDT) */
 	if (limit > 0xfffff) {
+		/* 在这里设置G_bit = 1后，limt的单位就从byte编程page(页，4字节)了 */
+		/* 所以可以管理的上限从1MB变成1MB * 4KB = 4GB */
 		ar |= 0x8000; /* G_bit = 1 */
 		limit /= 0x1000;
 	}

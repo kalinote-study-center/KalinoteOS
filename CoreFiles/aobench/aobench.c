@@ -309,5 +309,5 @@ int KaliMain() {
 	for (;;)
 		if (api_getkey(1) == 0x1b)
 			break;
-	return 0;
+	api_end{};
 }

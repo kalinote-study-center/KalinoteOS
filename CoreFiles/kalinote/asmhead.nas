@@ -1,5 +1,7 @@
 ; kalinote-os
 ; TAB=4
+; 如果切换到64位模式，就没有办法使用nask和cc1编译器了
+; 后面需要将语言(编译器)切换到nasm和gcc
 
 [INSTRSET "i486p"]
 
@@ -87,21 +89,38 @@ keystatus:
 		INT		0x16 			; keyboard BIOS
 		MOV		[LEDS],AL
 
+; 从这里开始进入32位
+; 在osdev.org中，对于切换到受保护模式(Protected Mode)之前，有以下步骤：
+; 禁用中断，包括NMI（如英特尔开发人员手册建议）。
+; 启用A20 line。
+; 加载适用于代码、数据和堆栈的段描述符"全球描述器表(GDT)"。
+
 ; PIC关闭所有中断
 ; 根据AT兼容机的规格，如果要初始化PIC，
 ; 必须在CLI之前进行，否则有事会挂起
 ; 随后进行PIC初始化
-
+; 功能等同于(C语言)
+; io_out(PIC0_IMR, 0xff);	/* 禁止主PIC中断 */
+; io_out(PIC1_IMR, 0xff);	/* 禁止从PIC中断 */
+; io_cli();					/* 禁止CPU中断 */
 		MOV		AL,0xff
-		OUT		0x21,AL
-		NOP						; 停顿一下，防止BUG(这个对于现在来说没有太大的必要性 )
-		OUT		0xa1,AL
+		OUT		0x21,AL			; 禁止主PIC中断(这里可以参考PIC中断控制器相关资料)
+		; NOP						; 停顿一下，防止BUG(这个对于现在来说没有太大的必要性 )
+		OUT		0xa1,AL			; 禁止从PIC中断
 
-		CLI						; 禁止CPU级别中断
+		CLI						; 禁止CPU中断
 
 ; 为了能够从CPU访问1MB以上的存储器，设定A20GATE
-
-		CALL	waitkbdout
+; 功能等同于(C语言)
+; #define KEYCMD_WRITE_OUTPORT		0xd1
+; #define KBC_OUTPORT_A20G_ENABLE	0Xdf
+; 
+; wait_KBC_sendready();		/* keyboard.c */
+; io_out(PORT_KEYCMD, KEYCMD_WRITE_OUTPORT);
+; wait_KBC_sendready();
+; io_out(PORT_KEYCMD, KBC_OUTPORT_A20G_ENABLE);
+; wait_KBC_sendready();		/* wait_KBC_sendready是多余的，在这里是为了等待A20GATE处理完毕 */
+		CALL	waitkbdout		; 这里与wait_KBC_sendready相同(等待键盘控制电路准备完毕 P.140)
 		MOV		AL,0xd1
 		OUT		0x64,AL
 		CALL	waitkbdout
@@ -110,13 +129,15 @@ keystatus:
 		CALL	waitkbdout
 
 ; 转向保护模式
-
+; CR0寄存器中含有控制处理器操作模式和状态的系统控制标志
 		LGDT	[GDTR0]			; 设定临时GDT
-		MOV		EAX,CR0
-		AND		EAX,0x7fffffff	; 将bit31设为0（为了禁止分页）
-		OR		EAX,0x00000001	; 使bit0为1(为了切换到保护模式)
+		MOV		EAX,CR0			; 为了设置CR0寄存器的值
+		AND		EAX,0x7fffffff	; 将bit31(最高位)设为0（为了禁止分页）
+		OR		EAX,0x00000001	; 使bit0(最低位)为1(为了切换到保护模式)
 		MOV		CR0,EAX
 		JMP		pipelineflush
+; 位于此处的jmp
+; CPU通过代入CR0进入保护模式后，需要立即执行跳转指令(P.155)
 pipelineflush:
 		MOV		AX,1*8			; 可读写的段 32bit
 		MOV		DS,AX
@@ -126,10 +147,10 @@ pipelineflush:
 		MOV		SS,AX
 		
 ; bootpack的传送
-
+; 将bootpack传送到相应的内存位置
 		MOV		ESI,bootpack	; 传送源
 		MOV		EDI,BOTPAK		; 传送目的地
-		MOV		ECX,512*1024/4
+		MOV		ECX,512*1024/4	; 传送数据大小
 		CALL	memcpy
 		
 ; 顺便盘数据也向原来的位置传送
@@ -139,9 +160,9 @@ pipelineflush:
 ; 0x00100000是1M以后的内存
 		MOV		ESI,0x7c00		; 传送源
 		MOV		EDI,DSKCAC		; 传送目的地
-		MOV		ECX,512/4
+		MOV		ECX,512/4		; 传送数据大小
 		CALL	memcpy
-		
+
 ; 剩下的全部
 
 		MOV		ESI,DSKCAC0+512	; 传送源
@@ -160,7 +181,7 @@ pipelineflush:
 		MOV		EBX,BOTPAK
 		MOV		ECX,[EBX+16]
 		ADD		ECX,3			; ECX += 3;
-		SHR		ECX,2			; ECX /= 4;
+		SHR		ECX,2			; ECX /= 4;		SHR是右移指令
 		JZ		skip			; 没有可转发的东西
 		MOV		ESI,[EBX+20]	; 传送源
 		ADD		ESI,EBX
@@ -173,11 +194,15 @@ skip:
 waitkbdout:
 		IN		 AL,0x64
 		AND		 AL,0x02
+		IN		 AL,0x60		; 空读，为了清空缓存中的垃圾数据
 		JNZ		waitkbdout		; 如果AND的结果不是0，进入waitkbdout
 		RET
 
 memcpy:
 		; 这个函数用于复制内存
+		; ESI是复制源地址
+		; EDI是复制目标地址
+		; ECX是复制数据大小(传送数据大小是以dword为单位[32位]，所以用字节数除以4)
 		MOV		EAX,[ESI]
 		ADD		ESI,4
 		MOV		[EDI],EAX
@@ -187,16 +212,20 @@ memcpy:
 		RET
 ; memcpy如果不忘记加入地址复制，也可以写串命令
 
-		ALIGNB	16
+		ALIGNB	16				; 补充0，直到能被16整除。下同
 GDT0:
+; 位于数据区的GDT表
 		RESB	8				; 选择器
-		DW		0xffff,0x0000,0x9200,0x00cf	; 可读区段32bit
-		DW		0xffff,0x0000,0x9a28,0x0047	; 可执行段32bit(用于bootpack)
+		; 写入8字节的GDT表
+		DW		0xffff,0x0000,0x9200,0x00cf	; 可读区段32bit					; CPU使用
+		DW		0xffff,0x0000,0x9a28,0x0047	; 可执行段32bit(用于bootpack)	; bootpack.kal使用
+		
 
 		DW		0
 GDTR0:
-		DW		8*3-1
-		DD		GDT0
+; 这里是写一个临时的GDT
+		DW		8*3-1		; GDT表的数量
+		DD		GDT0		; GDT表的地址
 
 		ALIGNB	16
 bootpack:

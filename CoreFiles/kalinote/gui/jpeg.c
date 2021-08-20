@@ -3,16 +3,14 @@
 
 typedef unsigned char UCHAR;
 
-typedef struct
-{
+typedef struct {
     int elem;
     unsigned short code[256];
     unsigned char  size[256];
     unsigned char  value[256];
 }HUFF;
 
-typedef struct
-{
+typedef struct {
     // SOF
     int width;
     int height;
@@ -77,8 +75,7 @@ int jpeg_init(JPEG *jpeg);
 void jpeg_decode(JPEG *jpeg, unsigned char *rgb,int b_type);
 
 
-int info_JPEG(struct DLL_STRPICENV *env,int *info, int size, UCHAR *fp0)
-{
+int info_JPEG(struct DLL_STRPICENV *env,int *info, int size, UCHAR *fp0) {
 	JPEG *jpeg = (JPEG *) (((int *) env) + 128);
 	jpeg->fp = fp0;
 	jpeg->fp1 = fp0 + size;
@@ -98,8 +95,7 @@ int info_JPEG(struct DLL_STRPICENV *env,int *info, int size, UCHAR *fp0)
 	return 1;
 }
 
-int decode0_JPEG(struct DLL_STRPICENV *env,int size, UCHAR *fp0, int b_type, UCHAR *buf, int skip)
-{
+int decode0_JPEG(struct DLL_STRPICENV *env,int size, UCHAR *fp0, int b_type, UCHAR *buf, int skip) {
 	JPEG *jpeg = (JPEG *) (((int *) env) + 128);
 	jpeg->fp = fp0;
 	jpeg->fp1 = fp0 + size;
@@ -115,8 +111,7 @@ int decode0_JPEG(struct DLL_STRPICENV *env,int size, UCHAR *fp0, int b_type, UCH
 }
 
 
-unsigned short get_bits(JPEG *jpeg, int bit)
-{
+unsigned short get_bits(JPEG *jpeg, int bit) {
 	unsigned char c;
 	unsigned short ret;
 	unsigned long buff;
@@ -150,8 +145,7 @@ fin:
 	return ret;
 }
 
-int jpeg_sof(JPEG *jpeg)
-{
+int jpeg_sof(JPEG *jpeg) {
 	unsigned char c;
 	int i, h, v, n;
 
@@ -186,8 +180,7 @@ err:
 }
 
 // define quantize table
-int jpeg_dqt(JPEG *jpeg)
-{
+int jpeg_dqt(JPEG *jpeg) {
 	unsigned char c;
 	int i, j, size;
 
@@ -226,8 +219,7 @@ err:
 }
 
 // define huffman table
-int jpeg_dht(JPEG *jpeg)
-{
+int jpeg_dht(JPEG *jpeg) {
 	unsigned tc, th;
 	unsigned code = 0;
 	unsigned char val;
@@ -288,8 +280,7 @@ err:
 	return 1;
 }
 
-int jpeg_init(JPEG *jpeg)
-{
+int jpeg_init(JPEG *jpeg) {
 	unsigned char c;
 	int r = 0, i;
 	jpeg->width = 0;
@@ -357,8 +348,7 @@ fin:
 
 // MCU decode
 
-void jpeg_decode_init(JPEG *jpeg)
-{
+void jpeg_decode_init(JPEG *jpeg) {
 	int i, j;
 
 	for (i = 0; i < jpeg->scan_count; i++) {
@@ -384,8 +374,7 @@ void jpeg_decode_init(JPEG *jpeg)
 	return;
 }
 
-int jpeg_huff_decode(JPEG *jpeg,int tc,int th)
-{
+int jpeg_huff_decode(JPEG *jpeg,int tc,int th) {
     HUFF *h = &(jpeg->huff[tc][th]);
     int code,size,k,v;
     code = 0;
