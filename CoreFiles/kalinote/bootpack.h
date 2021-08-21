@@ -156,7 +156,7 @@ int mouse_decode(struct MOUSE_DEC *mdec, unsigned char dat);										// »ñÈ¡Êó±
 void inthandler21(int *esp);																		// ¼üÅÌ¼àÌıÖĞ¶Ï
 void wait_KBC_sendready(void);																		// µÈ´ı¼üÅÌ¿ØÖÆµçÂ·×¼±¸Íê±Ï
 void init_keyboard(struct FIFO32 *fifo, int data0);													// ³õÊ¼»¯¼üÅÌ¿ØÖÆµçÂ·
-void reset_cpu(void);																				// ¸´Î»CPU
+void reset_cpu(void);																				// ¸´Î»CPU(8042ÖØÆô)
 #define PORT_KEYDAT		0x0060
 #define PORT_KEYCMD		0x0064
 

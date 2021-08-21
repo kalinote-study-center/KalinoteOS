@@ -3,9 +3,10 @@
 #include "../bootpack.h"
 
 void onStartButtonClick(void);							/* 单击Function按钮 */
-void onOpenConsoleClick(void);							/* 命令台选项被单击 */
-void onShutdownClick(void);								/* 关机选项被单击 */
-void onUselessClick(void);								/* 没用的选项 */
+static void onOpenConsoleClick(void);					/* 命令台选项被单击 */
+static void onShutdownClick(void);						/* 关机选项被单击 */
+static void onResetCPUClick(void);						/* 8042 键盘控制器脉冲CPU重置系统 */
+static void onUselessClick(void);						/* 没用的选项 */
 struct MENU *start_menu;								/* Function菜单 */
 void onWinButtonClick();								/* 控制窗口最小化 */
 
@@ -25,7 +26,7 @@ void init_taskbar(struct MEMMAN *memman, struct SHEET *sht) {
 	}
 	tb_back = sheet_alloc(sht->subctl);
 	tb_buf = (unsigned int *) memman_alloc_4k(memman, sht->bxsize * sht->bysize * 4);		/* 分配背景图层内存 */
-	sheet_setbuf(tb_back, tb_buf, sht->bxsize, sht->bysize, -1);								/* 设置背景图层缓冲区 */
+	sheet_setbuf(tb_back, tb_buf, sht->bxsize, sht->bysize, -1);							/* 设置背景图层缓冲区 */
 	tb_back->flags = SHEET_BACK;															/* 设置图层标签为背景 */
 	tb_back->win = 0;																		/* 窗口指针暂时不设置 */
 	
@@ -57,8 +58,8 @@ void init_taskbar(struct MEMMAN *memman, struct SHEET *sht) {
 	/* 准备Function菜单栏 */
 	start_menu = make_menu(memman, 5, 610);
 	add_options(start_menu, "open console", onOpenConsoleClick);
-	add_options(start_menu, "shutdown", cmd_shutdown);
-	add_options(start_menu, "useless1", onUselessClick);					/* 测试使用 */
+	add_options(start_menu, "shutdown", onShutdownClick);
+	add_options(start_menu, "reboot by 8042", onResetCPUClick);
 	add_options(start_menu, "useless2", onUselessClick);					/* 测试使用 */
 	add_options(start_menu, "useless3", onUselessClick);					/* 测试使用 */
 	remove_options(start_menu, 3);											/* 测试使用：移除useless2 */
@@ -211,20 +212,26 @@ void onStartButtonClick(void) {
 	return;
 }
 
-void onOpenConsoleClick(void) {
+static void onOpenConsoleClick(void) {
 	/* 命令台选项被单击 */
 	struct FIFO32 *fifo = (struct FIFO32 *) *((int *) FIFO_ADDR);
 	fifo32_put(fifo, 2);		/* 2是打开新的命令窗口，详细参考《系统支持文档》 */
 	return;
 }
 
-void onShutdownClick(void) {
+static void onShutdownClick(void) {
 	/* 关机选项被单击 */
 	acpi_shutdown();
 	return;
 }
 
-void onUselessClick(void) {
+static void onResetCPUClick(void) {
+	/* 8042 键盘控制器脉冲CPU重置系统 */
+	reset_cpu();
+	return;
+}
+
+static void onUselessClick(void) {
 	/* 没用的选项 */
 	return;
 }

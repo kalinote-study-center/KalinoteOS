@@ -10,10 +10,10 @@
 
 #include <stddef.h>		/* size_t */
 
-char *strcpy(char *s, const char *ct);							// 把 s 所指向的字符串复制到 ct。
-char *strncpy(char *s, const char *ct, size_t n);				// 把 s 所指向的字符串复制到 ct，最多复制 n 个字符。
-char *strcat(char *s, const char *ct);							// 把 s 所指向的字符串追加到 ct 所指向的字符串的结尾。
-char *strncat(char *s, const char *ct, size_t n);				// 把 s 所指向的字符串追加到 ct 所指向的字符串的结尾，直到 n 字符长度为止。
+char *strcpy(char *s, const char *ct);							// 把 ct 所指向的字符串复制到 s。
+char *strncpy(char *s, const char *ct, size_t n);				// 把 ct 所指向的字符串复制到 s，最多复制 n 个字符。
+char *strcat(char *s, const char *ct);							// 把 ct 所指向的字符串追加到 s 所指向的字符串的结尾。
+char *strncat(char *s, const char *ct, size_t n);				// 把 ct 所指向的字符串追加到 s 所指向的字符串的结尾，直到 n 字符长度为止。
 int strcmp(const char *cs, const char *ct);						// 把 cs 所指向的字符串和 ct 所指向的字符串进行比较。
 int strncmp(const char *cs, const char *ct, size_t n);			// 把 cs 和 ct 进行比较，最多比较前 n 个字节。
 int strcoll(const char *str1, const char *str2);				// 把 str1 和 str2 进行比较，结果取决于 LC_COLLATE 的位置设置。
@@ -29,7 +29,7 @@ size_t strlen(const char *cs);									// 计算字符串 str 的长度，直到
 // size_t strxfrm(char *dest, const char *src, size_t n);		// (这个后面再做)根据程序当前的区域选项中的 LC_COLLATE 来转换字符串 src 的前 n 个字符，并把它们放置在字符串 dest 中。
 
 void *memcpy(void *s, const void *ct, size_t n);				// 从 ct 复制 n 个字符到 s。
-void *memmove(void *s, const void *ct, size_t n);				// 另一个用于从 s 复制 n 个字符到 ct 的函数。
+void *memmove(void *s, const void *ct, size_t n);				// 另一个用于从 ct 复制 n 个字符到 s 的函数。
 int memcmp(const void *cs, const void *ct, size_t n);			// 把 cs 和 str2 的前 n 个字节进行比较。
 void *memchr(const void *cs, int c, size_t n);					// 在参数 cs 所指向的字符串的前 n 个字节中搜索第一次出现字符 c（一个无符号字符）的位置。
 void *memset(void *s, int c, size_t n);							// 复制字符 c（一个无符号字符）到参数 s 所指向的字符串的前 n 个字符。

@@ -53,7 +53,7 @@ unsigned int acpi_find_table(char *Signature){
 }
 
 /*
-*     由 ACPI 定义	// https://wiki.osdev.org/RSDT
+*     由 ACPI 定义(机翻)	// https://wiki.osdev.org/RSDT
 *   ACPI 规范 5.0 对以下系统描述表有直接定义，由其签名识别：
 * "APIC"：多个 APIC 描述表（MADT）)
 * "BERT"：引导错误记录表（BERT）)
@@ -117,7 +117,7 @@ void init_acpi(void){
  * \_S5 Object 
  * -----------------------------------
  * NameOP | \(可选) | _  | S  | 5  | _
- * 08     | 5A     | 5F | 53 | 35 | 5F
+ * 08     | 5A      | 5F | 53 | 35 | 5F
  * -----------------------------------
  * PackageOP | PkgLength | NumElements | prefix Num | prefix Num | prefix Num | prefix Num
  * 12        | 0A        | 04          | 0A     05  | 0A     05  | 0A     05  | 0A     05
@@ -164,4 +164,11 @@ int acpi_shutdown(void){
 		}
 	}
     return 1;
+}
+
+int acpi_reboot(void) {
+	/* 通过ACPI实现重启 */
+	/* https://wiki.osdev.org/Reboot */
+	
+	
 }
