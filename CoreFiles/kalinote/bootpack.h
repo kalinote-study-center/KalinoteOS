@@ -605,7 +605,6 @@ typedef struct {
 	unsigned char AccessSize;
 	unsigned int Address[2];
 } GenericAddressStructure;
-
 struct ACPI_FADT {
 	/* Fixed ACPI Description Table数据结构 */
     struct   ACPISDTHeader h;
@@ -653,7 +652,13 @@ struct ACPI_FADT {
  
     unsigned char  Reserved2;
     unsigned int Flags;
- 
+	/*
+	* Flags;	
+	* 状态标志，具体数据见下方常量(ACPI_FADT_*),
+	* 使用(acpi_gbl_FADT.flags & ACPI_FADT_*)验证
+	* 这些常量来自linux源代码
+	*/
+
     // 12 byte structure; see below for details
     GenericAddressStructure ResetReg;
  
@@ -673,9 +678,44 @@ struct ACPI_FADT {
     GenericAddressStructure X_GPE0Block;
     GenericAddressStructure X_GPE1Block;
 };
+#define ACPI_FADT_WBINVD            (1)		/* FADT Flags 00: [V1] WBINVD指令工作正常 */
+#define ACPI_FADT_WBINVD_FLUSH      (1<<1)	/* FADT Flags 01: [V1] WBINVD刷新但不使缓存无效 */
+#define ACPI_FADT_C1_SUPPORTED      (1<<2)	/* FADT Flags 02: [V1] 所有处理器都支持C1状态 */
+#define ACPI_FADT_C2_MP_SUPPORTED   (1<<3)	/* FADT Flags 03: [V1] MP系统支持C2状态 */
+#define ACPI_FADT_POWER_BUTTON      (1<<4)	/* FADT Flags 04: [V1] 电源按钮可以作为一种控制方法处理 */
+#define ACPI_FADT_SLEEP_BUTTON      (1<<5)	/* FADT Flags 05: [V1] 睡眠按钮可以作为一种控制方法处理 */
+#define ACPI_FADT_FIXED_RTC         (1<<6)	/* FADT Flags 06: [V1] RTC唤醒状态不在固定寄存器空间中 */
+#define ACPI_FADT_S4_RTC_WAKE       (1<<7)	/* FADT Flags 07: [V1] RTC警报可将系统从S4唤醒 */
+#define ACPI_FADT_32BIT_TIMER       (1<<8)	/* FADT Flags 08: [V1] ACPI定时器宽度为32位 (0=24-bit) */
+#define ACPI_FADT_DOCKING_SUPPORTED (1<<9)	/* FADT Flags 09: [V1] 支持 Docking(?) */
+#define ACPI_FADT_RESET_REGISTER    (1<<10)	/* FADT Flags 10: [V2] 支持通过FADT reset\ U REG进行系统重启 */
+#define ACPI_FADT_SEALED_CASE       (1<<11)	/* FADT Flags 11: [V3] 无内部扩展功能，情况未知 */
+#define ACPI_FADT_HEADLESS          (1<<12)	/* FADT Flags 12: [V3] 没有本地视频功能或本地输入设备 */
+#define ACPI_FADT_SLEEP_TYPE        (1<<13)	/* FADT Flags 13: [V3] 写入SLP_TYPx寄存器后必须执行本机指令 */
+#define ACPI_FADT_PCI_EXPRESS_WAKE  (1<<14)	/* FADT Flags 14: [V4] 系统支持PCIEXP_唤醒 (STS/EN) bits (ACPI 3.0) */
+#define ACPI_FADT_PLATFORM_CLOCK    (1<<15)	/* FADT Flags 15: [V4] OSPM应使用平台提供的定时器 (ACPI 3.0) */
+#define ACPI_FADT_S4_RTC_VALID      (1<<16)	/* FADT Flags 16: [V4] S4唤醒后有效的RTC_STS内容 (ACPI 3.0) */
+#define ACPI_FADT_REMOTE_POWER_ON   (1<<17)	/* FADT Flags 17: [V4] 系统与远程开机兼容 (ACPI 3.0) */
+#define ACPI_FADT_APIC_CLUSTER      (1<<18)	/* FADT Flags 18: [V4] 所有本地APIC必须使用群集模型 (ACPI 3.0) */
+#define ACPI_FADT_APIC_PHYSICAL     (1<<19)	/* FADT Flags 19: [V4] 所有本地XAPIC必须使用物理目的地模式 (ACPI 3.0) */
+#define ACPI_FADT_HW_REDUCED        (1<<20)	/* FADT Flags 20: [V5] 未实现ACPI硬件 (ACPI 5.0) */
+#define ACPI_FADT_LOW_POWER_S0      (1<<21)	/* FADT Flags 21: [V5] S0节能效果等于或优于S3 (ACPI 5.0) */
+#define ACPI_ADR_SPACE_SYSTEM_MEMORY    (unsigned char) 0
+#define ACPI_ADR_SPACE_SYSTEM_IO        (unsigned char) 1
+#define ACPI_ADR_SPACE_PCI_CONFIG       (unsigned char) 2
+#define ACPI_ADR_SPACE_EC               (unsigned char) 3
+#define ACPI_ADR_SPACE_SMBUS            (unsigned char) 4
+#define ACPI_ADR_SPACE_CMOS             (unsigned char) 5
+#define ACPI_ADR_SPACE_PCI_BAR_TARGET   (unsigned char) 6
+#define ACPI_ADR_SPACE_IPMI             (unsigned char) 7
+#define ACPI_ADR_SPACE_GPIO             (unsigned char) 8
+#define ACPI_ADR_SPACE_GSBUS            (unsigned char) 9
+#define ACPI_ADR_SPACE_PLATFORM_COMM    (unsigned char) 10
+#define ACPI_ADR_SPACE_PLATFORM_RT      (unsigned char) 11
 void init_acpi(void);
 unsigned int acpi_find_table(char *Signature);
 unsigned int *acpi_find_rsdp(void);
 char checksum(unsigned char *addr, unsigned int length);
-int acpi_shutdown(void);
-
+int acpi_shutdown(void);												/* 通过ACPI实现关机 */
+int acpi_reboot(void);													/* 通过ACPI实现重启 */
+int acpi_reset(void);											/* 通过ACPI的I/O总线实现重启 */

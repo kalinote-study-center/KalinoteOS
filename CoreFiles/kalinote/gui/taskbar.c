@@ -5,7 +5,8 @@
 void onStartButtonClick(void);							/* 单击Function按钮 */
 static void onOpenConsoleClick(void);					/* 命令台选项被单击 */
 static void onShutdownClick(void);						/* 关机选项被单击 */
-static void onResetCPUClick(void);						/* 8042 键盘控制器脉冲CPU重置系统 */
+static void on8042ResetCPUClick(void);					/* 8042 键盘控制器脉冲CPU重置系统 */
+static void onAPICResetCPUClick(void);					/* APIC重启 */
 static void onUselessClick(void);						/* 没用的选项 */
 struct MENU *start_menu;								/* Function菜单 */
 void onWinButtonClick();								/* 控制窗口最小化 */
@@ -59,11 +60,9 @@ void init_taskbar(struct MEMMAN *memman, struct SHEET *sht) {
 	start_menu = make_menu(memman, 5, 610);
 	add_options(start_menu, "open console", onOpenConsoleClick);
 	add_options(start_menu, "shutdown", onShutdownClick);
-	add_options(start_menu, "reboot by 8042", onResetCPUClick);
-	add_options(start_menu, "useless2", onUselessClick);					/* 测试使用 */
-	add_options(start_menu, "useless3", onUselessClick);					/* 测试使用 */
-	remove_options(start_menu, 3);											/* 测试使用：移除useless2 */
-	add_options(start_menu, "useless4", onUselessClick);					/* 测试使用 */
+	add_options(start_menu, "reboot", on8042ResetCPUClick);
+	add_options(start_menu, "reserve", onUselessClick);					/* 预留 */
+	add_options(start_menu, "reserve", onUselessClick);					/* 预留 */
 	
 	/* Function按钮 */
 	func_button = make_button(memman, 70, 23, 2, 4, "Function", COL_BGREY, onStartButtonClick);
@@ -225,9 +224,15 @@ static void onShutdownClick(void) {
 	return;
 }
 
-static void onResetCPUClick(void) {
+static void on8042ResetCPUClick(void) {
 	/* 8042 键盘控制器脉冲CPU重置系统 */
 	reset_cpu();
+	return;
+}
+
+static void onAPICResetCPUClick(void) {
+	/* APIC 重启 */
+	acpi_reboot();
 	return;
 }
 

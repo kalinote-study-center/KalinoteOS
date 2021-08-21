@@ -168,7 +168,51 @@ int acpi_shutdown(void){
 
 int acpi_reboot(void) {
 	/* 通过ACPI实现重启 */
+	/*
+	* (这里的重启是通过判断系统环境选择使用I/O总线还是PCI总线，
+	* 但是因为PCI驱动还没有实现，所以暂时和acpi_reset功能相同，
+	* 但在调用使用重启功能时，应该使用该函数)
+	*/
 	/* https://wiki.osdev.org/Reboot */
+	/* https://elixir.bootlin.com/linux/latest/source/drivers/acpi/reboot.c */
+
+	/* 判断ACPI版本 */
+	debug_print("ACPI>ACPI version:%d\n",FADT->h.Revision);
+	if(FADT->h.Revision < 2) {
+		debug_print("ACPI>Unsupported ACPI version:%d\n",FADT->h.Revision);
+		return 0;
+	}
+
+	/* Linux系统在这里验证了是否支持reset寄存器(通过检查位宽度和位偏移)，这里暂时跳过 */
 	
+	/* 
+	* 复位寄存器只能存在于I/O、内存或PCI配置空间中，在总线0上的设备上
+	*/
 	
+	/*
+	* 这里选择是通过PCI总线配置空间还是I/O和内存实现重启
+	* 关于PCI总线的驱动，只能后面有空再去做
+	*/
+	acpi_reset();
+	return 1;
+}
+
+int acpi_reset(void) {
+	/* 检查是否支持reset寄存器 */
+
+	if (!(FADT->Flags & ACPI_FADT_RESET_REGISTER) || !(FADT->ResetReg.Address)) {
+		/* 不支持则进行返回 */
+		debug_print("ACPI>Unsupported ResetReg\n");
+		debug_print("ACPI>FADT Flags = 0x%08x\n", FADT->Flags);
+		debug_print("ACPI>FADT ResetReg Address[0] = 0x%08x\n", FADT->ResetReg.Address[0]);
+		debug_print("ACPI>FADT ResetReg Address[1] = 0x%08x\n", FADT->ResetReg.Address[1]);
+		debug_print("ACPI>FADT ResetReg Address[2] = 0x%08x\n", FADT->ResetReg.Address[2]);
+		return 0;
+	}
+
+	/* ACPI通过I/O总线实现reset */
+	debug_print("APIC>reset by I/O\n");
+	io_out8((unsigned int)(FADT->ResetReg.Address), FADT->ResetValue);
+
+	return 1;
 }
