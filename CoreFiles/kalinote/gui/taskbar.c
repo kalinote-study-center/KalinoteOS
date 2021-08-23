@@ -6,7 +6,7 @@ void onStartButtonClick(void);							/* 单击Function按钮 */
 static void onOpenConsoleClick(void);					/* 命令台选项被单击 */
 static void onShutdownClick(void);						/* 关机选项被单击 */
 static void on8042ResetCPUClick(void);					/* 8042 键盘控制器脉冲CPU重置系统 */
-static void onAPICResetCPUClick(void);					/* APIC重启 */
+// static void onAPICResetCPUClick(void);					/* APIC重启 */
 static void onUselessClick(void);						/* 没用的选项 */
 struct MENU *start_menu;								/* Function菜单 */
 void onWinButtonClick();								/* 控制窗口最小化 */
@@ -230,11 +230,11 @@ static void on8042ResetCPUClick(void) {
 	return;
 }
 
-static void onAPICResetCPUClick(void) {
-	/* APIC 重启 */
-	acpi_reboot();
-	return;
-}
+// static void onAPICResetCPUClick(void) {
+	// /* APIC 重启 */
+	// acpi_reboot();
+	// return;
+// }
 
 static void onUselessClick(void) {
 	/* 没用的选项 */

@@ -2,20 +2,21 @@
 ; TAB=4
 ; 这个文件的存在是为了解决C语言不能解决的问题
 
-[FORMAT "WCOFF"]				; 制作目标文件的模式
-[INSTRSET "i486p"]				; 给486用的指令
+; [FORMAT "WCOFF"]				; 制作目标文件的模式
+; [INSTRSET "i486p"]				; 给486用的指令
 [BITS 32]						; 制作32位模式用的机器语言
-[FILE "naskfunc.nas"]			; 源文件名信息
+; [FILE "naskfunc.nas"]			; 源文件名信息
 		
 		GLOBAL	_io_hlt, _io_cli, _io_sti, _io_stihlt
 		GLOBAL	_io_in8,  _io_in16,  _io_in32
 		GLOBAL	_io_out8, _io_out16, _io_out32
-		GLOBAL	_port_read, _port_write
 		GLOBAL	_io_load_eflags, _io_store_eflags
+		GLOBAL	_port_read, _port_write
 		GLOBAL	_load_gdtr, _load_idtr
 		GLOBAL	_load_cr0, _store_cr0
 		GLOBAL	_load_tr
 		GLOBAL  _clts, _fnsave, _frstor
+		GLOBAL	_check_cpuid, _read_cpuid
 		GLOBAL	_asm_inthandler00
 		GLOBAL	_asm_inthandler07
 		GLOBAL	_asm_inthandler20, _asm_inthandler21
@@ -97,22 +98,22 @@ _io_store_eflags:				; void io_store_eflags(int eflags);
 		RET
 
 _port_read:						; void port_read(unsigned short port, void* buf, int n);
-	mov	edx, [esp + 4]			; port
-	mov	edi, [esp + 8]			; buf
-	mov	ecx, [esp + 12]			; n
-	shr	ecx, 1
-	cld
-	rep	insw
-	ret
+		MOV	EDX, [ESP + 4]			; port
+		MOV	EDI, [ESP + 8]			; buf
+		MOV	ECX, [ESP + 12]			; n
+		SHR	ECX, 1
+		CLD
+		REP	INSW
+		RET
 
 _port_write:					; void port_write(unsigned short port, void* buf, int n);
-	mov	edx, [esp + 4]			; port
-	mov	esi, [esp + 8]			; buf
-	mov	ecx, [esp + 12]			; n
-	shr	ecx, 1
-	cld
-	rep	outsw
-	ret
+		MOV	EDX, [ESP + 4]			; port
+		MOV	ESI, [ESP + 8]			; buf
+		MOV	ECX, [ESP + 12]			; n
+		SHR	ECX, 1
+		CLD
+		REP	OUTSW
+		RET
 
 _load_gdtr:						; void load_gdtr(int limit, int addr);
 		MOV		AX,[ESP+4]		; 段上限(limit，GDT有效字节数-1)
@@ -152,6 +153,33 @@ _frstor:        ; void frstor(int *addr);
         MOV     EAX,[ESP+4]     ; addr
         FRSTOR  [EAX]
         RET
+
+_check_cpuid:	; int check_cpuid(void);		/* 检查CPUID是否可用 */
+		PUSHFD                               	; 保存 EFLAGS
+		PUSHFD                               	; 储存 EFLAGS
+		XOR DWORD [ESP],0x00200000           	; 反转存储的EFLAG中的ID位
+		POPFD                                	; 加载存储的EFLAG（ID位反转）
+		PUSHFD                               	; 再次储存 EFLAGS (ID位可能反转，也可能不反转)
+		POP EAX                              	; eax = 修改的 EFLAGS (ID位可能反转，也可能不反转)
+		XOR EAX,[ESP]                        	; eax = 无论哪一位被改变
+		POPFD                                	; 恢复原始EFLAGS
+		AND EAX,0x00200000                   	; eax = 如果无法更改ID位，则为零，否则为非零
+		RET
+
+_read_cpuid:	; int read_cpuid(int code, int *ebx, int *edx, int *ecx);	/* 从CPUID获取信息 */
+		MOV EAX,[ESP+4]
+		PUSH EBX
+		CPUID									; 数据存在EBX,EDX,ECX中
+		PUSH ESI
+		MOV ESI,[ESP+16]
+		MOV [ESI],EBX
+		MOV ESI,[ESP+20]
+		MOV [ESI],EDX
+		MOV ESI,[ESP+24]
+		MOV [ESI],ECX
+		POP ESI
+		POP EBX
+		RET
 
 _asm_inthandler00:				; 除零异常
         STI

@@ -348,6 +348,8 @@ void cons_runcmd(char *cmdline, struct CONSOLE *cons, int *fat, unsigned int mem
 		cmd_echo(cons, cmdline);
 	} else if (strcmp(cmdline, "getruntime") == 0) {
 		cmd_getruntime(cons);
+	} else if (strcmp(cmdline, "sysinfo") == 0) {
+		cmd_sysinfo(cons);
 	} else if (cmdline[0] != 0) {
 		/* 执行cmd_app(),如果不是一个应用，会返回0 */
 		if (cmd_app(cons, fat, cmdline) == 0) {

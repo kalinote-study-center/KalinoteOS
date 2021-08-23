@@ -102,7 +102,7 @@ void KaliMain(void){
 	*((int *) DEBUG_ADDR) = (int)open_console(shtctl, memtotal, 1);
 	sht_debug_cons = (struct SHEET *) *((int *) DEBUG_ADDR);
 	sht_debug_cons->flags = SHEET_DEBUG_CONS;
-
+	
 	/* sht_back */
 	sht_back  = sheet_alloc(shtctl);
 	buf_back  = (unsigned int *) memman_alloc_4k(memman, binfo->scrnx * binfo->scrny * 4);
@@ -181,7 +181,7 @@ void KaliMain(void){
 	
 	/* 让系统切换到DEBUG模式(这里的代码与sysmode 1指令相同) */
 	sysinfo.sysmode = 1;
-	sheet_updown(sht_debug_cons, sht_debug_cons->ctl->top);
+	sheet_updown(sht_debug_cons, sht_debug_cons->ctl->top-1);
 	cons_putstr0(sht_debug_cons->task->cons,"DEBUG MODE\n");
 	
 	/* 测试代码 */

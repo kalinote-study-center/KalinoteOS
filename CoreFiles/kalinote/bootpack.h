@@ -54,13 +54,15 @@ int io_in32(int port);									// 传输数据用的，汇编IN指令，用于端口操作(32位)
 void io_out32(int port, int data);						// 传输数据用的，汇编OUT指令，用于端口操作(32位)
 int io_load_eflags(void);								// 读取最初的eflags值
 void io_store_eflags(int eflags);						// 将值存入eflags寄存器
-void port_read(unsigned short port, void* buf, int n);	// 端口读数据
-void port_write(unsigned short port, void* buf, int n);	// 端口写数据
+void port_read(unsigned short port, void *buf, int n);	// 端口读数据
+void port_write(unsigned short port, void *buf, int n);	// 端口写数据
 void load_gdtr(int limit, int addr);					// 加载GDTR寄存器(GDTR寄存器用于保存GDT在内存中的位置)
 void load_idtr(int limit, int addr);					// 加载IDTR寄存器(IDTR寄存器用于保存IDT在内存中的位置)
 int load_cr0(void);										// 加载CR0寄存器
 void store_cr0(int cr0);								// 存入CR0寄存器
 void load_tr(int tr);									// 加载TR寄存器
+int check_cpuid(void);									// 检查CPUID是否可用
+int read_cpuid(int code, int *ebx, int *edx, int *ecx);	// 从CPUID获取信息
 void asm_inthandler00(void);							// 00号中断，除零异常
 void asm_inthandler07(void);							// 07号中断，FPU异常中断
 void asm_inthandler0c(void);							// 0c号中断，用于处理栈异常
@@ -467,6 +469,7 @@ void cmd_shutdown(void);																			// CMD：关机
 void cmd_sysmode(struct CONSOLE *cons, char *cmdline);												// CMD：切换系统模式
 void cmd_echo(struct CONSOLE *cons, char *cmdline);													// CMD：系统输出
 void cmd_getruntime(struct CONSOLE *cons);															// CMD：查询系统启动运行时间
+void cmd_sysinfo(struct CONSOLE *cons);																// CMD：输出系统相关信息
 int cmd_app(struct CONSOLE *cons, int *fat, char *cmdline);											// 外部应用程序
 struct SHEET *open_console(struct SHTCTL *shtctl, unsigned int memtotal, int debug);				// 开启一个命令窗口
 struct TASK *open_constask(struct SHEET *sht, unsigned int memtotal);								// 开启一个任务
@@ -718,4 +721,4 @@ unsigned int *acpi_find_rsdp(void);
 char checksum(unsigned char *addr, unsigned int length);
 int acpi_shutdown(void);												/* 通过ACPI实现关机 */
 int acpi_reboot(void);													/* 通过ACPI实现重启 */
-int acpi_reset(void);											/* 通过ACPI的I/O总线实现重启 */
+int acpi_reset(void);													/* 通过ACPI的I/O总线实现重启 */

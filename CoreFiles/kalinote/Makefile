@@ -1,4 +1,4 @@
-OBJS_BOOTPACK = kernel/bootpack.obj naskfunc.obj fonts.obj gui/graphic.obj kernel/dsctbl.obj \
+OBJS_BOOTPACK = kernel/bootpack.obj fonts.obj nasmfunc.obj gui/graphic.obj kernel/dsctbl.obj \
 		kernel/int.obj kernel/fifo.obj driver/keyboard.obj driver/mouse.obj kernel/memory.obj kernel/sheet.obj driver/timer.obj \
 		kernel/mtask.obj gui/window.obj console/console.obj filesys/file.obj filesys/kca.obj gui/jpeg.obj driver/cmos.obj \
 		kernel/list.obj kernel/lock.obj gui/taskbar.obj gui/menu.obj gui/button.obj driver/acpi.obj console/exception.obj \
@@ -6,13 +6,14 @@ OBJS_BOOTPACK = kernel/bootpack.obj naskfunc.obj fonts.obj gui/graphic.obj kerne
 
 OBJS_CMD = console/cmd_mem.obj console/cmd_cls.obj console/cmd_dir.obj console/cmd_type.obj console/cmd_exit.obj \
 		console/cmd_start.obj console/cmd_run.obj console/cmd_langmode.obj console/cmd_shutdown.obj console/cmd_sysmode.obj \
-		console/cmd_echo.obj console/cmd_getruntime.obj
+		console/cmd_echo.obj console/cmd_getruntime.obj console/cmd_sysinfo.obj
 
 TOOLPATH = ../../z_tools/
 INCPATH  = ../../z_tools/kalinote/
 
 MAKE     = $(TOOLPATH)make.exe -r
 NASK     = $(TOOLPATH)nask.exe
+NASM	 = nasm
 CC1      = $(TOOLPATH)cc1.exe -I$(INCPATH) -Os -Wall -quiet
 GAS2NASK = $(TOOLPATH)gas2nask.exe -a
 OBJ2BIM  = $(TOOLPATH)obj2bim.exe
@@ -39,6 +40,9 @@ ipl40.bin : ipl40.nas Makefile
 
 asmhead.bin : asmhead.nas Makefile
 	$(NASK) asmhead.nas asmhead.bin asmhead.lst
+
+nasmfunc.obj : nasmfunc.asm Makefile
+	$(NASM) -f coff -l nasmfunc.lst nasmfunc.asm -o nasmfunc.obj
 
 fonts.bin : fonts.txt Makefile
 	$(MAKEFONT) fonts.txt fonts.bin
