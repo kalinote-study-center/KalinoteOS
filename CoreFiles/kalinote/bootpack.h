@@ -6,10 +6,15 @@
  */
 
 /* 系统全局定义 */
-//sysinfo(bootpack.c系统全局信息)
+/* sysinfo(bootpack.c系统全局信息) */
+typedef struct {
+	char cpuid;						/* 是否支持CPUID */
+	unsigned char max_cpuid_num;	/* 最大CPUID数量 */
+	char oem[12];					/* CPU OEM信息 */
+} CPUIDINFO;
 struct SYSINFO {
-	char sysmode;					/* 系统模式 */
-	char sysmmainver;				/* 系统主版本号 */
+	double sysmode;					/* 系统模式 */
+	unsigned int sysmmainver;		/* 系统主版本号 */
 	int sysver;						/* 系统版本号 */
 	unsigned char ide_hd_num;		/* 计算机IDE硬盘数量 */
 	unsigned int free_mem;			/* 系统剩余内存容量 */
@@ -17,6 +22,7 @@ struct SYSINFO {
 	int year, month, day;			/* 系统日期 */
 	int hour, min, sec;				/* 系统时间 */
 	unsigned long time_counter;		/* 记录系统启动以来的ticks */
+	CPUIDINFO cpuid_info;			/* CPUIDINFO结构体 */
 };
 #define	SYS_MEMORY		0x00400000			// 系统占用内存
 #define FIFO_ADDR		0x0fec				// FIFO地址
@@ -724,22 +730,23 @@ int acpi_reset(void);													/* 通过ACPI的I/O总线实现重启 */
 
 /* cpuid.h(CPUID相关宏) */
 /* 供应商设置 */
-#define CPUID_VENDOR_OLDAMD       "AMDisbetter!"						/* 早期AMD处理器的工程样品 */
-#define CPUID_VENDOR_AMD          "AuthenticAMD"
-#define CPUID_VENDOR_INTEL        "GenuineIntel"
-#define CPUID_VENDOR_OLDTRANSMETA "TransmetaCPU"
-#define CPUID_VENDOR_TRANSMETA    "GenuineTMx86"
-#define CPUID_VENDOR_CYRIX        "CyrixInstead"
-#define CPUID_VENDOR_CENTAUR      "CentaurHauls"
-#define CPUID_VENDOR_NEXGEN       "NexGenDriven"
-#define CPUID_VENDOR_UMC          "UMC UMC UMC "
-#define CPUID_VENDOR_SIS          "SiS SiS SiS "
-#define CPUID_VENDOR_NSC          "Geode by NSC"
-#define CPUID_VENDOR_RISE         "RiseRiseRise"
-#define CPUID_VENDOR_VORTEX       "Vortex86 SoC"
-#define CPUID_VENDOR_VIA          "VIA VIA VIA "
-/* 虚拟机的供应商设置 */
-#define CPUID_VENDOR_VMWARE       "VMwareVMware"
-#define CPUID_VENDOR_XENHVM       "XenVMMXenVMM"
-#define CPUID_VENDOR_MICROSOFT_HV "Microsoft Hv"
-#define CPUID_VENDOR_PARALLELS    " lrpepyh vr"
+#define CPUID_VENDOR_OLDAMD      		"AMDisbetter!"					/* 早期AMD处理器的工程样品 */
+#define CPUID_VENDOR_AMD         		"AuthenticAMD"
+#define CPUID_VENDOR_INTEL       		"GenuineIntel"
+#define CPUID_VENDOR_OLDTRANSMETA		"TransmetaCPU"
+#define CPUID_VENDOR_TRANSMETA   		"GenuineTMx86"
+#define CPUID_VENDOR_CYRIX       		"CyrixInstead"
+#define CPUID_VENDOR_CENTAUR     		"CentaurHauls"
+#define CPUID_VENDOR_NEXGEN      		"NexGenDriven"
+#define CPUID_VENDOR_UMC         		"UMC UMC UMC "
+#define CPUID_VENDOR_SIS         		"SiS SiS SiS "
+#define CPUID_VENDOR_NSC         		"Geode by NSC"
+#define CPUID_VENDOR_RISE        		"RiseRiseRise"
+#define CPUID_VENDOR_VORTEX      		"Vortex86 SoC"
+#define CPUID_VENDOR_VIA         		"VIA VIA VIA "
+/* 虚拟机的供应商设置 */		
+#define CPUID_VENDOR_VMWARE      		"VMwareVMware"
+#define CPUID_VENDOR_XENHVM      		"XenVMMXenVMM"
+#define CPUID_VENDOR_MICROSOFT_HV		"Microsoft Hv"
+#define CPUID_VENDOR_PARALLELS   		" lrpepyh vr"
+void cpu_init(void);													/* 初始化CPU相关信息 */

@@ -58,7 +58,7 @@ void KaliMain(void){
 	/* 初始化sysinfo */
 	*((int *) SYSINFO_ADDR) = (int) &sysinfo;
 	sysinfo.sysmode = 0;
-	sysinfo.sysmmainver = 1;
+	sysinfo.sysmmainver = 1.001;
 	sysinfo.sysver = 400;
 	sysinfo.year = get_year();
 	sysinfo.month = get_mon_hex();
@@ -67,6 +67,7 @@ void KaliMain(void){
 	sysinfo.min = get_min_hex();
 	sysinfo.sec = get_sec_hex();
 	sysinfo.time_counter = 0;
+	sysinfo.cpuid_info.cpuid = FALSE;
 
 	/* 初始化 */
 	init_gdtidt();													// 初始化GDT和IDT
@@ -79,6 +80,7 @@ void KaliMain(void){
 	io_out8(PIC0_IMR, 0xb8); 										// 允许PIT、PIC1和PS/2键盘(11111000)
 	io_out8(PIC1_IMR, 0xef); 										// 允许PS/2鼠标(11101111)
 	init_acpi();													// 初始化ACPI
+	cpu_init();														// 初始化CPU相关信息
 	
 	fifo32_init(&keycmd, 32, keycmd_buf, 0);
 	*((int *) FIFO_ADDR) = (int) &fifo;		/* 把fifo缓冲区存到0x0fec */
