@@ -69,7 +69,6 @@ void asm_inthandler0c(void);							// 0c号中断，用于处理栈异常
 void asm_inthandler0d(void);							// 0d号中断，用于处理异常程序
 void asm_inthandler20(void);							// 20号中断，用于timer
 void asm_inthandler21(void);							// 21号中断，注册在0x21
-void asm_inthandler26(void);							// 26号中断，用于处理软盘
 void asm_inthandler27(void);							// 27号中断，注册在0x27
 void asm_inthandler2c(void);							// 2c号中断，注册在0x2c
 void asm_inthandler2e(void);							// IDE硬盘中断
@@ -722,3 +721,25 @@ char checksum(unsigned char *addr, unsigned int length);
 int acpi_shutdown(void);												/* 通过ACPI实现关机 */
 int acpi_reboot(void);													/* 通过ACPI实现重启 */
 int acpi_reset(void);													/* 通过ACPI的I/O总线实现重启 */
+
+/* cpuid.h(CPUID相关宏) */
+/* 供应商设置 */
+#define CPUID_VENDOR_OLDAMD       "AMDisbetter!"						/* 早期AMD处理器的工程样品 */
+#define CPUID_VENDOR_AMD          "AuthenticAMD"
+#define CPUID_VENDOR_INTEL        "GenuineIntel"
+#define CPUID_VENDOR_OLDTRANSMETA "TransmetaCPU"
+#define CPUID_VENDOR_TRANSMETA    "GenuineTMx86"
+#define CPUID_VENDOR_CYRIX        "CyrixInstead"
+#define CPUID_VENDOR_CENTAUR      "CentaurHauls"
+#define CPUID_VENDOR_NEXGEN       "NexGenDriven"
+#define CPUID_VENDOR_UMC          "UMC UMC UMC "
+#define CPUID_VENDOR_SIS          "SiS SiS SiS "
+#define CPUID_VENDOR_NSC          "Geode by NSC"
+#define CPUID_VENDOR_RISE         "RiseRiseRise"
+#define CPUID_VENDOR_VORTEX       "Vortex86 SoC"
+#define CPUID_VENDOR_VIA          "VIA VIA VIA "
+/* 虚拟机的供应商设置 */
+#define CPUID_VENDOR_VMWARE       "VMwareVMware"
+#define CPUID_VENDOR_XENHVM       "XenVMMXenVMM"
+#define CPUID_VENDOR_MICROSOFT_HV "Microsoft Hv"
+#define CPUID_VENDOR_PARALLELS    " lrpepyh vr"

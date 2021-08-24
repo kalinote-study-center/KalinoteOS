@@ -7,7 +7,6 @@ void cmd_start(struct CONSOLE *cons, char *cmdline, int memtotal){
 	struct SHEET *sht = open_console(shtctl, memtotal, 0);
 	struct FIFO32 *fifo = &sht->task->fifo;
 	int i;
-	debug_print("command>run start at %d\n",cons);
 	sheet_slide(sht, 32, 4);
 	sheet_updown(sht, shtctl->top);
 	/* 将命令行输入的字符串逐字复制到新的命令行窗口中 */

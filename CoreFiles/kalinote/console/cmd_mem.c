@@ -7,7 +7,6 @@ void cmd_mem(struct CONSOLE *cons, unsigned int memtotal){
 	struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;
 	struct TASK *task = task_now();
 	char s[80];
-	debug_print("command>run mem at %d\n",cons);
 	if (task->langmode == 1) {
 		/* 中文模式 */
 		sprintf(s, "总计     %dMB\n可用  %dKB\n系统占用 %dKB\n\n", memtotal / (1024 * 1024), memman_total(memman) / 1024, SYS_MEMORY / 1024);

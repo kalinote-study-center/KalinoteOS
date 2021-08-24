@@ -309,6 +309,7 @@ void cons_putstr1(struct CONSOLE *cons, char *s, int l){
 }
 
 void cons_runcmd(char *cmdline, struct CONSOLE *cons, int *fat, unsigned int memtotal, char sysmode){
+	debug_print("command>try run %s at %d\n", cmdline, cons);
 	if (strcmp(cmdline, "mem") == 0) {
 		cmd_mem(cons, memtotal);
 	} else if (((strcmp(cmdline, "cls") == 0) || (strcmp(cmdline, "clear") == 0)) && cons->sht != 0) {

@@ -6,7 +6,6 @@ void cmd_run(struct CONSOLE *cons, char *cmdline, int memtotal){
 	struct TASK *task = open_constask(0, memtotal);
 	struct FIFO32 *fifo = &task->fifo;
 	int i;
-	debug_print("command>run run at %d\n",cons);
 	/* 将命令行输入的字符串逐字复制到新的命令行窗口中 */
 	for (i = 4; cmdline[i] != 0; i++) {
 		fifo32_put(fifo, cmdline[i] + 256);

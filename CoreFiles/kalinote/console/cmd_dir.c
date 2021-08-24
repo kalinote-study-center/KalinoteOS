@@ -8,7 +8,6 @@ void cmd_dir(struct CONSOLE *cons){
 	int i, j;
 	char s[50];
 	struct TASK *task = task_now();
-	debug_print("command>run dir at %d\n",cons);
 	if (task->langmode == 1) {
 		cons_putstr0(cons, "文件名			类型  			 大小		  属性\n\n");
 	} else {

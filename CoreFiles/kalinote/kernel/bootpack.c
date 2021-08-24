@@ -22,10 +22,10 @@ void KaliMain(void){
 	int key_shift = 0, key_leds = (binfo->leds >> 4) & 7, keycmd_wait = -1;
 	int j, x, y, mmx = -1, mmy = -1, mmx2 = 0, subx, suby;
 	struct SHEET *sht = 0, *subsht = 0, *point_sht = 0, *key_win, *sht2;/* , *subsht_back;	*/		/* point_sht是用来处理鼠标移动时指向的层的 */
-	int *fat_ch, *fat_jp;
-	unsigned char *chinese, *nihongo;
+	int *fat_ch;// , *fat_jp;
+	unsigned char *chinese;// , *nihongo;
 	struct FILEINFO *finfo_ch;
-	struct FILEINFO *finfo_jp;
+	// struct FILEINFO *finfo_jp;
 	extern char fonts[4096];
 	struct SYSINFO sysinfo;
 	int direction = 0;		/* 这个变量用来记录是否按下方向键，0为未按下，1为按下 */
@@ -233,24 +233,24 @@ void KaliMain(void){
 	
 	/* 载入nihongo字库 */
 	//nihongo = (unsigned char *) memman_alloc_4k(memman, 16 * 256 + 32 * 94 * 47);
-	fat_jp = (int *) memman_alloc_4k(memman, 4 * 2880);
-	file_readfat(fat_jp, (unsigned char *) (ADR_DISKIMG + 0x000200));
-	finfo_jp = file_search("nihongo.fnt", (struct FILEINFO *) (ADR_DISKIMG + 0x002600), 224);
-	if (finfo_jp != 0) {
-		//file_loadfile(finfo_jp->clustno, finfo_jp->size, nihongo, fat_jp, (char *) (ADR_DISKIMG + 0x003e00));
-		i = finfo_jp->size;
-		nihongo = file_loadfile2(finfo_jp->clustno, &i, fat_jp);
-	} else {
-		nihongo = (unsigned char *) memman_alloc_4k(memman, 16 * 256 + 32 * 94 * 47);
-		for (i = 0; i < 16 * 256; i++) {
-			nihongo[i] = fonts[i]; /* 没有字库，半角部分直接复制英文字库*/
-		}
-		for (i = 16 * 256; i < 16 * 256 + 32 * 94 * 47; i++) {
-			nihongo[i] = 0xff; /* 没有字库，半角部分直接复制英文字库 */
-		}
-	}
-	*((int *) 0x0ef9) = (int) nihongo;
-	memman_free_4k(memman, (int) fat_jp, 4 * 2880);
+	// fat_jp = (int *) memman_alloc_4k(memman, 4 * 2880);
+	// file_readfat(fat_jp, (unsigned char *) (ADR_DISKIMG + 0x000200));
+	// finfo_jp = file_search("nihongo.fnt", (struct FILEINFO *) (ADR_DISKIMG + 0x002600), 224);
+	// if (finfo_jp != 0) {
+		// // file_loadfile(finfo_jp->clustno, finfo_jp->size, nihongo, fat_jp, (char *) (ADR_DISKIMG + 0x003e00));
+		// i = finfo_jp->size;
+		// nihongo = file_loadfile2(finfo_jp->clustno, &i, fat_jp);
+	// } else {
+		// nihongo = (unsigned char *) memman_alloc_4k(memman, 16 * 256 + 32 * 94 * 47);
+		// for (i = 0; i < 16 * 256; i++) {
+			// nihongo[i] = fonts[i]; /* 没有字库，半角部分直接复制英文字库*/
+		// }
+		// for (i = 16 * 256; i < 16 * 256 + 32 * 94 * 47; i++) {
+			// nihongo[i] = 0xff; /* 没有字库，半角部分直接复制英文字库 */
+		// }
+	// }
+	// *((int *) 0x0ef9) = (int) nihongo;
+	// memman_free_4k(memman, (int) fat_jp, 4 * 2880);
 	
 	/* 时钟更新定时器 */
 	timer = timer_alloc();

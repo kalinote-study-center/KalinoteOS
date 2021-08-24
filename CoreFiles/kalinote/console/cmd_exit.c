@@ -7,7 +7,6 @@ void cmd_exit(struct CONSOLE *cons, int *fat){
 	struct TASK *task = task_now();
 	struct SHTCTL *shtctl = (struct SHTCTL *) *((int *) SHTCTL_ADDR);
 	struct FIFO32 *fifo = (struct FIFO32 *) *((int *) FIFO_ADDR);
-	debug_print("command>run exit at %d\n",cons);
 	if (cons->sht != 0) {
 		timer_cancel(cons->timer);
 	}

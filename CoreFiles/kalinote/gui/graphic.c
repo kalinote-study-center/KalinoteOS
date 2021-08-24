@@ -156,7 +156,7 @@ void putfonts8_asc(int *vram, int xsize, int x, int y, int c, unsigned char *s)
 	extern char fonts[4096];
 	struct TASK *task = task_now();
 	char *hzk = (char *) *((int *) 0x10fe8), *font;
-	char *nihongo = (char *) *((int *) 0xef9);
+	// char *nihongo = (char *) *((int *) 0xef9);
 	int k, t;
 	
 	if (task->langmode == 0) {
@@ -185,60 +185,57 @@ void putfonts8_asc(int *vram, int xsize, int x, int y, int c, unsigned char *s)
 			x += 8;
 		}
 	}
-	/***********************************************
-	*          日文显示有致命错误需要修复          *
-	***********************************************/
-	if (task->langmode == 2) {
-		/* 日文Shift-JIS */
-		for (; *s != 0x00; s++) {
-			if (task->langbyte1 == 0) {
-				if ((0x81 <= *s && *s <= 0x9f) || (0xe0 <= *s && *s <= 0xfc)) {
-					task->langbyte1 = *s;
-				} else {
-					putfont8(vram, xsize, x, y, c, nihongo + *s * 16);
-				}
-			} else {
-				if (0x81 <= task->langbyte1 && task->langbyte1 <= 0x9f) {
-					k = (task->langbyte1 - 0x81) * 2;
-				} else {
-					k = (task->langbyte1 - 0xe0) * 2 + 62;
-				}
-				if (0x40 <= *s && *s <= 0x7e) {
-					t = *s - 0x40;
-				} else if (0x80 <= *s && *s <= 0x9e) {
-					t = *s - 0x80 + 63;
-				} else {
-					t = *s - 0x9f;
-					k++;
-				}
-				task->langbyte1 = 0;
-				font = nihongo + 256 * 16 + (k * 94 + t) * 32;
-				putfont8(vram, xsize, x - 8, y, c, font     );	/* 左半部分 */
-				putfont8(vram, xsize, x    , y, c, font + 16);	/* 右半部分 */
-			}
-			x += 8;
-		}
-	}
-	if (task->langmode == 3) {
-		/* 日文EUC */
-		for (; *s != 0x00; s++) {
-			if (task->langbyte1 == 0) {
-				if (0x81 <= *s && *s <= 0xfe) {
-					task->langbyte1 = *s;
-				} else {
-					putfont8(vram, xsize, x, y, c, nihongo + *s * 16);
-				}
-			} else {
-				k = task->langbyte1 - 0xa1;
-				t = *s - 0xa1;
-				task->langbyte1 = 0;
-				font = nihongo + 256 * 16 + (k * 94 + t) * 32;
-				putfont8(vram, xsize, x - 8, y, c, font     );	/* 左半部分 */
-				putfont8(vram, xsize, x    , y, c, font + 16);	/* 右半部分 */
-			}
-			x += 8;
-		}
-	}
+	// if (task->langmode == 2) {
+		// /* 日文Shift-JIS */
+		// for (; *s != 0x00; s++) {
+			// if (task->langbyte1 == 0) {
+				// if ((0x81 <= *s && *s <= 0x9f) || (0xe0 <= *s && *s <= 0xfc)) {
+					// task->langbyte1 = *s;
+				// } else {
+					// putfont8(vram, xsize, x, y, c, nihongo + *s * 16);
+				// }
+			// } else {
+				// if (0x81 <= task->langbyte1 && task->langbyte1 <= 0x9f) {
+					// k = (task->langbyte1 - 0x81) * 2;
+				// } else {
+					// k = (task->langbyte1 - 0xe0) * 2 + 62;
+				// }
+				// if (0x40 <= *s && *s <= 0x7e) {
+					// t = *s - 0x40;
+				// } else if (0x80 <= *s && *s <= 0x9e) {
+					// t = *s - 0x80 + 63;
+				// } else {
+					// t = *s - 0x9f;
+					// k++;
+				// }
+				// task->langbyte1 = 0;
+				// font = nihongo + 256 * 16 + (k * 94 + t) * 32;
+				// putfont8(vram, xsize, x - 8, y, c, font     );	/* 左半部分 */
+				// putfont8(vram, xsize, x    , y, c, font + 16);	/* 右半部分 */
+			// }
+			// x += 8;
+		// }
+	// }
+	// if (task->langmode == 3) {
+		// /* 日文EUC */
+		// for (; *s != 0x00; s++) {
+			// if (task->langbyte1 == 0) {
+				// if (0x81 <= *s && *s <= 0xfe) {
+					// task->langbyte1 = *s;
+				// } else {
+					// putfont8(vram, xsize, x, y, c, nihongo + *s * 16);
+				// }
+			// } else {
+				// k = task->langbyte1 - 0xa1;
+				// t = *s - 0xa1;
+				// task->langbyte1 = 0;
+				// font = nihongo + 256 * 16 + (k * 94 + t) * 32;
+				// putfont8(vram, xsize, x - 8, y, c, font     );	/* 左半部分 */
+				// putfont8(vram, xsize, x    , y, c, font + 16);	/* 右半部分 */
+			// }
+			// x += 8;
+		// }
+	// }
 	return;
 }
 
