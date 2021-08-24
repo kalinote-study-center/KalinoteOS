@@ -7,7 +7,7 @@ CYLS	EQU		40				; 读取80个柱面
 
 ; 以下是标准FAT12格式载体用代码，参考网址：https://blog.csdn.net/m0_37329910/article/details/88927673
 
-		JMP		entry
+		JMP SHORT entry
 		DB		0x90
 		DB		"KALIIPL "		; 启动区名称(8字节)
 		DW		512				; 每个扇区大小为512
@@ -148,6 +148,6 @@ next:
 .ret:
 		RET
 
-		RESB	0x7dfe-$		; 填充0
+		TIMES 0x1fe-($-$$) DB 0	; 填充0
 
 		DB		0x55, 0xaa

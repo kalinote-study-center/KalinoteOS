@@ -750,3 +750,4 @@ int acpi_reset(void);													/* 通过ACPI的I/O总线实现重启 */
 #define CPUID_VENDOR_MICROSOFT_HV		"Microsoft Hv"
 #define CPUID_VENDOR_PARALLELS   		" lrpepyh vr"
 void cpu_init(void);													/* 初始化CPU相关信息 */
+int cpu_64_check(void);													/* 检测CPU是否支持64位 */

@@ -35,11 +35,11 @@ default :
 
 # 文件生成规则
 
-ipl40.bin : ipl40.nas Makefile
-	$(NASK) ipl40.nas ipl40.bin ipl40.lst
+ipl40.bin : ipl40.asm Makefile
+	$(NASM) -f bin ipl40.asm -o ipl40.bin -l ipl40.lst
 
-asmhead.bin : asmhead.nas Makefile
-	$(NASK) asmhead.nas asmhead.bin asmhead.lst
+asmhead.bin : asmhead.asm Makefile
+	$(NASM) -f bin asmhead.asm -o asmhead.bin -l asmhead.lst
 
 nasmfunc.obj : nasmfunc.asm Makefile
 	$(NASM) -f coff -l nasmfunc.lst nasmfunc.asm -o nasmfunc.obj

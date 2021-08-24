@@ -28,7 +28,6 @@ kalinote.img : kalinote/ipl40.bin kalinote/kalinote.sys Makefile \
 	$(EDIMG)   imgin:../z_tools/fdimg0at.tek \
 		wbinimg src:kalinote/ipl40.bin len:512 from:0 to:0 \
 		copy from:kalinote/kalinote.sys to:@: \
-		copy from:kalinote/ipl40.nas to:@: \
 		copy from:hello4/hello4.kal to:@: \
 		copy from:winhelo/winhelo.kal to:@: \
 		copy from:star/star.kal to:@: \

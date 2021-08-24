@@ -3,7 +3,7 @@
 ; 如果切换到64位模式，就没有办法使用nask和cc1编译器了
 ; 后面需要将语言(编译器)切换到nasm和gcc
 
-[INSTRSET "i486p"]
+; [INSTRSET "i486p"]
 
 VBEMODE	EQU		0x118			; 1024x768x32bit色彩
 BOTPAK	EQU		0x00280000		; bootpack安装位置
@@ -212,10 +212,11 @@ memcpy:
 		RET
 ; memcpy如果不忘记加入地址复制，也可以写串命令
 
-		ALIGNB	16				; 补充0，直到能被16整除。下同
+		ALIGNB	16, DB 0		; 补充0，直到能被16整除。下同
 GDT0:
 ; 位于数据区的GDT表
-		RESB	8				; 选择器
+		; RESB	8
+		TIMES	8 DB 0			; 选择器
 		; 写入8字节的GDT表
 		DW		0xffff,0x0000,0x9200,0x00cf	; 可读区段32bit					; CPU使用
 		DW		0xffff,0x0000,0x9a28,0x0047	; 可执行段32bit(用于bootpack)	; bootpack.kal使用
@@ -229,5 +230,6 @@ GDTR0:
 		DW		8*3-1		; GDT表的数量
 		DD		GDT0		; GDT表的地址
 
-		ALIGNB	16
+		; ALIGNB	16
+		ALIGN 16, DB 0
 bootpack:
