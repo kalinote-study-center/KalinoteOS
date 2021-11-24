@@ -25,6 +25,50 @@ int *inthandler00(int *esp){
 	return &(task->tss.esp0);
 }
 
+int *inthandler01(int *esp){
+	/* 调试异常 */
+}
+
+int *inthandler02(int *esp){
+	/* NMI中断 */
+}
+
+int *inthandler03(int *esp){
+	/* 断点(INT 3) */
+}
+
+int *inthandler04(int *esp){
+	/* 溢出(INTO) */
+}
+
+int *inthandler05(int *esp){
+	/* 数组越界(BOUND) */
+}
+
+int *inthandler06(int *esp){
+	/* 无效指令 */
+}
+
+int *inthandler07(int *esp){
+	/* 数学协处理器不存在或不可用(WAIT) */
+}
+
+int *inthandler08(int *esp){
+	/* 双重错误(Double Fault) */
+}
+
+int *inthandler09(int *esp){
+	/* 向协处理器传送操作数时检测到页错误（Page Fault）或段不存在 */
+}
+
+int *inthandler0a(int *esp){
+	/* 无效TSS */
+}
+
+int *inthandler0b(int *esp){
+	/* 段不存在 */
+}
+
 int *inthandler0c(int *esp){
 	/* 栈异常中断 */
 	struct TASK *task = task_now();
@@ -66,3 +110,9 @@ int *inthandler0d(int *esp){
 	
 	return &(task->tss.esp0);	/* 强制结束程序 */
 }
+
+int *inthandler0e(int *esp){
+	/* 页错误 */
+	/* 暂时没有使用到页，暂时不管。 */
+}
+
