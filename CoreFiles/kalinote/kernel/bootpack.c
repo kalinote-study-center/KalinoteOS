@@ -55,6 +55,8 @@ void KaliMain(void){
 		0,   0,   0,   '|', 0,   0,   0,   0,   0,   0,   0,   0,   0,   '|', 0,   0
 	};
 
+	// for(;;)
+
 	/* 初始化sysinfo */
 	*((int *) SYSINFO_ADDR) = (int) &sysinfo;
 	sysinfo.sysmode = 0;
@@ -68,6 +70,7 @@ void KaliMain(void){
 	sysinfo.sec = get_sec_hex();
 	sysinfo.time_counter = 0;
 	sysinfo.cpuid_info.cpuid = FALSE;
+	sysinfo.cpuid_info.brandString = FALSE;
 
 	/* 初始化 */
 	init_gdtidt();													// 初始化GDT和IDT

@@ -1,0 +1,138 @@
+     1 00000000                                 [FORMAT "WCOFF"]
+     2 00000000                                 [INSTRSET "i486p"]
+     3 00000000                                 [OPTIMIZE 1]
+     4 00000000                                 [OPTION 1]
+     5 00000000                                 [BITS 32]
+     6 00000000                                 	EXTERN	_check_cpuid
+     7 00000000                                 	EXTERN	_read_cpuid
+     8 00000000                                 	EXTERN	_debug_print
+     9 00000000                                 [FILE "cpuid.c"]
+    10                                          [SECTION .text]
+    11 00000000                                 	GLOBAL	_cpu_init
+    12 00000000                                 _cpu_init:
+    13 00000000 55                              	PUSH	EBP
+    14 00000001 89 E5                           	MOV	EBP,ESP
+    15 00000003 57                              	PUSH	EDI
+    16 00000004 56                              	PUSH	ESI
+    17 00000005 53                              	PUSH	EBX
+    18 00000006 83 EC 0C                        	SUB	ESP,12
+    19 00000009 8B 3D 00010000                  	MOV	EDI,DWORD [65536]
+    20 0000000F E8 [00000000]                   	CALL	_check_cpuid
+    21 00000014 85 C0                           	TEST	EAX,EAX
+    22 00000016 0F 95 C0                        	SETNE	AL
+    23 00000019 88 47 38                        	MOV	BYTE [56+EDI],AL
+    24 0000001C 84 C0                           	TEST	AL,AL
+    25 0000001E 75 08                           	JNE	L3
+    26 00000020                                 L1:
+    27 00000020 8D 65 F4                        	LEA	ESP,DWORD [-12+EBP]
+    28 00000023 5B                              	POP	EBX
+    29 00000024 5E                              	POP	ESI
+    30 00000025 5F                              	POP	EDI
+    31 00000026 5D                              	POP	EBP
+    32 00000027 C3                              	RET
+    33 00000028                                 L3:
+    34 00000028 8D 45 F0                        	LEA	EAX,DWORD [-16+EBP]
+    35 0000002B 8D 75 EC                        	LEA	ESI,DWORD [-20+EBP]
+    36 0000002E 50                              	PUSH	EAX
+    37 0000002F 8D 5D E8                        	LEA	EBX,DWORD [-24+EBP]
+    38 00000032 56                              	PUSH	ESI
+    39 00000033 53                              	PUSH	EBX
+    40 00000034 6A 00                           	PUSH	0
+    41 00000036 E8 [00000000]                   	CALL	_read_cpuid
+    42 0000003B 88 47 3A                        	MOV	BYTE [58+EDI],AL
+    43 0000003E 8B 45 E8                        	MOV	EAX,DWORD [-24+EBP]
+    44 00000041 89 47 3B                        	MOV	DWORD [59+EDI],EAX
+    45 00000044 8B 45 EC                        	MOV	EAX,DWORD [-20+EBP]
+    46 00000047 89 47 3F                        	MOV	DWORD [63+EDI],EAX
+    47 0000004A 8B 45 F0                        	MOV	EAX,DWORD [-16+EBP]
+    48 0000004D 89 47 43                        	MOV	DWORD [67+EDI],EAX
+    49 00000050 8D 45 F0                        	LEA	EAX,DWORD [-16+EBP]
+    50 00000053 C6 47 47 00                     	MOV	BYTE [71+EDI],0
+    51 00000057 50                              	PUSH	EAX
+    52 00000058 56                              	PUSH	ESI
+    53 00000059 53                              	PUSH	EBX
+    54 0000005A 68 80000000                     	PUSH	-2147483648
+    55 0000005F E8 [00000000]                   	CALL	_read_cpuid
+    56 00000064 83 C4 20                        	ADD	ESP,32
+    57 00000067 3D 80000003                     	CMP	EAX,-2147483645
+    58 0000006C 0F 97 47 39                     	SETA	BYTE [57+EDI]
+    59 00000070 EB AE                           	JMP	L1
+    60                                          [SECTION .data]
+    61 00000000                                 LC0:
+    62 00000000 47 65 6E 75 69 6E 65 49 6E 74   	DB	"GenuineIntel",0x00
+       0000000A 65 6C 00 
+    63 0000000D                                 LC1:
+    64 0000000D 43 50 55 49 44 3E 36 34 20 62   	DB	"CPUID>64 bit Check",0x0A,0x00
+       00000017 69 74 20 43 68 65 63 6B 0A 00 
+    65 00000021                                 LC2:
+    66 00000021 43 50 55 49 44 3E 00            	DB	"CPUID>",0x00
+    67 00000028                                 LC3:
+    68 00000028 25 73 00                        	DB	"%s",0x00
+    69 0000002B                                 LC4:
+    70 0000002B 0A 00                           	DB	0x0A,0x00
+    71                                          [SECTION .text]
+    72 00000072                                 	GLOBAL	_cpu_64_check
+    73 00000072                                 _cpu_64_check:
+    74 00000072 55                              	PUSH	EBP
+    75 00000073 89 E5                           	MOV	EBP,ESP
+    76 00000075 57                              	PUSH	EDI
+    77 00000076 56                              	PUSH	ESI
+    78 00000077 53                              	PUSH	EBX
+    79 00000078 83 EC 2C                        	SUB	ESP,44
+    80 0000007B 8B 1D 00010000                  	MOV	EBX,DWORD [65536]
+    81 00000081 80 7B 38 00                     	CMP	BYTE [56+EBX],0
+    82 00000085 74 12                           	JE	L4
+    83 00000087 FC                              	CLD
+    84 00000088 8D 73 3B                        	LEA	ESI,DWORD [59+EBX]
+    85 0000008B BF [00000000]                   	MOV	EDI,LC0
+    86 00000090 B9 0000000C                     	MOV	ECX,12
+    87 00000095 F3                              	REPE
+    88 00000096 A6                              	CMPSB
+    89 00000097 74 0A                           	JE	L15
+    90 00000099                                 L4:
+    91 00000099 8D 65 F4                        	LEA	ESP,DWORD [-12+EBP]
+    92 0000009C 31 C0                           	XOR	EAX,EAX
+    93 0000009E 5B                              	POP	EBX
+    94 0000009F 5E                              	POP	ESI
+    95 000000A0 5F                              	POP	EDI
+    96 000000A1 5D                              	POP	EBP
+    97 000000A2 C3                              	RET
+    98 000000A3                                 L15:
+    99 000000A3 68 [0000000D]                   	PUSH	LC1
+   100 000000A8 E8 [00000000]                   	CALL	_debug_print
+   101 000000AD 59                              	POP	ECX
+   102 000000AE 80 7B 39 00                     	CMP	BYTE [57+EBX],0
+   103 000000B2 74 E5                           	JE	L4
+   104 000000B4 68 [00000021]                   	PUSH	LC2
+   105 000000B9 BB 80000002                     	MOV	EBX,-2147483646
+   106 000000BE E8 [00000000]                   	CALL	_debug_print
+   107 000000C3 5A                              	POP	EDX
+   108 000000C4                                 L12:
+   109 000000C4 8D 45 D0                        	LEA	EAX,DWORD [-48+EBP]
+   110 000000C7 50                              	PUSH	EAX
+   111 000000C8 8D 45 CC                        	LEA	EAX,DWORD [-52+EBP]
+   112 000000CB 50                              	PUSH	EAX
+   113 000000CC 8D 45 C8                        	LEA	EAX,DWORD [-56+EBP]
+   114 000000CF 50                              	PUSH	EAX
+   115 000000D0 53                              	PUSH	EBX
+   116 000000D1 43                              	INC	EBX
+   117 000000D2 E8 [00000000]                   	CALL	_read_cpuid
+   118 000000D7 C6 45 E4 00                     	MOV	BYTE [-28+EBP],0
+   119 000000DB 89 45 D4                        	MOV	DWORD [-44+EBP],EAX
+   120 000000DE 8B 45 C8                        	MOV	EAX,DWORD [-56+EBP]
+   121 000000E1 89 45 D8                        	MOV	DWORD [-40+EBP],EAX
+   122 000000E4 8B 45 D0                        	MOV	EAX,DWORD [-48+EBP]
+   123 000000E7 89 45 DC                        	MOV	DWORD [-36+EBP],EAX
+   124 000000EA 8B 45 CC                        	MOV	EAX,DWORD [-52+EBP]
+   125 000000ED 89 45 E0                        	MOV	DWORD [-32+EBP],EAX
+   126 000000F0 8D 45 D4                        	LEA	EAX,DWORD [-44+EBP]
+   127 000000F3 50                              	PUSH	EAX
+   128 000000F4 68 [00000028]                   	PUSH	LC3
+   129 000000F9 E8 [00000000]                   	CALL	_debug_print
+   130 000000FE 83 C4 18                        	ADD	ESP,24
+   131 00000101 81 FB 80000004                  	CMP	EBX,-2147483644
+   132 00000107 76 BB                           	JBE	L12
+   133 00000109 68 [0000002B]                   	PUSH	LC4
+   134 0000010E E8 [00000000]                   	CALL	_debug_print
+   135 00000113 58                              	POP	EAX
+   136 00000114 EB 83                           	JMP	L4

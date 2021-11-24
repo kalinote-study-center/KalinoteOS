@@ -1,7 +1,5 @@
 ; kalinote-os
 ; TAB=4
-; 如果切换到64位模式，就没有办法使用nask和cc1编译器了
-; 后面需要将语言(编译器)切换到nasm和gcc
 
 ; [INSTRSET "i486p"]
 
@@ -105,7 +103,7 @@ keystatus:
 ; io_cli();					/* 禁止CPU中断 */
 		MOV		AL,0xff
 		OUT		0x21,AL			; 禁止主PIC中断(这里可以参考PIC中断控制器相关资料)
-		; NOP						; 停顿一下，防止BUG(这个对于现在来说没有太大的必要性 )
+		NOP						; 停顿一下，防止BUG(这个对于现在来说没有太大的必要性 )
 		OUT		0xa1,AL			; 禁止从PIC中断
 
 		CLI						; 禁止CPU中断

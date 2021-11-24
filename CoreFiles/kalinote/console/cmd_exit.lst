@@ -1,0 +1,68 @@
+     1 00000000                                 [FORMAT "WCOFF"]
+     2 00000000                                 [INSTRSET "i486p"]
+     3 00000000                                 [OPTIMIZE 1]
+     4 00000000                                 [OPTION 1]
+     5 00000000                                 [BITS 32]
+     6 00000000                                 	EXTERN	_task_now
+     7 00000000                                 	EXTERN	_timer_cancel
+     8 00000000                                 	EXTERN	_memman_free_4k
+     9 00000000                                 	EXTERN	_io_cli
+    10 00000000                                 	EXTERN	_fifo32_put
+    11 00000000                                 	EXTERN	_io_sti
+    12 00000000                                 	EXTERN	_task_sleep
+    13 00000000                                 	EXTERN	_taskctl
+    14 00000000                                 [FILE "cmd_exit.c"]
+    15                                          [SECTION .text]
+    16 00000000                                 	GLOBAL	_cmd_exit
+    17 00000000                                 _cmd_exit:
+    18 00000000 55                              	PUSH	EBP
+    19 00000001 89 E5                           	MOV	EBP,ESP
+    20 00000003 57                              	PUSH	EDI
+    21 00000004 56                              	PUSH	ESI
+    22 00000005 53                              	PUSH	EBX
+    23 00000006 50                              	PUSH	EAX
+    24 00000007 8B 5D 08                        	MOV	EBX,DWORD [8+EBP]
+    25 0000000A E8 [00000000]                   	CALL	_task_now
+    26 0000000F 8B 35 00000FE4                  	MOV	ESI,DWORD [4068]
+    27 00000015 8B 3D 00000FEC                  	MOV	EDI,DWORD [4076]
+    28 0000001B 89 45 F0                        	MOV	DWORD [-16+EBP],EAX
+    29 0000001E 83 3B 00                        	CMP	DWORD [EBX],0
+    30 00000021 74 09                           	JE	L2
+    31 00000023 FF 73 10                        	PUSH	DWORD [16+EBX]
+    32 00000026 E8 [00000000]                   	CALL	_timer_cancel
+    33 0000002B 58                              	POP	EAX
+    34 0000002C                                 L2:
+    35 0000002C 68 00002D00                     	PUSH	11520
+    36 00000031 FF 75 0C                        	PUSH	DWORD [12+EBP]
+    37 00000034 68 003C0000                     	PUSH	3932160
+    38 00000039 E8 [00000000]                   	CALL	_memman_free_4k
+    39 0000003E E8 [00000000]                   	CALL	_io_cli
+    40 00000043 8B 03                           	MOV	EAX,DWORD [EBX]
+    41 00000045 83 C4 0C                        	ADD	ESP,12
+    42 00000048 85 C0                           	TEST	EAX,EAX
+    43 0000004A 74 2E                           	JE	L3
+    44 0000004C 29 F0                           	SUB	EAX,ESI
+    45 0000004E 2D 00000418                     	SUB	EAX,1048
+    46 00000053 C1 F8 04                        	SAR	EAX,4
+    47 00000056 69 C0 AAAAAAAB                  	IMUL	EAX,EAX,-1431655765
+    48 0000005C 05 00000300                     	ADD	EAX,768
+    49 00000061                                 L8:
+    50 00000061 50                              	PUSH	EAX
+    51 00000062 57                              	PUSH	EDI
+    52 00000063 E8 [00000000]                   	CALL	_fifo32_put
+    53 00000068 5A                              	POP	EDX
+    54 00000069 59                              	POP	ECX
+    55 0000006A E8 [00000000]                   	CALL	_io_sti
+    56 0000006F                                 L5:
+    57 0000006F FF 75 F0                        	PUSH	DWORD [-16+EBP]
+    58 00000072 E8 [00000000]                   	CALL	_task_sleep
+    59 00000077 58                              	POP	EAX
+    60 00000078 EB F5                           	JMP	L5
+    61 0000007A                                 L3:
+    62 0000007A 8B 45 F0                        	MOV	EAX,DWORD [-16+EBP]
+    63 0000007D 2B 05 [00000000]                	SUB	EAX,DWORD [_taskctl]
+    64 00000083 2D 0000276C                     	SUB	EAX,10092
+    65 00000088 C1 F8 02                        	SAR	EAX,2
+    66 0000008B 69 C0 962FC963                  	IMUL	EAX,EAX,-1775253149
+    67 00000091 05 00000400                     	ADD	EAX,1024
+    68 00000096 EB C9                           	JMP	L8

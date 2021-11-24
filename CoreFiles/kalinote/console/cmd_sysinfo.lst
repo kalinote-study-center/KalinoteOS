@@ -1,0 +1,84 @@
+     1 00000000                                 [FORMAT "WCOFF"]
+     2 00000000                                 [INSTRSET "i486p"]
+     3 00000000                                 [OPTIMIZE 1]
+     4 00000000                                 [OPTION 1]
+     5 00000000                                 [BITS 32]
+     6 00000000                                 	EXTERN	_cons_printf
+     7 00000000                                 	EXTERN	_cpu_64_check
+     8 00000000                                 [FILE "cmd_sysinfo.c"]
+     9                                          [SECTION .data]
+    10 00000000                                 LC0:
+    11 00000000 43 50 55 49 44 20 61 76 61 69   	DB	"CPUID available",0x0A,0x00
+       0000000A 6C 61 62 6C 65 0A 00 
+    12 00000011                                 LC1:
+    13 00000011 4D 41 58 20 43 50 55 49 44 20   	DB	"MAX CPUID number:%d",0x0A,0x00
+       0000001B 6E 75 6D 62 65 72 3A 25 64 0A 
+       00000025 00 
+    14 00000026                                 LC2:
+    15 00000026 43 50 55 20 4F 45 4D 3A 25 73   	DB	"CPU OEM:%s",0x0A,0x00
+       00000030 0A 00 
+    16 00000032                                 LC3:
+    17 00000032 79 65 73 00                     	DB	"yes",0x00
+    18 00000036                                 LC5:
+    19 00000036 42 72 61 6E 64 20 53 74 72 69   	DB	"Brand String support: %s",0x0A,0x00
+       00000040 6E 67 20 73 75 70 70 6F 72 74 
+       0000004A 3A 20 25 73 0A 00 
+    20 00000050                                 LC4:
+    21 00000050 6E 6F 00                        	DB	"no",0x00
+    22 00000053                                 LC6:
+    23 00000053 43 50 55 49 44 20 6E 6F 74 20   	DB	"CPUID not available",0x0A,0x00
+       0000005D 61 76 61 69 6C 61 62 6C 65 0A 
+       00000067 00 
+    24                                          [SECTION .text]
+    25 00000000                                 	GLOBAL	_cmd_sysinfo
+    26 00000000                                 _cmd_sysinfo:
+    27 00000000 55                              	PUSH	EBP
+    28 00000001 89 E5                           	MOV	EBP,ESP
+    29 00000003 56                              	PUSH	ESI
+    30 00000004 53                              	PUSH	EBX
+    31 00000005 8B 1D 00010000                  	MOV	EBX,DWORD [65536]
+    32 0000000B 8B 75 08                        	MOV	ESI,DWORD [8+EBP]
+    33 0000000E 80 7B 38 00                     	CMP	BYTE [56+EBX],0
+    34 00000012 74 59                           	JE	L2
+    35 00000014 68 [00000000]                   	PUSH	LC0
+    36 00000019 56                              	PUSH	ESI
+    37 0000001A E8 [00000000]                   	CALL	_cons_printf
+    38 0000001F 0F B6 43 3A                     	MOVZX	EAX,BYTE [58+EBX]
+    39 00000023 50                              	PUSH	EAX
+    40 00000024 68 [00000011]                   	PUSH	LC1
+    41 00000029 56                              	PUSH	ESI
+    42 0000002A E8 [00000000]                   	CALL	_cons_printf
+    43 0000002F 8D 43 3B                        	LEA	EAX,DWORD [59+EBX]
+    44 00000032 50                              	PUSH	EAX
+    45 00000033 68 [00000026]                   	PUSH	LC2
+    46 00000038 56                              	PUSH	ESI
+    47 00000039 E8 [00000000]                   	CALL	_cons_printf
+    48 0000003E 83 C4 20                        	ADD	ESP,32
+    49 00000041 80 7B 39 00                     	CMP	BYTE [57+EBX],0
+    50 00000045 74 1F                           	JE	L3
+    51 00000047 B8 [00000032]                   	MOV	EAX,LC3
+    52 0000004C                                 L4:
+    53 0000004C 50                              	PUSH	EAX
+    54 0000004D 68 [00000036]                   	PUSH	LC5
+    55 00000052 56                              	PUSH	ESI
+    56 00000053 E8 [00000000]                   	CALL	_cons_printf
+    57 00000058 83 C4 0C                        	ADD	ESP,12
+    58 0000005B 8D 65 F8                        	LEA	ESP,DWORD [-8+EBP]
+    59 0000005E 5B                              	POP	EBX
+    60 0000005F 5E                              	POP	ESI
+    61 00000060 5D                              	POP	EBP
+    62 00000061 E9 [00000000]                   	JMP	_cpu_64_check
+    63 00000066                                 L3:
+    64 00000066 B8 [00000050]                   	MOV	EAX,LC4
+    65 0000006B EB DF                           	JMP	L4
+    66 0000006D                                 L2:
+    67 0000006D 68 [00000053]                   	PUSH	LC6
+    68 00000072 56                              	PUSH	ESI
+    69 00000073 E8 [00000000]                   	CALL	_cons_printf
+    70 00000078 58                              	POP	EAX
+    71 00000079 5A                              	POP	EDX
+    72 0000007A 8D 65 F8                        	LEA	ESP,DWORD [-8+EBP]
+    73 0000007D 5B                              	POP	EBX
+    74 0000007E 5E                              	POP	ESI
+    75 0000007F 5D                              	POP	EBP
+    76 00000080 C3                              	RET

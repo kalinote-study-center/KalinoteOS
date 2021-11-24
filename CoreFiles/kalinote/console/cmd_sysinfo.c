@@ -11,6 +11,7 @@ void cmd_sysinfo(struct CONSOLE *cons) {
 		cons_printf(cons, "CPUID available\n");
 		cons_printf(cons,"MAX CPUID number:%d\n",sysinfo->cpuid_info.max_cpuid_num);
 		cons_printf(cons,"CPU OEM:%s\n",sysinfo->cpuid_info.oem);
+		cons_printf(cons,"Brand String support: %s\n", sysinfo->cpuid_info.brandString?"yes":"no");
 		cpu_64_check();
 	} else {
 		/* CPUID指令用不了 */

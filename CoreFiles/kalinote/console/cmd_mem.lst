@@ -1,0 +1,64 @@
+     1 00000000                                 [FORMAT "WCOFF"]
+     2 00000000                                 [INSTRSET "i486p"]
+     3 00000000                                 [OPTIMIZE 1]
+     4 00000000                                 [OPTION 1]
+     5 00000000                                 [BITS 32]
+     6 00000000                                 	EXTERN	_task_now
+     7 00000000                                 	EXTERN	_memman_total
+     8 00000000                                 	EXTERN	_sprintf
+     9 00000000                                 	EXTERN	_cons_putstr0
+    10 00000000                                 [FILE "cmd_mem.c"]
+    11                                          [SECTION .data]
+    12 00000000                                 LC1:
+    13 00000000 74 6F 74 61 6C 20 20 20 20 25   	DB	"total    %dMB",0x0A,"free  %dKB",0x0A,"system   %dKB",0x0A,0x0A,0x00
+       0000000A 64 4D 42 0A 66 72 65 65 20 20 
+       00000014 25 64 4B 42 0A 73 79 73 74 65 
+       0000001E 6D 20 20 20 25 64 4B 42 0A 0A 
+       00000028 00 
+    14 00000029                                 LC0:
+    15 00000029 D7 DC BC C6 20 20 20 20 20 25   	DB	0xD7,0xDC,0xBC,0xC6,"     %dMB",0x0A,0xBF,0xC9,0xD3,0xC3,"  %dKB",0x0A,0xCF,0xB5,0xCD,0xB3,0xD5,0xBC,0xD3,0xC3," %dKB",0x0A,0x0A,0x00
+       00000033 64 4D 42 0A BF C9 D3 C3 20 20 
+       0000003D 25 64 4B 42 0A CF B5 CD B3 D5 
+       00000047 BC D3 C3 20 25 64 4B 42 0A 0A 
+       00000051 00 
+    16                                          [SECTION .text]
+    17 00000000                                 	GLOBAL	_cmd_mem
+    18 00000000                                 _cmd_mem:
+    19 00000000 55                              	PUSH	EBP
+    20 00000001 89 E5                           	MOV	EBP,ESP
+    21 00000003 53                              	PUSH	EBX
+    22 00000004 83 EC 50                        	SUB	ESP,80
+    23 00000007 8B 5D 0C                        	MOV	EBX,DWORD [12+EBP]
+    24 0000000A E8 [00000000]                   	CALL	_task_now
+    25 0000000F 80 B8 00000128 01               	CMP	BYTE [296+EAX],1
+    26 00000016 74 3B                           	JE	L5
+    27 00000018 C1 EB 14                        	SHR	EBX,20
+    28 0000001B 68 00001000                     	PUSH	4096
+    29 00000020 68 003C0000                     	PUSH	3932160
+    30 00000025 E8 [00000000]                   	CALL	_memman_total
+    31 0000002A C1 E8 0A                        	SHR	EAX,10
+    32 0000002D 89 04 24                        	MOV	DWORD [ESP],EAX
+    33 00000030 53                              	PUSH	EBX
+    34 00000031 68 [00000000]                   	PUSH	LC1
+    35 00000036                                 L4:
+    36 00000036 8D 45 AC                        	LEA	EAX,DWORD [-84+EBP]
+    37 00000039 50                              	PUSH	EAX
+    38 0000003A E8 [00000000]                   	CALL	_sprintf
+    39 0000003F 8D 45 AC                        	LEA	EAX,DWORD [-84+EBP]
+    40 00000042 83 C4 14                        	ADD	ESP,20
+    41 00000045 50                              	PUSH	EAX
+    42 00000046 FF 75 08                        	PUSH	DWORD [8+EBP]
+    43 00000049 E8 [00000000]                   	CALL	_cons_putstr0
+    44 0000004E 8B 5D FC                        	MOV	EBX,DWORD [-4+EBP]
+    45 00000051 C9                              	LEAVE
+    46 00000052 C3                              	RET
+    47 00000053                                 L5:
+    48 00000053 C1 EB 14                        	SHR	EBX,20
+    49 00000056 68 00001000                     	PUSH	4096
+    50 0000005B 68 003C0000                     	PUSH	3932160
+    51 00000060 E8 [00000000]                   	CALL	_memman_total
+    52 00000065 C1 E8 0A                        	SHR	EAX,10
+    53 00000068 89 04 24                        	MOV	DWORD [ESP],EAX
+    54 0000006B 53                              	PUSH	EBX
+    55 0000006C 68 [00000029]                   	PUSH	LC0
+    56 00000071 EB C3                           	JMP	L4

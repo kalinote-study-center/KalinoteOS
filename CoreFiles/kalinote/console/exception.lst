@@ -1,0 +1,358 @@
+     1 00000000                                 [FORMAT "WCOFF"]
+     2 00000000                                 [INSTRSET "i486p"]
+     3 00000000                                 [OPTIMIZE 1]
+     4 00000000                                 [OPTION 1]
+     5 00000000                                 [BITS 32]
+     6 00000000                                 	EXTERN	_task_now
+     7 00000000                                 	EXTERN	_sprintf
+     8 00000000                                 	EXTERN	_cons_putstr0
+     9 00000000                                 [FILE "exception.c"]
+    10 00000000                                 	GLOBAL	_WarningMsgCH
+    11                                          [SECTION .data]
+    12 00000000                                 _WarningMsgCH:
+    13 00000000 2A 2A 2A 2A 2A 2A 2A 2A 2A 2A   	DB	"********************%s********************",0x0A,"   ",0xCF,0xB5,0xCD,0xB3,0xD4,0xDA,0xB3,0xA2,0xCA,0xD4,0xD4,0xCB,0xD0,0xD0,0xD3,0xA6,0xD3,0xC3,0xCA,0xB1,0xD3,0xF6,0xB5,0xBD,0xC1,0xCB,0xB4,0xED,0xCE,0xF3,0xA1,0xA3,0x0A,"   %s",0xC8,0xE7,0xB9,0xFB,0xB8,0xC3,0xB4,0xED,0xCE,0xF3,0xB5,0xDA,0xD2,0xBB,0xB4,0xCE,0xB3,0xF6,0xCF,0xD6,0xA3,0xAC,0xC7,0xEB,0xB3,0xA2,0xCA,0xD4,0xD6,0xD8,0xD0,0xC2,0xC6,0xF4,0xB6,0xAF,0xB8,0xC3,0xD3,0xA6,0xD3,0xC3,0xB3,0xCC,0xD0,0xF2,0xA3,0xAC,0xC8,0xE7,0xB9,0xFB,0xB8,0xC3,0xB4,0xED,0xCE,0xF3,0xB7,0xB4,0xB8,0xB4,0xB3,0xF6,0xCF,0xD6,0xA3,0xAC,0xC7,0xEB,0xC1,0xAA,0xCF,0xB5,0xC8,0xED,0xBC,0xFE,0xB5,0xC4,0xBF,0xAA,0xB7,0xA2,0xD5,0xDF,0xA1,0xA3,0x0A,"   ",0xCF,0xC2,0xC3,0xE6,0xCA,0xC7,0xB4,0xCB,0xB4,0xCE,0xB4,0xED,0xCE,0xF3,0xB5,0xC4,0xD0,0xC5,0xCF,0xA2,0xA3,0xBA,0x0A,0x00
+       0000000A 2A 2A 2A 2A 2A 2A 2A 2A 2A 2A 
+       00000014 25 73 2A 2A 2A 2A 2A 2A 2A 2A 
+       0000001E 2A 2A 2A 2A 2A 2A 2A 2A 2A 2A 
+       00000028 2A 2A 0A 20 20 20 CF B5 CD B3 
+       00000032 D4 DA B3 A2 CA D4 D4 CB D0 D0 
+       0000003C D3 A6 D3 C3 CA B1 D3 F6 B5 BD 
+       00000046 C1 CB B4 ED CE F3 A1 A3 0A 20 
+       00000050 20 20 25 73 C8 E7 B9 FB B8 C3 
+       0000005A B4 ED CE F3 B5 DA D2 BB B4 CE 
+       00000064 B3 F6 CF D6 A3 AC C7 EB B3 A2 
+       0000006E CA D4 D6 D8 D0 C2 C6 F4 B6 AF 
+       00000078 B8 C3 D3 A6 D3 C3 B3 CC D0 F2 
+       00000082 A3 AC C8 E7 B9 FB B8 C3 B4 ED 
+       0000008C CE F3 B7 B4 B8 B4 B3 F6 CF D6 
+       00000096 A3 AC C7 EB C1 AA CF B5 C8 ED 
+       000000A0 BC FE B5 C4 BF AA B7 A2 D5 DF 
+       000000AA A1 A3 0A 20 20 20 CF C2 C3 E6 
+       000000B4 CA C7 B4 CB B4 CE B4 ED CE F3 
+       000000BE B5 C4 D0 C5 CF A2 A3 BA 0A 00 
+    14 000000C8 00 00 00 00 00 00 00 00 00 00   	RESB	100
+       000000D2 00 00 00 00 00 00 00 00 00 00 
+       000000DC 00 00 00 00 00 00 00 00 00 00 
+       000000E6 00 00 00 00 00 00 00 00 00 00 
+       000000F0 00 00 00 00 00 00 00 00 00 00 
+       000000FA 00 00 00 00 00 00 00 00 00 00 
+       00000104 00 00 00 00 00 00 00 00 00 00 
+       0000010E 00 00 00 00 00 00 00 00 00 00 
+       00000118 00 00 00 00 00 00 00 00 00 00 
+       00000122 00 00 00 00 00 00 00 00 00 00 
+    15 0000012C                                 	GLOBAL	_WarningMsgEN
+    16 0000012C                                 _WarningMsgEN:
+    17 0000012C 2A 2A 2A 2A 2A 2A 2A 2A 2A 2A   	DB	"********************%s********************",0x0A,"   The system encountered an error while trying to run the application. ",0x0A,"    %s If this error occurs for the first time, please try to restart the application. If this error occurs repeatedly, please contact the software developer. ",0x0A," the following is the error message:",0x0A,0x00
+       00000136 2A 2A 2A 2A 2A 2A 2A 2A 2A 2A 
+       00000140 25 73 2A 2A 2A 2A 2A 2A 2A 2A 
+       0000014A 2A 2A 2A 2A 2A 2A 2A 2A 2A 2A 
+       00000154 2A 2A 0A 20 20 20 54 68 65 20 
+       0000015E 73 79 73 74 65 6D 20 65 6E 63 
+       00000168 6F 75 6E 74 65 72 65 64 20 61 
+       00000172 6E 20 65 72 72 6F 72 20 77 68 
+       0000017C 69 6C 65 20 74 72 79 69 6E 67 
+       00000186 20 74 6F 20 72 75 6E 20 74 68 
+       00000190 65 20 61 70 70 6C 69 63 61 74 
+       0000019A 69 6F 6E 2E 20 0A 20 20 20 20 
+       000001A4 25 73 20 49 66 20 74 68 69 73 
+       000001AE 20 65 72 72 6F 72 20 6F 63 63 
+       000001B8 75 72 73 20 66 6F 72 20 74 68 
+       000001C2 65 20 66 69 72 73 74 20 74 69 
+       000001CC 6D 65 2C 20 70 6C 65 61 73 65 
+       000001D6 20 74 72 79 20 74 6F 20 72 65 
+       000001E0 73 74 61 72 74 20 74 68 65 20 
+       000001EA 61 70 70 6C 69 63 61 74 69 6F 
+       000001F4 6E 2E 20 49 66 20 74 68 69 73 
+       000001FE 20 65 72 72 6F 72 20 6F 63 63 
+       00000208 75 72 73 20 72 65 70 65 61 74 
+       00000212 65 64 6C 79 2C 20 70 6C 65 61 
+       0000021C 73 65 20 63 6F 6E 74 61 63 74 
+       00000226 20 74 68 65 20 73 6F 66 74 77 
+       00000230 61 72 65 20 64 65 76 65 6C 6F 
+       0000023A 70 65 72 2E 20 0A 20 74 68 65 
+       00000244 20 66 6F 6C 6C 6F 77 69 6E 67 
+       0000024E 20 69 73 20 74 68 65 20 65 72 
+       00000258 72 6F 72 20 6D 65 73 73 61 67 
+       00000262 65 3A 0A 00 
+    18 00000266 00 00 00 00 00 00 00 00 00 00   	RESB	36
+       00000270 00 00 00 00 00 00 00 00 00 00 
+       0000027A 00 00 00 00 00 00 00 00 00 00 
+       00000284 00 00 00 00 00 00 
+    19 0000028A                                 LC3:
+    20 0000028A 54 68 65 20 5A 65 72 6F 20 44   	DB	"The Zero Division Exception usually occurs when a program attempts to divide by 0.",0x00
+       00000294 69 76 69 73 69 6F 6E 20 45 78 
+       0000029E 63 65 70 74 69 6F 6E 20 75 73 
+       000002A8 75 61 6C 6C 79 20 6F 63 63 75 
+       000002B2 72 73 20 77 68 65 6E 20 61 20 
+       000002BC 70 72 6F 67 72 61 6D 20 61 74 
+       000002C6 74 65 6D 70 74 73 20 74 6F 20 
+       000002D0 64 69 76 69 64 65 20 62 79 20 
+       000002DA 30 2E 00 
+    21 000002DD                                 LC4:
+    22 000002DD 5A 65 72 6F 20 44 69 76 69 73   	DB	"Zero Division Exception",0x00
+       000002E7 69 6F 6E 20 45 78 63 65 70 74 
+       000002F1 69 6F 6E 00 
+    23 000002F5                                 LC5:
+    24 000002F5 0A 49 4E 54 20 30 78 30 30 20   	DB	0x0A,"INT 0x00 :",0x0A," Zero Division Exception.",0x0A,0x00
+       000002FF 3A 0A 20 5A 65 72 6F 20 44 69 
+       00000309 76 69 73 69 6F 6E 20 45 78 63 
+       00000313 65 70 74 69 6F 6E 2E 0A 00 
+    25 0000031C                                 LC6:
+    26 0000031C 45 49 50 20 3D 20 30 78 25 30   	DB	"EIP = 0x%08X",0x0A,0x00
+       00000326 38 58 0A 00 
+    27 0000032A                                 LC0:
+    28 0000032A D5 BB B3 FD C1 E3 D2 EC B3 A3   	DB	0xD5,0xBB,0xB3,0xFD,0xC1,0xE3,0xD2,0xEC,0xB3,0xA3,0xCD,0xA8,0xB3,0xA3,0xB3,0xF6,0xCF,0xD6,0xD4,0xDA,0xB3,0xCC,0xD0,0xF2,0xB3,0xA2,0xCA,0xD4,0xD2,0xD4
+       00000334 CD A8 B3 A3 B3 F6 CF D6 D4 DA 
+       0000033E B3 CC D0 F2 B3 A2 CA D4 D2 D4 
+    29 00000348 30 D7 F6 CE AA B3 FD CA FD CA   	DB	"0",0xD7,0xF6,0xCE,0xAA,0xB3,0xFD,0xCA,0xFD,0xCA,0xB1,0xA1,0xA3,0x00
+       00000352 B1 A1 A3 00 
+    30 00000356                                 LC1:
+    31 00000356 B3 FD C1 E3 D2 EC B3 A3 00      	DB	0xB3,0xFD,0xC1,0xE3,0xD2,0xEC,0xB3,0xA3,0x00
+    32 0000035F                                 LC2:
+    33 0000035F 0A D6 D0 B6 CF BA C5 20 30 78   	DB	0x0A,0xD6,0xD0,0xB6,0xCF,0xBA,0xC5," 0x00 :",0x0A," ",0xB3,0xFD,0xC1,0xE3,0xD2,0xEC,0xB3,0xA3,0x0A,0x00
+       00000369 30 30 20 3A 0A 20 B3 FD C1 E3 
+       00000373 D2 EC B3 A3 0A 00 
+    34                                          [SECTION .text]
+    35 00000000                                 	GLOBAL	_inthandler00
+    36 00000000                                 _inthandler00:
+    37 00000000 55                              	PUSH	EBP
+    38 00000001 89 E5                           	MOV	EBP,ESP
+    39 00000003 57                              	PUSH	EDI
+    40 00000004 56                              	PUSH	ESI
+    41 00000005 53                              	PUSH	EBX
+    42 00000006 81 EC 00000220                  	SUB	ESP,544
+    43 0000000C E8 [00000000]                   	CALL	_task_now
+    44 00000011 89 C7                           	MOV	EDI,EAX
+    45 00000013 8B B0 00000110                  	MOV	ESI,DWORD [272+EAX]
+    46 00000019 80 B8 00000128 01               	CMP	BYTE [296+EAX],1
+    47 00000020 74 56                           	JE	L5
+    48 00000022 68 [0000028A]                   	PUSH	LC3
+    49 00000027 8D 9D FFFFFDD4                  	LEA	EBX,DWORD [-556+EBP]
+    50 0000002D 68 [000002DD]                   	PUSH	LC4
+    51 00000032 68 [0000012C]                   	PUSH	_WarningMsgEN
+    52 00000037 53                              	PUSH	EBX
+    53 00000038 E8 [00000000]                   	CALL	_sprintf
+    54 0000003D 53                              	PUSH	EBX
+    55 0000003E 56                              	PUSH	ESI
+    56 0000003F E8 [00000000]                   	CALL	_cons_putstr0
+    57 00000044 68 [000002F5]                   	PUSH	LC5
+    58 00000049                                 L4:
+    59 00000049 56                              	PUSH	ESI
+    60 0000004A 8D 5D D4                        	LEA	EBX,DWORD [-44+EBP]
+    61 0000004D E8 [00000000]                   	CALL	_cons_putstr0
+    62 00000052 8B 45 08                        	MOV	EAX,DWORD [8+EBP]
+    63 00000055 83 C4 20                        	ADD	ESP,32
+    64 00000058 FF 70 2C                        	PUSH	DWORD [44+EAX]
+    65 0000005B 68 [0000031C]                   	PUSH	LC6
+    66 00000060 53                              	PUSH	EBX
+    67 00000061 E8 [00000000]                   	CALL	_sprintf
+    68 00000066 53                              	PUSH	EBX
+    69 00000067 56                              	PUSH	ESI
+    70 00000068 E8 [00000000]                   	CALL	_cons_putstr0
+    71 0000006D 8D 65 F4                        	LEA	ESP,DWORD [-12+EBP]
+    72 00000070 5B                              	POP	EBX
+    73 00000071 8D 47 30                        	LEA	EAX,DWORD [48+EDI]
+    74 00000074 5E                              	POP	ESI
+    75 00000075 5F                              	POP	EDI
+    76 00000076 5D                              	POP	EBP
+    77 00000077 C3                              	RET
+    78 00000078                                 L5:
+    79 00000078 68 [0000032A]                   	PUSH	LC0
+    80 0000007D 8D 9D FFFFFDD4                  	LEA	EBX,DWORD [-556+EBP]
+    81 00000083 68 [00000356]                   	PUSH	LC1
+    82 00000088 68 [00000000]                   	PUSH	_WarningMsgCH
+    83 0000008D 53                              	PUSH	EBX
+    84 0000008E E8 [00000000]                   	CALL	_sprintf
+    85 00000093 53                              	PUSH	EBX
+    86 00000094 56                              	PUSH	ESI
+    87 00000095 E8 [00000000]                   	CALL	_cons_putstr0
+    88 0000009A 68 [0000035F]                   	PUSH	LC2
+    89 0000009F EB A8                           	JMP	L4
+    90                                          [SECTION .data]
+    91 00000379                                 LC10:
+    92 00000379 73 74 61 63 6B 20 65 78 63 65   	DB	"stack exception usually occurs when the user program accesses the data stack by mistake (such as the subscript of array member is out of bounds).",0x00
+       00000383 70 74 69 6F 6E 20 75 73 75 61 
+       0000038D 6C 6C 79 20 6F 63 63 75 72 73 
+       00000397 20 77 68 65 6E 20 74 68 65 20 
+       000003A1 75 73 65 72 20 70 72 6F 67 72 
+       000003AB 61 6D 20 61 63 63 65 73 73 65 
+       000003B5 73 20 74 68 65 20 64 61 74 61 
+       000003BF 20 73 74 61 63 6B 20 62 79 20 
+       000003C9 6D 69 73 74 61 6B 65 20 28 73 
+       000003D3 75 63 68 20 61 73 20 74 68 65 
+       000003DD 20 73 75 62 73 63 72 69 70 74 
+       000003E7 20 6F 66 20 61 72 72 61 79 20 
+       000003F1 6D 65 6D 62 65 72 20 69 73 20 
+       000003FB 6F 75 74 20 6F 66 20 62 6F 75 
+       00000405 6E 64 73 29 2E 00 
+    93 0000040B                                 LC11:
+    94 0000040B 53 74 61 63 6B 20 45 78 63 65   	DB	"Stack Exception",0x00
+       00000415 70 74 69 6F 6E 00 
+    95 0000041B                                 LC12:
+    96 0000041B 0A 49 4E 54 20 30 78 30 43 20   	DB	0x0A,"INT 0x0C :",0x0A," Stack Exception.",0x0A,0x00
+       00000425 3A 0A 20 53 74 61 63 6B 20 45 
+       0000042F 78 63 65 70 74 69 6F 6E 2E 0A 
+       00000439 00 
+    97 0000043A                                 LC7:
+    98 0000043A D5 BB D2 EC B3 A3 CD A8 B3 A3   	DB	0xD5,0xBB,0xD2,0xEC,0xB3,0xA3,0xCD,0xA8,0xB3,0xA3,0xB3,0xF6,0xCF,0xD6,0xD4,0xDA,0xD3,0xC3,0xBB,0xA7,0xB3,0xCC,0xD0,0xF2,0xB4,0xED,0xCE,0xF3,0xB7,0xC3,0xCE,0xCA,0xCA,0xFD,0xBE,0xDD,0xD5,0xBB,"(",0xC8,0xE7,0xCA,0xFD,0xD7,0xE9,0xB3,0xC9,0xD4,0xB1,0xCF,0xC2,0xB1,0xEA,0xD4,0xBD,0xBD,0xE7,0xB5,0xC8,")",0xA1,0xA3,0x00
+       00000444 B3 F6 CF D6 D4 DA D3 C3 BB A7 
+       0000044E B3 CC D0 F2 B4 ED CE F3 B7 C3 
+       00000458 CE CA CA FD BE DD D5 BB 28 C8 
+       00000462 E7 CA FD D7 E9 B3 C9 D4 B1 CF 
+       0000046C C2 B1 EA D4 BD BD E7 B5 C8 29 
+       00000476 A1 A3 00 
+    99 00000479                                 LC8:
+   100 00000479 D5 BB D2 EC B3 A3 00            	DB	0xD5,0xBB,0xD2,0xEC,0xB3,0xA3,0x00
+   101 00000480                                 LC9:
+   102 00000480 0A D6 D0 B6 CF BA C5 20 30 78   	DB	0x0A,0xD6,0xD0,0xB6,0xCF,0xBA,0xC5," 0x0C :",0x0A," ",0xD5,0xBB,0xD2,0xEC,0xB3,0xA3,0x0A,0x00
+       0000048A 30 43 20 3A 0A 20 D5 BB D2 EC 
+       00000494 B3 A3 0A 00 
+   103                                          [SECTION .text]
+   104 000000A1                                 	GLOBAL	_inthandler0c
+   105 000000A1                                 _inthandler0c:
+   106 000000A1 55                              	PUSH	EBP
+   107 000000A2 89 E5                           	MOV	EBP,ESP
+   108 000000A4 57                              	PUSH	EDI
+   109 000000A5 56                              	PUSH	ESI
+   110 000000A6 53                              	PUSH	EBX
+   111 000000A7 81 EC 00000220                  	SUB	ESP,544
+   112 000000AD E8 [00000000]                   	CALL	_task_now
+   113 000000B2 89 C7                           	MOV	EDI,EAX
+   114 000000B4 8B B0 00000110                  	MOV	ESI,DWORD [272+EAX]
+   115 000000BA 80 B8 00000128 01               	CMP	BYTE [296+EAX],1
+   116 000000C1 74 56                           	JE	L10
+   117 000000C3 68 [00000379]                   	PUSH	LC10
+   118 000000C8 8D 9D FFFFFDD4                  	LEA	EBX,DWORD [-556+EBP]
+   119 000000CE 68 [0000040B]                   	PUSH	LC11
+   120 000000D3 68 [0000012C]                   	PUSH	_WarningMsgEN
+   121 000000D8 53                              	PUSH	EBX
+   122 000000D9 E8 [00000000]                   	CALL	_sprintf
+   123 000000DE 53                              	PUSH	EBX
+   124 000000DF 56                              	PUSH	ESI
+   125 000000E0 E8 [00000000]                   	CALL	_cons_putstr0
+   126 000000E5 68 [0000041B]                   	PUSH	LC12
+   127 000000EA                                 L9:
+   128 000000EA 56                              	PUSH	ESI
+   129 000000EB 8D 5D D4                        	LEA	EBX,DWORD [-44+EBP]
+   130 000000EE E8 [00000000]                   	CALL	_cons_putstr0
+   131 000000F3 8B 45 08                        	MOV	EAX,DWORD [8+EBP]
+   132 000000F6 83 C4 20                        	ADD	ESP,32
+   133 000000F9 FF 70 2C                        	PUSH	DWORD [44+EAX]
+   134 000000FC 68 [0000031C]                   	PUSH	LC6
+   135 00000101 53                              	PUSH	EBX
+   136 00000102 E8 [00000000]                   	CALL	_sprintf
+   137 00000107 53                              	PUSH	EBX
+   138 00000108 56                              	PUSH	ESI
+   139 00000109 E8 [00000000]                   	CALL	_cons_putstr0
+   140 0000010E 8D 65 F4                        	LEA	ESP,DWORD [-12+EBP]
+   141 00000111 5B                              	POP	EBX
+   142 00000112 8D 47 30                        	LEA	EAX,DWORD [48+EDI]
+   143 00000115 5E                              	POP	ESI
+   144 00000116 5F                              	POP	EDI
+   145 00000117 5D                              	POP	EBP
+   146 00000118 C3                              	RET
+   147 00000119                                 L10:
+   148 00000119 68 [0000043A]                   	PUSH	LC7
+   149 0000011E 8D 9D FFFFFDD4                  	LEA	EBX,DWORD [-556+EBP]
+   150 00000124 68 [00000479]                   	PUSH	LC8
+   151 00000129 68 [00000000]                   	PUSH	_WarningMsgCH
+   152 0000012E 53                              	PUSH	EBX
+   153 0000012F E8 [00000000]                   	CALL	_sprintf
+   154 00000134 53                              	PUSH	EBX
+   155 00000135 56                              	PUSH	ESI
+   156 00000136 E8 [00000000]                   	CALL	_cons_putstr0
+   157 0000013B 68 [00000480]                   	PUSH	LC9
+   158 00000140 EB A8                           	JMP	L9
+   159                                          [SECTION .data]
+   160 00000498                                 LC16:
+   161 00000498 47 65 6E 65 72 61 6C 20 70 72   	DB	"General protection exception usually occurs when the user program attempts to access an inaccessible address.",0x00
+       000004A2 6F 74 65 63 74 69 6F 6E 20 65 
+       000004AC 78 63 65 70 74 69 6F 6E 20 75 
+       000004B6 73 75 61 6C 6C 79 20 6F 63 63 
+       000004C0 75 72 73 20 77 68 65 6E 20 74 
+       000004CA 68 65 20 75 73 65 72 20 70 72 
+       000004D4 6F 67 72 61 6D 20 61 74 74 65 
+       000004DE 6D 70 74 73 20 74 6F 20 61 63 
+       000004E8 63 65 73 73 20 61 6E 20 69 6E 
+       000004F2 61 63 63 65 73 73 69 62 6C 65 
+       000004FC 20 61 64 64 72 65 73 73 2E 00 
+   162 00000506                                 LC17:
+   163 00000506 47 65 6E 65 72 61 6C 20 70 72   	DB	"General protection exception",0x00
+       00000510 6F 74 65 63 74 69 6F 6E 20 65 
+       0000051A 78 63 65 70 74 69 6F 6E 00 
+   164 00000523                                 LC18:
+   165 00000523 0A 49 4E 54 20 30 78 30 44 20   	DB	0x0A,"INT 0x0D :",0x0A," General Protected Exception",0x0A,0x00
+       0000052D 3A 0A 20 47 65 6E 65 72 61 6C 
+       00000537 20 50 72 6F 74 65 63 74 65 64 
+       00000541 20 45 78 63 65 70 74 69 6F 6E 
+       0000054B 0A 00 
+   166 0000054D                                 LC13:
+   167 0000054D D2 BB B0 E3 B1 A3 BB A4 D2 EC   	DB	0xD2,0xBB,0xB0,0xE3,0xB1,0xA3,0xBB,0xA4,0xD2,0xEC,0xB3,0xA3,0xCD,0xA8,0xB3,0xA3,0xB3,0xF6,0xCF,0xD6,0xD4,0xDA,0xD3,0xC3,0xBB,0xA7,0xB3,0xCC,0xD0,0xF2,0xC6,0xF3,0xCD,0xBC,0xB7,0xC3,0xCE,0xCA,0xB2,0xBB,0xBF,0xC9,0xB7,0xC3,0xCE,0xCA,0xB5,0xC4,0xB5,0xD8,0xD6,0xB7,0xCA,0xB1,0xA1,0xA3,0x00
+       00000557 B3 A3 CD A8 B3 A3 B3 F6 CF D6 
+       00000561 D4 DA D3 C3 BB A7 B3 CC D0 F2 
+       0000056B C6 F3 CD BC B7 C3 CE CA B2 BB 
+       00000575 BF C9 B7 C3 CE CA B5 C4 B5 D8 
+       0000057F D6 B7 CA B1 A1 A3 00 
+   168 00000586                                 LC14:
+   169 00000586 D2 BB B0 E3 B1 A3 BB A4 D2 EC   	DB	0xD2,0xBB,0xB0,0xE3,0xB1,0xA3,0xBB,0xA4,0xD2,0xEC,0xB3,0xA3,0x00
+       00000590 B3 A3 00 
+   170 00000593                                 LC15:
+   171 00000593 0A D6 D0 B6 CF BA C5 20 30 78   	DB	0x0A,0xD6,0xD0,0xB6,0xCF,0xBA,0xC5," 0x0D :",0x0A," ",0xD2,0xBB,0xB0,0xE3,0xB1,0xA3,0xBB,0xA4,0xD2,0xEC,0xB3,0xA3,0x0A,0x00
+       0000059D 30 44 20 3A 0A 20 D2 BB B0 E3 
+       000005A7 B1 A3 BB A4 D2 EC B3 A3 0A 00 
+   172                                          [SECTION .text]
+   173 00000142                                 	GLOBAL	_inthandler0d
+   174 00000142                                 _inthandler0d:
+   175 00000142 55                              	PUSH	EBP
+   176 00000143 89 E5                           	MOV	EBP,ESP
+   177 00000145 57                              	PUSH	EDI
+   178 00000146 56                              	PUSH	ESI
+   179 00000147 53                              	PUSH	EBX
+   180 00000148 81 EC 00000220                  	SUB	ESP,544
+   181 0000014E E8 [00000000]                   	CALL	_task_now
+   182 00000153 89 C7                           	MOV	EDI,EAX
+   183 00000155 8B B0 00000110                  	MOV	ESI,DWORD [272+EAX]
+   184 0000015B 80 B8 00000128 01               	CMP	BYTE [296+EAX],1
+   185 00000162 74 56                           	JE	L15
+   186 00000164 68 [00000498]                   	PUSH	LC16
+   187 00000169 8D 9D FFFFFDD4                  	LEA	EBX,DWORD [-556+EBP]
+   188 0000016F 68 [00000506]                   	PUSH	LC17
+   189 00000174 68 [0000012C]                   	PUSH	_WarningMsgEN
+   190 00000179 53                              	PUSH	EBX
+   191 0000017A E8 [00000000]                   	CALL	_sprintf
+   192 0000017F 53                              	PUSH	EBX
+   193 00000180 56                              	PUSH	ESI
+   194 00000181 E8 [00000000]                   	CALL	_cons_putstr0
+   195 00000186 68 [00000523]                   	PUSH	LC18
+   196 0000018B                                 L14:
+   197 0000018B 56                              	PUSH	ESI
+   198 0000018C 8D 5D D4                        	LEA	EBX,DWORD [-44+EBP]
+   199 0000018F E8 [00000000]                   	CALL	_cons_putstr0
+   200 00000194 8B 45 08                        	MOV	EAX,DWORD [8+EBP]
+   201 00000197 83 C4 20                        	ADD	ESP,32
+   202 0000019A FF 70 2C                        	PUSH	DWORD [44+EAX]
+   203 0000019D 68 [0000031C]                   	PUSH	LC6
+   204 000001A2 53                              	PUSH	EBX
+   205 000001A3 E8 [00000000]                   	CALL	_sprintf
+   206 000001A8 53                              	PUSH	EBX
+   207 000001A9 56                              	PUSH	ESI
+   208 000001AA E8 [00000000]                   	CALL	_cons_putstr0
+   209 000001AF 8D 65 F4                        	LEA	ESP,DWORD [-12+EBP]
+   210 000001B2 5B                              	POP	EBX
+   211 000001B3 8D 47 30                        	LEA	EAX,DWORD [48+EDI]
+   212 000001B6 5E                              	POP	ESI
+   213 000001B7 5F                              	POP	EDI
+   214 000001B8 5D                              	POP	EBP
+   215 000001B9 C3                              	RET
+   216 000001BA                                 L15:
+   217 000001BA 68 [0000054D]                   	PUSH	LC13
+   218 000001BF 8D 9D FFFFFDD4                  	LEA	EBX,DWORD [-556+EBP]
+   219 000001C5 68 [00000586]                   	PUSH	LC14
+   220 000001CA 68 [00000000]                   	PUSH	_WarningMsgCH
+   221 000001CF 53                              	PUSH	EBX
+   222 000001D0 E8 [00000000]                   	CALL	_sprintf
+   223 000001D5 53                              	PUSH	EBX
+   224 000001D6 56                              	PUSH	ESI
+   225 000001D7 E8 [00000000]                   	CALL	_cons_putstr0
+   226 000001DC 68 [00000593]                   	PUSH	LC15
+   227 000001E1 EB A8                           	JMP	L14

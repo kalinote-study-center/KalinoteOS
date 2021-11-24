@@ -1,0 +1,23 @@
+     1 00000000                                 [FORMAT "WCOFF"]
+     2 00000000                                 [INSTRSET "i486p"]
+     3 00000000                                 [OPTIMIZE 1]
+     4 00000000                                 [OPTION 1]
+     5 00000000                                 [BITS 32]
+     6 00000000                                 	EXTERN	_cons_printf
+     7 00000000                                 [FILE "cmd_getruntime.c"]
+     8                                          [SECTION .data]
+     9 00000000                                 LC0:
+    10 00000000 25 75 20 74 69 63 6B 73 28 31   	DB	"%u ticks(10ms)",0x0A,0x00
+       0000000A 30 6D 73 29 0A 00 
+    11                                          [SECTION .text]
+    12 00000000                                 	GLOBAL	_cmd_getruntime
+    13 00000000                                 _cmd_getruntime:
+    14 00000000 55                              	PUSH	EBP
+    15 00000001 A1 00010000                     	MOV	EAX,DWORD [65536]
+    16 00000006 89 E5                           	MOV	EBP,ESP
+    17 00000008 FF 70 34                        	PUSH	DWORD [52+EAX]
+    18 0000000B 68 [00000000]                   	PUSH	LC0
+    19 00000010 FF 75 08                        	PUSH	DWORD [8+EBP]
+    20 00000013 E8 [00000000]                   	CALL	_cons_printf
+    21 00000018 C9                              	LEAVE
+    22 00000019 C3                              	RET

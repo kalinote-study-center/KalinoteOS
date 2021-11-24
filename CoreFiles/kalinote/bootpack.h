@@ -9,6 +9,8 @@
 /* sysinfo(bootpack.c系统全局信息) */
 typedef struct {
 	char cpuid;						/* 是否支持CPUID */
+	char brandString;				/* 是否支持Brand String */
+	/* 后面考虑把所有flag换成按位计算(节省空间) :) */
 	unsigned char max_cpuid_num;	/* 最大CPUID数量 */
 	char oem[12];					/* CPU OEM信息 */
 } CPUIDINFO;
@@ -28,6 +30,7 @@ struct SYSINFO {
 #define FIFO_ADDR		0x0fec				// FIFO地址
 #define SYSINFO_ADDR	0x10000				// 系统信息地址
 #define SHTCTL_ADDR		0x0fe4				// 系统图层管理结构体地址
+#define HZK_ADDR		0x10fe8				// 中文字体保存地址
 #undef	NULL			
 #define NULL ((void*)0)						// 重新定义NULL
 #ifndef FALSE
