@@ -6,6 +6,7 @@
 void cmd_sysinfo(struct CONSOLE *cons) {
 	// struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;
 	struct SYSINFO *sysinfo = (struct SYSINFO *) *((int *) SYSINFO_ADDR);
+	cons_printf(cons, "CPU info:\n");
 	if(sysinfo->cpuid_info.cpuid) {
 		/* 可用CPUID */
 		cons_printf(cons, "CPUID available\n");

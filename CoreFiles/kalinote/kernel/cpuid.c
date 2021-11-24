@@ -45,6 +45,7 @@ int cpu_64_check(void) {
 	// debug_print("EDX:0x%08x\n",edx);
 	if(sysinfo->cpuid_info.brandString){
 		/* 如果支持Brand String */
+		/* CPU型号信息 */
 		debug_print("CPUID>");
 		for(i = 0x80000002; i <= 0x80000004; i++){
 			eax = read_cpuid(i, &ebx, &edx, &ecx);
