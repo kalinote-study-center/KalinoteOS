@@ -314,8 +314,8 @@ void cons_runcmd(char *cmdline, struct CONSOLE *cons, int *fat, unsigned int mem
 		cmd_mem(cons, memtotal);
 	} else if (((strcmp(cmdline, "cls") == 0) || (strcmp(cmdline, "clear") == 0)) && cons->sht != 0) {
 		cmd_cls(cons);
-	} else if (((strcmp(cmdline, "dir") == 0) || (strcmp(cmdline, "ls") == 0)) && cons->sht != 0) {
-		cmd_dir(cons);
+	} else if (((strncmp(cmdline, "dir", 3) == 0) || (strncmp(cmdline, "ls", 2) == 0)) && cons->sht != 0) {
+		cmd_dir(cons, cmdline);
 	} else if (strncmp(cmdline, "type ", 5) == 0 && cons->sht != 0) {
 		cmd_type(cons, fat, cmdline);
 	} else if (strcmp(cmdline, "exit") == 0) {

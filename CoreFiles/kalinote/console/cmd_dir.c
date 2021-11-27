@@ -2,7 +2,7 @@
 #include "../bootpack.h"
 #include <stdio.h>
 
-void cmd_dir(struct CONSOLE *cons){
+void cmd_dir(struct CONSOLE *cons, char *cmdline){
 	/* 输出文件及目录 */
 	struct FILEINFO *finfo = (struct FILEINFO *) (ADR_DISKIMG + 0x002600);
 	int i, j;

@@ -468,7 +468,7 @@ void cons_runcmd(char *cmdline, struct CONSOLE *cons, int *fat,
 	unsigned int memtotal, char sysmode);															// 执行命令
 void cmd_mem(struct CONSOLE *cons, unsigned int memtotal);											// CMD：查询内存使用状态
 void cmd_cls(struct CONSOLE *cons);																	// CMD：清屏
-void cmd_dir(struct CONSOLE *cons);																	// CMD：查询目录文件
+void cmd_dir(struct CONSOLE *cons, char *cmdline);													// CMD：查询目录文件
 void cmd_type(struct CONSOLE *cons, int *fat, char *cmdline);										// CMD：显示文件内容
 void cmd_exit(struct CONSOLE *cons, int *fat);														// CMD：关闭命令窗口
 void cmd_start(struct CONSOLE *cons, char *cmdline, int memtotal);									// CMD：在新的命令行中启动一个程序
@@ -500,11 +500,17 @@ int *inthandler0c(int *esp);																		// 0c号中断，用于处理栈异常
 int *inthandler0d(int *esp);																		// 0d号中断，用于处理一般异常
 
 /* file.c(文件处理) */
+#define FILE_NOINFO			0x00						// 没有文件信息
+#define FILE_DELETED		0xe5						// 已经被删除的
+#define FILE_READONLY		0xfe						// 只读文件
+#define FILE_SYSTEM			0xfb						// 系统文件
+#define FILE_DIR			0xef						// 目录
+#define FILE_NORMAL			0xdf						// 普通文件
 struct FILEINFO {
 	//文件结构(详见第367页)
 	unsigned char name[8], ext[3], type;
-	char reserve[10];
-	unsigned short time, date, clustno;																// 磁盘映像中的地址 = clustno * 512 +0x003e00
+	char reserve[10];									// 保留位
+	unsigned short time, date, clustno;					// 磁盘映像中的地址 = clustno * 512 +0x003e00
 	unsigned int size;
 };
 struct FILEINFO *file_search(char *name, struct FILEINFO *finfo, int max);
