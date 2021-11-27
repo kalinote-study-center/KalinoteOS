@@ -7,6 +7,7 @@ void cpu_init(void) {
 	/* 检测CPU相关信息 */
 	struct SYSINFO *sysinfo = (struct SYSINFO *) *((int *) SYSINFO_ADDR);
 	unsigned int eax,ebx,ecx,edx;
+	int i,j;
 	
 	sysinfo->cpuid_info.cpuid = (check_cpuid()?TRUE:FALSE);
 	if (!sysinfo->cpuid_info.cpuid)return;		/* 如果不支持CPUID */
@@ -24,6 +25,22 @@ void cpu_init(void) {
 	// debug_print("CPUID>Brand String support: %s\n", eax >= 0x80000004? "yes":"no");		// 想什么呢，这个时候debug窗口还没有初始化
 	sysinfo->cpuid_info.brandString = ((eax>=0x80000004)?TRUE:FALSE);
 
+	/* 读取CPU信息 */
+	if(sysinfo->cpuid_info.brandString){
+		/* 如果支持Brand String */
+		/* CPU型号信息 */
+		i = 0;
+		for(j = 0x80000002; j <= 0x80000004; j++){
+			eax = read_cpuid(j, &ebx, &edx, &ecx);
+			memcpy((sysinfo->cpuid_info.CPUName)+(i*16),&eax,4);
+			memcpy((sysinfo->cpuid_info.CPUName)+(i*16+4),&ebx,4);
+			memcpy((sysinfo->cpuid_info.CPUName)+(i*16+8),&ecx,4);
+			memcpy((sysinfo->cpuid_info.CPUName)+(i*16+12),&edx,4);
+			i++;
+		}
+		sysinfo->cpuid_info.CPUName[48] = '\0';
+	}
+
 	return;
 }
 
@@ -31,9 +48,8 @@ int cpu_64_check(void) {
 	/* 检测CPU是否支持长模式(IntelCPU,通过CPUID:0x80000002) */
 	/* 这里的功能是否正常仍有待检查 */
 	struct SYSINFO *sysinfo = (struct SYSINFO *) *((int *) SYSINFO_ADDR);
-	char CPUName[17];
-	unsigned int eax,ebx,ecx,edx;
-	int i;
+	// unsigned int eax,ebx,ecx,edx;
+	// int i;
 	
 	if (!sysinfo->cpuid_info.cpuid)return FALSE;											/* 如果不支持CPUID */
 	if (!(strncmp(sysinfo->cpuid_info.oem, CPUID_VENDOR_INTEL, 12) == 0))return FALSE;		/* 不是intelCPU(查询方式不同) */
@@ -43,21 +59,6 @@ int cpu_64_check(void) {
 	// debug_print("EBX:0x%08x\n",ebx);
 	// debug_print("ECX:0x%08x\n",ecx);
 	// debug_print("EDX:0x%08x\n",edx);
-	if(sysinfo->cpuid_info.brandString){
-		/* 如果支持Brand String */
-		/* CPU型号信息 */
-		debug_print("CPUID>");
-		for(i = 0x80000002; i <= 0x80000004; i++){
-			eax = read_cpuid(i, &ebx, &edx, &ecx);
-			*(unsigned int*)&CPUName[0] = eax;
-			*(unsigned int*)&CPUName[4] = ebx;
-			*(unsigned int*)&CPUName[8] = ecx;
-			*(unsigned int*)&CPUName[12] = edx;
-			CPUName[16] = '\0';
-			debug_print("%s",CPUName);
-		}
-		debug_print("\n");
-	}
 	
 	/* 获取Family/Model/Stepping等信息 */
 	/**

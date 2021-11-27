@@ -12,7 +12,8 @@ typedef struct {
 	char brandString;				/* 是否支持Brand String */
 	/* 后面考虑把所有flag换成按位计算(节省空间) :) */
 	unsigned char max_cpuid_num;	/* 最大CPUID数量 */
-	char oem[12];					/* CPU OEM信息 */
+	char oem[13];					/* CPU OEM信息 */
+	char CPUName[49];				/* CPU型号信息 */
 } CPUIDINFO;
 struct SYSINFO {
 	double sysmode;					/* 系统模式 */
@@ -477,7 +478,7 @@ void cmd_shutdown(void);																			// CMD：关机
 void cmd_sysmode(struct CONSOLE *cons, char *cmdline);												// CMD：切换系统模式
 void cmd_echo(struct CONSOLE *cons, char *cmdline);													// CMD：系统输出
 void cmd_getruntime(struct CONSOLE *cons);															// CMD：查询系统启动运行时间
-void cmd_sysinfo(struct CONSOLE *cons);																// CMD：输出系统相关信息
+void cmd_sysinfo(struct CONSOLE *cons, unsigned int memtotal);										// CMD：输出系统相关信息
 int cmd_app(struct CONSOLE *cons, int *fat, char *cmdline);											// 外部应用程序
 struct SHEET *open_console(struct SHTCTL *shtctl, unsigned int memtotal, int debug);				// 开启一个命令窗口
 struct TASK *open_constask(struct SHEET *sht, unsigned int memtotal);								// 开启一个任务
