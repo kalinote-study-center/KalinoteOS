@@ -131,29 +131,41 @@ int dir_check(char *dir, int *fat) {
 	struct FILEINFO *finfo = (struct FILEINFO *) (ADR_DISKIMG + 0x002600);		/* 根目录信息 */
 	char dirname_buf[8] = {0};
 	char subdirinfo_buf[512];
-	int i;
+	int i,j=0;
 	
-	for(i = 0;i < strlen(dir);i++){
-		if(dir[i]!=0) {
-			if(dir[i]!='/'){
-				/* 继续复制文件名 */
-				dirname_buf[i] = dir[i];
+	for(i = 0;i <= strlen(dir);i++){
+		// debug_print("%d/%d\n",i,strlen(dir));
+		if(dir[i]=='/'||dir[i]==0){
+			if(strlen(dirname_buf)==0){continue;}
+			/* 一段文件名复制完，寻找目录 */
+			dirname_buf[j] = 0;
+			finfo = dir_search(dirname_buf, finfo, 224);
+			// debug_print("DIR_CHECK>check %s,finfo:%d\n",dirname_buf,finfo);
+			if(finfo == 0) {
+				/* 没有找到 */
+				return FALSE;
 			} else {
-				if(strlen(dirname_buf)==0){continue;}
-				/* 一段文件名复制完，寻找目录 */
-				dirname_buf[i] = 0;
-				finfo = dir_search(dirname_buf, finfo, 224);
-				if(finfo == 0) {
-					/* 没有找到 */
-					return FALSE;
-				} else {
-					file_loadfile(finfo->clustno, 512, subdirinfo_buf, fat, (char *) (ADR_DISKIMG + 0x003e00));
-					finfo = (struct FILEINFO *)subdirinfo_buf;
-				}
-				
+				file_loadfile(finfo->clustno, 512, subdirinfo_buf, fat, (char *) (ADR_DISKIMG + 0x003e00));
+				finfo = (struct FILEINFO *)subdirinfo_buf;
 			}
+			if(dir[i]=='/'&&dir[i+1]==0){
+				/*
+				* 如果最后一个字符是'/'，则程序读取到'/'就会执行判断 
+				* 默认字符串处理结束后还会执行一次判断
+				* 这样会导致'/'结尾的字符串进行错误判断
+				* 所以如果满足这个if，证明这个字符串是最后一次判断，且以'/'结尾
+				* 所以手动break
+				* 后面再想想这里有没有更好的办法解决
+				*/
+				break;
+			}
+			j=0;
+		} else {
+			/* 继续复制文件名 */
+			dirname_buf[j] = dir[i];
+			// debug_print("DIR_CHECK>copy %s,finfo:%d\n",dirname_buf,finfo);
+			j++;
 		}
-		
 	}
 	return TRUE;
 }
