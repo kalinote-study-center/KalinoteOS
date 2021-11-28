@@ -1,13 +1,60 @@
 /* 输出文件及目录 */
 #include "../bootpack.h"
 #include <stdio.h>
+#include <string.h>
 
-void cmd_dir(struct CONSOLE *cons, char *cmdline){
+void print_file(struct CONSOLE *cons, struct FILEINFO *finfo);		// 打印某个目录
+
+void cmd_dir(struct CONSOLE *cons, char *parameter, int *fat){
 	/* 输出文件及目录 */
-	struct FILEINFO *finfo = (struct FILEINFO *) (ADR_DISKIMG + 0x002600);
+	struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;
+	struct FILEINFO *root_finfo = (struct FILEINFO *) (ADR_DISKIMG + 0x002600);		/* 根目录信息 */
+	struct FILEINFO *subdir_finfo;		/* 子目录在根目录中的信息 */
+	struct FILEINFO *sub_finfo;			/* 子目录目录信息 */
+	char *subdirinfo_memory;
+	
+	/* 先处理参数 */
+	if(parameter[0]=='/'){
+		/* 绝对路径，先读根目录，后面再做改进 */
+		cons_printf(cons, "绝对路径参数:%s\n", parameter);
+		print_file(cons, root_finfo);
+	} else {
+		cons_printf(cons, "相对路径参数:%s\n", parameter);
+		// cons_printf(cons, "len:%d\n",strlen(parameter));
+		if(parameter[0]=='.'){
+			/* 当前目录，先读根目录，后面再做改进 */
+			print_file(cons, root_finfo);
+		} else {
+			/* 暂时先不处理路径，先想办法把子目录文件读出来 */
+			subdir_finfo = dir_search(parameter, root_finfo, 224);
+			if(subdir_finfo != 0) {
+				/* 目录存在 */
+				if((subdir_finfo->type & 0xef) == 0){
+					/* 是目录 */
+					subdirinfo_memory = (char *) memman_alloc_4k(memman, 512);
+					file_loadfile(subdir_finfo->clustno, 512, subdirinfo_memory, fat, (char *) (ADR_DISKIMG + 0x003e00));
+					sub_finfo = (struct FILEINFO *)subdirinfo_memory;
+					print_file(cons, sub_finfo);
+				} else {
+					/* 文件存在，但不是目录 */
+					cons_printf(cons, "%s Not a directory.", parameter);
+				}
+			} else {
+				/* 目录不存在 */
+				cons_printf(cons, "%s Not exist.", parameter);
+			}
+		}
+	}
+	
+	cons_newline(cons);
+	return;
+}
+
+void print_file(struct CONSOLE *cons, struct FILEINFO *finfo){
 	int i, j;
 	char s[50];
 	struct TASK *task = task_now();
+	
 	if (task->langmode == 1) {
 		cons_putstr0(cons, "文件名			类型  			 大小		  属性\n\n");
 	} else {
@@ -83,6 +130,5 @@ void cmd_dir(struct CONSOLE *cons, char *cmdline){
 			}
 		}
 	}
-	cons_newline(cons);
 	return;
 }

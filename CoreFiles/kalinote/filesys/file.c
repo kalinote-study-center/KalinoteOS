@@ -56,6 +56,7 @@ struct FILEINFO *file_search(char *name, struct FILEINFO *finfo, int max){
 	for (i = 0; name[i] != 0; i++) {
 		if (j >= 11) { return 0; /* 没有找到 */ }
 		if (name[i] == '.' && j <= 8) {
+			/* 如果文件名中找到点，则直接读后缀 */
 			j = 8;
 		} else {
 			s[j] = name[i];
@@ -68,6 +69,7 @@ struct FILEINFO *file_search(char *name, struct FILEINFO *finfo, int max){
 	}
 	for (i = 0; i < max; ) {
 		if (finfo[i].name[0] == 0x00) {
+			/* 文件名第一个就是0(十六进制，而非字符)，则后面没有文件 */
 			break;
 		}
 		if ((finfo[i].type & 0x18) == 0) {
@@ -77,6 +79,46 @@ struct FILEINFO *file_search(char *name, struct FILEINFO *finfo, int max){
 				}
 			}
 			return finfo + i; /* 找到文件 */
+		}
+next:
+		i++;
+	}
+	return 0; /* 没有找到 */
+}
+
+struct FILEINFO *dir_search(char *name, struct FILEINFO *finfo, int max){
+	/* 搜索目录 */
+	/* 与文件不同的是，目录没有后缀名 */
+	/* 由于FAT12格式原因，最多储存文件数量为224个(max) */
+	int i, j;
+	char s[9];
+	for (j = 0; j < 8; j++) {
+		s[j] = ' ';
+	}
+	j = 0;
+	/* 处理文件名 */
+	for (i = 0; name[i] != 0; i++) {
+		if (j >= 8) { return 0; /* 没有找到 */ }
+		s[j] = name[i];
+		if ('a' <= s[j] && s[j] <= 'z') {
+			/* 将小写字母转换为大写字母 */
+			s[j] -= 0x20;
+		} 
+		j++;
+	}
+	/* 搜索 */
+	for (i = 0; i < max; ) {
+		if (finfo[i].name[0] == 0x00) {
+			/* 文件名第一个就是0(十六进制，而非字符)，则后面没有文件 */
+			break;
+		}
+		if ((finfo[i].type & 0xef) == 0) {
+			for (j = 0; j < 8; j++) {
+				if (finfo[i].name[j] != s[j]) {
+					goto next;
+				}
+			}
+			return finfo + i; /* 找到目录 */
 		}
 next:
 		i++;

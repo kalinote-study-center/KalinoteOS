@@ -468,7 +468,7 @@ void cons_runcmd(char *cmdline, struct CONSOLE *cons, int *fat,
 	unsigned int memtotal, char sysmode);															// 执行命令
 void cmd_mem(struct CONSOLE *cons, unsigned int memtotal);											// CMD：查询内存使用状态
 void cmd_cls(struct CONSOLE *cons);																	// CMD：清屏
-void cmd_dir(struct CONSOLE *cons, char *cmdline);													// CMD：查询目录文件
+void cmd_dir(struct CONSOLE *cons, char *parameter, int *fat);										// CMD：查询目录文件
 void cmd_type(struct CONSOLE *cons, int *fat, char *cmdline);										// CMD：显示文件内容
 void cmd_exit(struct CONSOLE *cons, int *fat);														// CMD：关闭命令窗口
 void cmd_start(struct CONSOLE *cons, char *cmdline, int memtotal);									// CMD：在新的命令行中启动一个程序
@@ -513,10 +513,11 @@ struct FILEINFO {
 	unsigned short time, date, clustno;					// 磁盘映像中的地址 = clustno * 512 +0x003e00
 	unsigned int size;
 };
-struct FILEINFO *file_search(char *name, struct FILEINFO *finfo, int max);
+struct FILEINFO *file_search(char *name, struct FILEINFO *finfo, int max);							// 搜索文件
 void file_readfat(int *fat, unsigned char *img);													// 解码FAT
 void file_loadfile(int clustno, int size, char *buf, int *fat, char *img);							// 加载文件
 char *file_loadfile2(int clustno, int *psize, int *fat);											// 加载kca压缩文件
+struct FILEINFO *dir_search(char *name, struct FILEINFO *finfo, int max);							// 搜索目录
 
 /* jpeg.c(处理jpg图片) */
 struct DLL_STRPICENV{
