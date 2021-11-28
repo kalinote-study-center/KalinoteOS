@@ -1,6 +1,6 @@
 /* 文件处理相关程序 */
-
 #include "../bootpack.h"
+#include <string.h>
 
 void file_readfat(int *fat, unsigned char *img){
 	/* 将磁盘映像中的FAT解码 */
@@ -124,6 +124,38 @@ next:
 		i++;
 	}
 	return 0; /* 没有找到 */
+}
+
+int dir_check(char *dir, int *fat) {
+	/* 通过绝对路径判断路径是否存在 */
+	struct FILEINFO *finfo = (struct FILEINFO *) (ADR_DISKIMG + 0x002600);		/* 根目录信息 */
+	char dirname_buf[8] = {0};
+	char subdirinfo_buf[512];
+	int i;
+	
+	for(i = 0;i < strlen(dir);i++){
+		if(dir[i]!=0) {
+			if(dir[i]!='/'){
+				/* 继续复制文件名 */
+				dirname_buf[i] = dir[i];
+			} else {
+				if(strlen(dirname_buf)==0){continue;}
+				/* 一段文件名复制完，寻找目录 */
+				dirname_buf[i] = 0;
+				finfo = dir_search(dirname_buf, finfo, 224);
+				if(finfo == 0) {
+					/* 没有找到 */
+					return FALSE;
+				} else {
+					file_loadfile(finfo->clustno, 512, subdirinfo_buf, fat, (char *) (ADR_DISKIMG + 0x003e00));
+					finfo = (struct FILEINFO *)subdirinfo_buf;
+				}
+				
+			}
+		}
+		
+	}
+	return TRUE;
 }
 
 char *file_loadfile2(int clustno, int *psize, int *fat)

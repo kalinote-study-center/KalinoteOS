@@ -288,6 +288,7 @@ void timer_cancelall(struct FIFO32 *fifo);															// 取消所有定时器
 #define TASK_GDT0		3																			// 定义从GDT的几号开始分配给TSS
 #define MAX_TASKS_LV	250																			// 每层最多任务数
 #define MAX_TASKLEVELS	10																			// 最高任务层数(321页)
+#define MAX_DIRLENGTH	256																			// 最大命令行路径长度
 /*下面这些是任务状态码，暂时还没有用到(2021.6.3) */
 #define	TESK_UNUSED					0					/* 未使用 */
 #define TASK_UNINTERRUPTIBLE		1					/* 可中断睡眠状态 */
@@ -316,6 +317,7 @@ struct TASK {
 	int *fat;
 	char *cmdline;
 	unsigned char langmode, langbyte1;
+	char dir[MAX_DIRLENGTH];								// 命令行所在路径
 	// char *task_name;										// 任务名称
 };
 struct TASKLEVEL {
@@ -479,6 +481,8 @@ void cmd_sysmode(struct CONSOLE *cons, char *cmdline);												// CMD：切换系
 void cmd_echo(struct CONSOLE *cons, char *cmdline);													// CMD：系统输出
 void cmd_getruntime(struct CONSOLE *cons);															// CMD：查询系统启动运行时间
 void cmd_sysinfo(struct CONSOLE *cons, unsigned int memtotal);										// CMD：输出系统相关信息
+void cmd_pwd(struct CONSOLE *cons);																	// CMD：查看当前命令行路径
+void cmd_cd(struct CONSOLE *cons, char *parameter, int *fat);										// CMD：切换命令行目录
 int cmd_app(struct CONSOLE *cons, int *fat, char *cmdline);											// 外部应用程序
 struct SHEET *open_console(struct SHTCTL *shtctl, unsigned int memtotal, int debug);				// 开启一个命令窗口
 struct TASK *open_constask(struct SHEET *sht, unsigned int memtotal);								// 开启一个任务
@@ -518,6 +522,7 @@ void file_readfat(int *fat, unsigned char *img);													// 解码FAT
 void file_loadfile(int clustno, int size, char *buf, int *fat, char *img);							// 加载文件
 char *file_loadfile2(int clustno, int *psize, int *fat);											// 加载kca压缩文件
 struct FILEINFO *dir_search(char *name, struct FILEINFO *finfo, int max);							// 搜索目录
+int dir_check(char *dir, int *fat);																			// 检查绝对路径是否存在
 
 /* jpeg.c(处理jpg图片) */
 struct DLL_STRPICENV{

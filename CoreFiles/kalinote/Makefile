@@ -6,7 +6,7 @@ OBJS_BOOTPACK = kernel/bootpack.obj fonts.obj nasmfunc.obj gui/graphic.obj kerne
 
 OBJS_CMD = console/cmd_mem.obj console/cmd_cls.obj console/cmd_dir.obj console/cmd_type.obj console/cmd_exit.obj \
 		console/cmd_start.obj console/cmd_run.obj console/cmd_langmode.obj console/cmd_shutdown.obj console/cmd_sysmode.obj \
-		console/cmd_echo.obj console/cmd_getruntime.obj console/cmd_sysinfo.obj
+		console/cmd_echo.obj console/cmd_getruntime.obj console/cmd_sysinfo.obj console/cmd_pwd.obj console/cmd_cd.obj
 
 TOOLPATH = ../../z_tools/
 INCPATH  = ../../z_tools/kalinote/

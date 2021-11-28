@@ -35,6 +35,7 @@ void cmd_dir(struct CONSOLE *cons, char *parameter, int *fat){
 					file_loadfile(subdir_finfo->clustno, 512, subdirinfo_memory, fat, (char *) (ADR_DISKIMG + 0x003e00));
 					sub_finfo = (struct FILEINFO *)subdirinfo_memory;
 					print_file(cons, sub_finfo);
+					memman_free_4k(memman, (int)subdirinfo_memory,512);
 				} else {
 					/* 文件存在，但不是目录 */
 					cons_printf(cons, "%s Not a directory.", parameter);

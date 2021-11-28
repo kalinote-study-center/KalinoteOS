@@ -369,6 +369,14 @@ void cons_runcmd(char *cmdline, struct CONSOLE *cons, int *fat, unsigned int mem
 		cmd_getruntime(cons);
 	} else if (strcmp(cmdline, "sysinfo") == 0) {
 		cmd_sysinfo(cons, memtotal);
+	} else if (strcmp(cmdline, "pwd") == 0) {
+		cmd_pwd(cons);
+	} else if (strncmp(cmdline, "cd", 2) == 0) {
+		if(strlen(cmdline)>3) {
+			cmd_cd(cons, cmdline+3, fat);
+		} else {
+			cmd_cd(cons, ".", fat);
+		}
 	} else if (cmdline[0] != 0) {
 		/* 执行cmd_app(),如果不是一个应用，会返回0 */
 		if (cmd_app(cons, fat, cmdline) == 0) {
@@ -508,6 +516,7 @@ struct TASK *open_constask(struct SHEET *sht, unsigned int memtotal){
 	task->tss.ds = 1 * 8;
 	task->tss.fs = 1 * 8;
 	task->tss.gs = 1 * 8;
+	strcat(task->dir, "/");		// 初始console目录
 	*((int *) (task->tss.esp + 4)) = (int) sht;
 	*((int *) (task->tss.esp + 8)) = memtotal;
 	task_run(task, 2, 2); /* level=2, priority=2 */
