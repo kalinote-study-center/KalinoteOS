@@ -135,6 +135,7 @@ int dir_check(char *dir, int *fat) {
 	
 	for(i = 0;i <= strlen(dir);i++){
 		// debug_print("%d/%d\n",i,strlen(dir));
+		if(j>8)return FALSE;	/* 文件夹名称长度超过8 */
 		if(dir[i]=='/'||dir[i]==0){
 			if(strlen(dirname_buf)==0){continue;}
 			/* 一段文件名复制完，寻找目录 */
