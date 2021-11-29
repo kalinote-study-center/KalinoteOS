@@ -545,18 +545,18 @@ int kca_decomp(unsigned char *p, char *q, int size);
 #define cmos_index 0x70
 #define cmos_data 0x71
 /* cmos中相关信息偏移 */
-#define CMOS_CUR_SEC	0x0
-#define CMOS_ALA_SEC	0x1
-#define CMOS_CUR_MIN	0x2
-#define CMOS_ALA_MIN	0x3
-#define CMOS_CUR_HOUR	0x4
-#define CMOS_ALA_HOUR	0x5
-#define CMOS_WEEK_DAY	0x6
-#define CMOS_MON_DAY	0x7
-#define CMOS_CUR_MON	0x8
-#define CMOS_CUR_YEAR	0x9
-#define CMOS_DEV_TYPE	0x12
-#define CMOS_CUR_CEN	0x32
+#define CMOS_CUR_SEC	0x0							// 实时钟秒值
+#define CMOS_ALA_SEC	0x1							// 报警秒值
+#define CMOS_CUR_MIN	0x2							// 实时钟分值
+#define CMOS_ALA_MIN	0x3							// 报警分值
+#define CMOS_CUR_HOUR	0x4							// 实时钟小时值
+#define CMOS_ALA_HOUR	0x5							// 报警小时值
+#define CMOS_WEEK_DAY	0x6							// 实时钟，一周中的天
+#define CMOS_MON_DAY	0x7							// 实时钟，一月中的天
+#define CMOS_CUR_MON	0x8							// 实时钟月份
+#define CMOS_CUR_YEAR	0x9							// 实时钟年份
+#define CMOS_DEV_TYPE	0x12						// 硬盘驱动器类型
+#define CMOS_CUR_CEN	0x32						// 当前世纪值
 #define BCD_HEX(n)	((n >> 4) * 10) + (n & 0xf)
 #define BCD_ASCII_first(n)	(((n<<4)>>4)+0x30)
 #define BCD_ASCII_S(n)	((n<<4)+0x30)
