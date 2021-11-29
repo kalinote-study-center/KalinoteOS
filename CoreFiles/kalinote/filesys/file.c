@@ -47,8 +47,22 @@ void file_loadfile(int clustno, int size, char *buf, int *fat, char *img){
 
 struct FILEINFO *file_search(char *name, struct FILEINFO *finfo, int max){
 	/* 由于FAT12格式原因，最多储存文件数量为224个(max) */
+	/* 增加路径处理 */
 	int i, j;
+	int c;
 	char s[12];
+	
+	if (name[0]=='/') {
+		/* 可能是绝对路径 */
+		
+	}
+	
+	for(c = 0; c <= strlen(name); c++) {
+		/* 判断是否可能存在相对路径 */
+		/* 判断的代码 */
+		
+	}
+	
 	for (j = 0; j < 11; j++) {
 		s[j] = ' ';
 	}
