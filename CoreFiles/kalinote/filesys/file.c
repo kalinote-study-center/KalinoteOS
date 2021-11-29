@@ -49,19 +49,7 @@ struct FILEINFO *file_search(char *name, struct FILEINFO *finfo, int max){
 	/* 由于FAT12格式原因，最多储存文件数量为224个(max) */
 	/* 增加路径处理 */
 	int i, j;
-	int c;
 	char s[12];
-	
-	if (name[0]=='/') {
-		/* 可能是绝对路径 */
-		
-	}
-	
-	for(c = 0; c <= strlen(name); c++) {
-		/* 判断是否可能存在相对路径 */
-		/* 判断的代码 */
-		
-	}
 	
 	for (j = 0; j < 11; j++) {
 		s[j] = ' ';
@@ -140,16 +128,21 @@ next:
 	return 0; /* 没有找到 */
 }
 
-int dir_check(char *dir, int *fat) {
-	/* 通过绝对路径判断路径是否存在 */
+struct FILEINFO *dir_check(char *dir, int *fat) {
+	/* 通过绝对路径读取目录信息 */
 	struct FILEINFO *finfo = (struct FILEINFO *) (ADR_DISKIMG + 0x002600);		/* 根目录信息 */
 	char dirname_buf[8] = {0};
 	char subdirinfo_buf[512];
 	int i,j=0;
 	
+	if(strcmp(dir, "/") == 0||strcmp(dir, "/.") == 0){
+		/* 参数只有一个根目录 */
+		return finfo;
+	}
+
 	for(i = 0;i <= strlen(dir);i++){
 		// debug_print("%d/%d\n",i,strlen(dir));
-		if(j>8)return FALSE;	/* 文件夹名称长度超过8 */
+		if(j>8)return 0;	/* 文件夹名称长度超过8 */
 		if(dir[i]=='/'||dir[i]==0){
 			if(strlen(dirname_buf)==0){continue;}	/* 跳过根目录的'/' */
 			/* 一段文件名复制完，寻找目录 */
@@ -158,7 +151,7 @@ int dir_check(char *dir, int *fat) {
 			// debug_print("DIR_CHECK>check %s,finfo:%d\n",dirname_buf,finfo);
 			if(finfo == 0) {
 				/* 没有找到 */
-				return FALSE;
+				return 0;
 			} else {
 				file_loadfile(finfo->clustno, 512, subdirinfo_buf, fat, (char *) (ADR_DISKIMG + 0x003e00));
 				finfo = (struct FILEINFO *)subdirinfo_buf;
@@ -182,7 +175,7 @@ int dir_check(char *dir, int *fat) {
 			j++;
 		}
 	}
-	return TRUE;
+	return finfo;
 }
 
 char *file_loadfile2(int clustno, int *psize, int *fat)

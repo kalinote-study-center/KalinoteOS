@@ -521,8 +521,8 @@ struct FILEINFO *file_search(char *name, struct FILEINFO *finfo, int max);						
 void file_readfat(int *fat, unsigned char *img);													// 解码FAT
 void file_loadfile(int clustno, int size, char *buf, int *fat, char *img);							// 加载文件
 char *file_loadfile2(int clustno, int *psize, int *fat);											// 加载kca压缩文件
-struct FILEINFO *dir_search(char *name, struct FILEINFO *finfo, int max);							// 搜索目录
-int dir_check(char *dir, int *fat);																			// 检查绝对路径是否存在
+struct FILEINFO *dir_search(char *name, struct FILEINFO *finfo, int max);							// 在finfo搜索名称为name的目录
+struct FILEINFO *dir_check(char *dir, int *fat);													// 通过绝对路径获取文件信息
 
 /* jpeg.c(处理jpg图片) */
 struct DLL_STRPICENV{

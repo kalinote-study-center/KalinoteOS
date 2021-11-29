@@ -6,10 +6,18 @@ void cmd_cd(struct CONSOLE *cons, char *parameter, int *fat) {
 	struct TASK *task = task_now();
 	char apath[350];
 	int i;
-	if(strcmp(parameter, ".") == 0) {
-		/* 目录不变 */
+	if(strcmp(parameter,".")==0){
+		// 目录不变
+		cons_printf(cons,"当前console路径已切换为：%s\n", task->dir);
+		return;
+	}	
+	if(strcmp(parameter,"/")==0){
+		// 切换到根目录
+		strcpy(task->dir,"/");
+		cons_printf(cons,"当前console路径已切换为：%s\n", task->dir);
 		return;
 	}
+	
 	
 	/* 如果不是以'/'开头，则是相对路径 */
 	if(parameter[0]!='/'){
@@ -22,7 +30,7 @@ void cmd_cd(struct CONSOLE *cons, char *parameter, int *fat) {
 	}
 	
 	/* 先查找路径是否存在 */
-	if(dir_check(apath, fat)) {
+	if(dir_check(apath, fat)!=0) {
 		cons_putstr0(cons,"路径存在。\n");
 		if(strlen(apath) < 255) {
 			i = strlen(apath);

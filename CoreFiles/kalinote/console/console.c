@@ -16,8 +16,6 @@ void console_task(struct SHEET *sheet, unsigned int memtotal){
 	unsigned char *hzk = (char *) *((int *) 0x0fe8);
 	struct SYSINFO *sysinfo = (struct SYSINFO *) *((int *) SYSINFO_ADDR);
 
-	
-
 	cons.sht = sheet;
 	cons.cur_x =  8;
 	cons.cur_y = 28;
