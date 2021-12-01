@@ -767,3 +767,56 @@ int acpi_reset(void);													/* 通过ACPI的I/O总线实现重启 */
 #define CPUID_VENDOR_PARALLELS   		" lrpepyh vr"
 void cpu_init(void);													/* 初始化CPU相关信息 */
 int cpu_64_check(void);													/* 检测CPU是否支持64位 */
+
+/********************************************************************
+*              下面是图形显示部分(从X11,TinyGL,etc.移植)            *
+********************************************************************/
+ 
+/* x11(sample X Windows lib) */
+/* X.h */
+typedef unsigned long XID;
+typedef XID Window;
+typedef XID Drawable;
+typedef XID Font;
+typedef XID Pixmap;
+typedef XID Cursor;
+typedef XID Colormap;
+typedef XID GContext;
+typedef XID KeySym;
+typedef unsigned long Mask;
+typedef unsigned long Atom;
+typedef unsigned long VisualID;
+typedef unsigned long Time;
+typedef unsigned char KeyCode;
+
+/* Xlib.h */
+typedef struct XExtData {
+	/* 扩展需要一种方法来将私有数据(private_data)挂在一些结构(list)上 */
+	int number;							/* XRegisterExtension返回的number */
+	struct XExtData *next;				/* 列表结构的下一项 */
+	int (*free_private)();				/* 调用该函数以释放private空间 */
+	char *private_data;					/* 此扩展的私有数据 */
+} XExtData;
+typedef struct {
+	/* 视觉结构，包含有关可能的颜色映射的信息。  */
+	XExtData *ext_data;										/* 用于扩展挂起数据的钩子 */
+	VisualID visualid;										/* 此视觉对象的视觉 ID */
+	int class;												/* 屏幕类别（单色等）  */
+	unsigned long red_mask, green_mask, blue_mask;			/* 掩码值 */
+	int bits_per_rgb;										/* 不同颜色值的对数基数 2  */
+	int map_entries;										/* 颜色映射条目 */
+} Visual;
+
+/* Xutil.h */
+typedef struct {
+  Visual *visual;
+  VisualID visualid;
+  int screen;
+  int depth;
+  int class;
+  unsigned long red_mask;
+  unsigned long green_mask;
+  unsigned long blue_mask;
+  int colormap_size;
+  int bits_per_rgb;
+} XVisualInfo;

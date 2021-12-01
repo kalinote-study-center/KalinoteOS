@@ -7,7 +7,13 @@ OBJS_BOOTPACK = kernel/bootpack.obj fonts.obj nasmfunc.obj gui/graphic.obj kerne
 OBJS_CMD = console/cmd_mem.obj console/cmd_cls.obj console/cmd_dir.obj console/cmd_type.obj console/cmd_exit.obj \
 		console/cmd_start.obj console/cmd_run.obj console/cmd_langmode.obj console/cmd_shutdown.obj console/cmd_sysmode.obj \
 		console/cmd_echo.obj console/cmd_getruntime.obj console/cmd_sysinfo.obj console/cmd_pwd.obj console/cmd_cd.obj
-
+		
+OBJS_GL = gui/TinyGL/api.obj gui/TinyGL/list.obj gui/TinyGL/vertex.obj gui/TinyGL/init.obj gui/TinyGL/matrix.obj gui/TinyGL/texture.obj \
+      gui/TinyGL/misc.obj gui/TinyGL/clear.obj gui/TinyGL/light.obj gui/TinyGL/clip.obj gui/TinyGL/select.obj gui/TinyGL/get.obj gui/TinyGL/error.obj \
+      gui/TinyGL/zbuffer.obj gui/TinyGL/zline.obj gui/TinyGL/zdither.obj gui/TinyGL/ztriangle.obj \
+      gui/TinyGL/zmath.obj gui/TinyGL/image_util.obj gui/TinyGL/oscontext.obj gui/TinyGL/msghandling.obj \
+      gui/TinyGL/arrays.obj gui/TinyGL/specbuf.obj gui/TinyGL/memory.obj gui/TinyGL/glx.obj
+	  
 TOOLPATH = ../../z_tools/
 INCPATH  = ../../z_tools/kalinote/
 
