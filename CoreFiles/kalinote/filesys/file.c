@@ -132,7 +132,6 @@ struct FILEINFO *dir_check(char *dir, int *fat) {
 	/* 通过绝对路径读取目录信息 */
 	struct FILEINFO *finfo = (struct FILEINFO *) (ADR_DISKIMG + 0x002600);		/* 根目录信息 */
 	char dirname_buf[8] = {0};
-	char subdirinfo_buf[512];
 	int i,j=0;
 	
 	if(strcmp(dir, "/") == 0||strcmp(dir, "/.") == 0){
@@ -153,8 +152,13 @@ struct FILEINFO *dir_check(char *dir, int *fat) {
 				/* 没有找到 */
 				return 0;
 			} else {
+				/* 
+				// 过期代码
 				file_loadfile(finfo->clustno, 512, subdirinfo_buf, fat, (char *) (ADR_DISKIMG + 0x003e00));
 				finfo = (struct FILEINFO *)subdirinfo_buf;
+				*/
+				finfo = (struct FILEINFO *)((finfo->clustno)*512 + ADR_DISKIMG + 0x003e00);
+				debug_print("%d",finfo);
 			}
 			if(dir[i]=='/'&&dir[i+1]==0){
 				/*
