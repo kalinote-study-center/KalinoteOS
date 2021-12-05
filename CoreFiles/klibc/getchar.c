@@ -1,5 +1,5 @@
 /* C语言标准函数库 getchar */
-#include "../apilib.h"
+#include <apilib.h>
 #include <stdio.h>
 
 int getchar(){

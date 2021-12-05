@@ -1,6 +1,6 @@
 /* C语言标准函数 stdlib.h malloc */
 #include <stdlib.h>
-#include "../apilib.h"
+#include <apilib.h>
 
 void *malloc(unsigned int nbytes){
 	int *p = api_malloc(nbytes + 16);

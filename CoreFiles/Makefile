@@ -73,9 +73,8 @@ install :
 	$(IMGTOL) w a: kalinote.img
 
 full :
-	$(MAKE) -C golibc
+	$(MAKE) -C klibc
 	$(MAKE) -C kalinote
-	$(MAKE) -C apilib
 	$(MAKE) -C hello4
 	$(MAKE) -C winhelo
 	$(MAKE) -C star
@@ -136,9 +135,8 @@ src_only :
 	-$(DEL) kalinote.img
 
 clean_full :
-	$(MAKE) -C golibc		clean
+	$(MAKE) -C klibc		clean
 	$(MAKE) -C kalinote		clean
-	$(MAKE) -C apilib		clean
 	$(MAKE) -C hello4		clean
 	$(MAKE) -C winhelo		clean
 	$(MAKE) -C star			clean
@@ -166,9 +164,8 @@ clean_full :
 	$(MAKE) -C aobench		clean
 
 src_only_full :
-	$(MAKE) -C golibc		clean
+	$(MAKE) -C klibc		src_only
 	$(MAKE) -C kalinote		src_only
-	$(MAKE) -C apilib		src_only
 	$(MAKE) -C hello4		src_only
 	$(MAKE) -C winhelo		src_only
 	$(MAKE) -C star			src_only

@@ -7,45 +7,30 @@ OBJS_API =	api001.obj api002.obj api003.obj api004.obj api005.obj api006.obj \
 			api038.obj api039.obj \
 			alloca.obj
 
-TOOLPATH = ../../z_tools/
-INCPATH  = ../../z_tools/kalinote/
+TOOLPATH = ../../../z_tools/
+INCPATH  = ../include/
 
 MAKE     = $(TOOLPATH)make.exe -r
 NASK     = $(TOOLPATH)nask.exe
-CC1      = $(TOOLPATH)cc1.exe -I$(INCPATH) -Os -Wall -quiet
-GAS2NASK = $(TOOLPATH)gas2nask.exe -a
-OBJ2BIM  = $(TOOLPATH)obj2bim.exe
-MAKEFONT = $(TOOLPATH)makefont.exe
-BIN2OBJ  = $(TOOLPATH)bin2obj.exe
-BIM2HRB  = $(TOOLPATH)bim2hrb.exe
-RULEFILE = ../kalinote.rul
-EDIMG    = $(TOOLPATH)edimg.exe
-IMGTOL   = $(TOOLPATH)imgtol.com
 GOLIB    = $(TOOLPATH)golib00.exe 
-COPY     = copy
 DEL      = del
-
-# ‡“??çÏ
 
 default :
 	$(MAKE) apilib.lib
-
-# ï∂åèê∂ê¨??
+	$(MAKE) -C entrypoint
 
 apilib.lib : Makefile $(OBJS_API)
 	$(GOLIB) $(OBJS_API) out:apilib.lib
 
-# àÍî ??
-
 %.obj : %.nas Makefile
 	$(NASK) $*.nas $*.obj $*.lst
-
-# ñΩóﬂ
 
 clean :
 	-$(DEL) *.lst
 	-$(DEL) *.obj
+	$(MAKE) -C entrypoint		clean
 
 src_only :
 	$(MAKE) clean
 	-$(DEL) apilib.lib
+	$(MAKE) -C entrypoint		src_only

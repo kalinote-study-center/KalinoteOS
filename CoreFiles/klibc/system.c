@@ -1,7 +1,7 @@
 /* C语言标准函数 stdlib.h system */
 #include <stdlib.h>
 #include <string.h>
-#include "../apilib.h"
+#include <apilib.h>
 
 int system(const char *command) {
 	/* 注意：该函数可用性未知 */

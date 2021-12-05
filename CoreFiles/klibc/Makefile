@@ -1,4 +1,4 @@
-TARGET     = golibc
+TARGET     = klibc
 STACKSIZE  =
 MALLOCSIZE =
 MMAREA     =
@@ -16,11 +16,9 @@ OBJS       = abs.obj atof.obj atoi.obj errno.obj frexp.obj ldexp.obj \
 
 # 有空把makefile整理以下，不然标准函数太多太乱
 
-KALIPATH	= ..\\..\\z_tools\\kalinote\\
 APILIBPATH	= ../apilib/
- 
-TOOLPATH =
-INCPATH  = .
+
+INCPATH  = ./include
 RULEFILE =
 MAKE     = $(TOOLPATH)make -r
 SJISCONV = $(TOOLPATH)sjisconv -s
@@ -39,8 +37,7 @@ DELE     = del
 
 ALL :
 	$(MAKE) $(TARGET).lib
-	$(COPY)	$(TARGET).lib $(KALIPATH)$(TARGET).lib
-	$(COPY) *.h $(KALIPATH)
+	$(MAKE) -C syscall
 
 %.ca : %.c Makefile
 	$(SJISCONV) $*.c $*.ca
@@ -82,4 +79,9 @@ clean :
 	-$(DELE) $(TARGET).bim
 	-$(DELE) $(TARGET).map
 	-$(DELE) $(TARGET).org
+	$(MAKE) -C syscall		clean
+	
+src_only: clean Makefile
 	-$(DELE) $(TARGET).lib
+	$(MAKE) -C syscall		src_only
+	

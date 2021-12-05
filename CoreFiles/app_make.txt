@@ -1,7 +1,6 @@
 TOOLPATH = ../../z_tools/
-INCPATH  = ../../z_tools/kalinote/
-APILIBPATH   = ../apilib/
-HARIBOTEPATH = ../kalinote/
+INCPATH  = ../klibc/include/
+APILIBPATH   = ../klibc/syscall/
 
 MAKE     = $(TOOLPATH)make.exe -r
 NASK     = $(TOOLPATH)nask.exe
@@ -44,7 +43,7 @@ kalinote.img : ../kalinote/ipl40.bin ../kalinote/kalinote.sys $(APP).kal \
 
 # “ª∞„πÊ‘Ú
 
-%.gas : %.c ../apilib.h Makefile ../app_make.txt
+%.gas : %.c $(INCPATH)apilib.h Makefile ../app_make.txt
 	$(CC1) -o $*.gas $*.c
 
 %.nas : %.gas Makefile ../app_make.txt

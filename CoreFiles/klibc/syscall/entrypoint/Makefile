@@ -3,8 +3,8 @@
 TARGET   = entrypoint.lib
 OBJS     = startup.obj
 
-TOOLPATH = ../z_tools/
-INCPATH  = ../z_tools/haribote/
+TOOLPATH = ../../../../z_tools/
+INCPATH  = ../../include/
 
 SJISCONV = $(TOOLPATH)sjisconv.exe -s
 CC1      = $(TOOLPATH)cc1.exe -I$(INCPATH) -Os -Wall -quiet

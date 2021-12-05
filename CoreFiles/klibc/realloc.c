@@ -1,6 +1,6 @@
 /* C语言标准函数库 stdlib.h realloc */
 #include <stdlib.h>
-#include "../apilib.h"
+#include <apilib.h>
 
 /* 重新分配一段内存，暂时不做调整，只做重新申请 */
 

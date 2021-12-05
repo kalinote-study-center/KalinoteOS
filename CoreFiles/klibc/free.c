@@ -1,6 +1,6 @@
 /* C语言标准函数 释放内存 */
 #include <stdlib.h>
-#include "../apilib.h"
+#include <apilib.h>
 
 void free(void *ap){
 	char *q = ap;

@@ -1,5 +1,5 @@
 /* C语言标准函数库 gets */
-#include "../apilib.h"
+#include <apilib.h>
 #include <stdio.h>
 
 char *gets(char *str){

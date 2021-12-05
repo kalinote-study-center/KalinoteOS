@@ -1,5 +1,5 @@
 /* C语言标准函数库 scanf */
-#include "../apilib.h"
+#include <apilib.h>
 #include <stdio.h>
 #include <stdarg.h>
 #include <stdlib.h>

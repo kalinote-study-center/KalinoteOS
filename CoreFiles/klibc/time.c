@@ -1,6 +1,6 @@
 /* C语言标准函数库 stdlib.h time */
 #include <time.h>
-#include <../apilib.h>
+#include <apilib.h>
 
 time_t time(time_t *seconds) {
 	/* 注意：该函数证实可用 */

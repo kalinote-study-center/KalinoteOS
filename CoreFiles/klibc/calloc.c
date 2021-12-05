@@ -1,6 +1,6 @@
 /* C语言标准函数库 stdlib.h calloc */
 #include <stdlib.h>
-#include "../apilib.h"
+#include <apilib.h>
 
 /* 分配一段内存，并将内容置0 */
 

@@ -203,8 +203,7 @@ void task_switch(void){
 	return;
 }
 
-void task_sleep(struct TASK *task)
-{
+void task_sleep(struct TASK *task) {
 	struct TASK *now_task;
 	if (task->flags == 2) {
 		/* 如果处于活动状态 */
