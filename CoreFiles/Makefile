@@ -1,5 +1,4 @@
 TOOLPATH = ../z_tools/
-INCPATH  = ../z_tools/kalinote/
 
 MAKE     = $(TOOLPATH)make.exe -r
 EDIMG    = $(TOOLPATH)edimg.exe

@@ -15,7 +15,7 @@ OBJS_GL = gui/TinyGL/api.obj gui/TinyGL/list.obj gui/TinyGL/vertex.obj gui/TinyG
       gui/TinyGL/arrays.obj gui/TinyGL/specbuf.obj gui/TinyGL/memory.obj gui/TinyGL/glx.obj
 	  
 TOOLPATH = ../../z_tools/
-INCPATH  = ../../z_tools/kalinote/
+INCPATH  = ./libc/include/
 
 MAKE     = $(TOOLPATH)make.exe -r
 NASK     = $(TOOLPATH)nask.exe
@@ -36,6 +36,7 @@ DEL      = del
 # Ä¬ÈÏ¶¯×÷
 
 default :
+	$(MAKE) -C libc
 	$(MAKE) ipl40.bin
 	$(MAKE) kalinote.sys
 
@@ -86,6 +87,7 @@ clean :
 	$(MAKE) -C filesys		clean
 	$(MAKE) -C gui			clean
 	$(MAKE) -C console		clean
+	$(MAKE) -C libc			clean
 	-$(DEL) asmhead.bin
 	-$(DEL) fonts.bin
 	-$(DEL) *.lst
@@ -97,5 +99,6 @@ clean :
 
 src_only :
 	$(MAKE) clean
+	$(MAKE) -C libc		src_only
 	-$(DEL) ipl40.bin
 	-$(DEL) kalinote.sys

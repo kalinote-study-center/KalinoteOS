@@ -3,7 +3,7 @@ format:
 	data(align:4, logic:stack_end, file:code_end);
 
 file:
-	./libc/libc.lib;
+	../klibc/klibc.lib;
 	../klibc/syscall/entrypoint/entrypoint.lib;
 
 label:
