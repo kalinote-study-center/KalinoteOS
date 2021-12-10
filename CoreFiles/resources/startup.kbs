@@ -1,1 +1,2 @@
+echo hello from startup.kbs
 sysinfo

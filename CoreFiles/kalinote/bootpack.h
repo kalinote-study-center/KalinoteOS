@@ -503,7 +503,7 @@ int *inthandler00(int *esp);																		// 00号中断，用于处理除零异常
 int *inthandler0c(int *esp);																		// 0c号中断，用于处理栈异常
 int *inthandler0d(int *esp);																		// 0d号中断，用于处理一般异常
 
-/* file.c(文件处理) */
+/* file.c(文件处理，文件系统) */
 #define FILE_NOINFO			0x00						// 没有文件信息
 #define FILE_DELETED		0xe5						// 已经被删除的
 #define FILE_READONLY		0xfe						// 只读文件
@@ -516,6 +516,21 @@ struct FILEINFO {
 	char reserve[10];									// 保留位
 	unsigned short time, date, clustno;					// 磁盘映像中的地址 = clustno * 512 +0x003e00
 	unsigned int size;
+};
+struct buf_head {
+	/* 缓冲区头数据结构 */
+	char *data;								/* 指针，指向数据块(1024字节) */
+	unsigned long blocknum;					/* 块号 */
+	unsigned short dev;						/* 设备号 */
+	unsigned char uptodate;					/* 数据是否更新 */
+	unsigned char dirt;						/* 0-clean,1-dirty(数据修改标志) */
+	unsigned char count;					/* 使用的用户数 */
+	unsigned char lock;						/* 0 - ok, 1 -locked(缓冲区是否被锁定) */
+	struct TASK *wait;						/* 指向等待缓冲区解锁的任务 */
+	struct buf_head *prev;                  /* 上一个块 */
+	struct buf_head *next;                  /* 下一个块 */
+	struct buf_head *prev_free;             /* 上一个空闲块 */
+	struct buf_head *next_free;             /* 下一个空闲块 */
 };
 struct FILEINFO *file_search(char *name, struct FILEINFO *finfo, int max);							// 搜索文件
 void file_readfat(int *fat, unsigned char *img);													// 解码FAT
@@ -767,6 +782,114 @@ int acpi_reset(void);													/* 通过ACPI的I/O总线实现重启 */
 #define CPUID_VENDOR_PARALLELS   		" lrpepyh vr"
 void cpu_init(void);													/* 初始化CPU相关信息 */
 int cpu_64_check(void);													/* 检测CPU是否支持64位 */
+
+/* blk.h(块设备参数) */
+#define NR_BLK_DEV	7							// 块设备数量
+#define NR_REQUEST	32							// 请求队列包含项数
+#define BLKREQ_READ		0						// 读命令
+#define BLKREQ_WRITE	1						// 写命令
+struct blk_request {
+	int dev;									// 设备号
+	int cmd;									// 命令号
+	int errors;									// 错误计数
+	unsigned long sector;						// 起始扇区(1块 = 2扇区)
+	char *buf;									// 数据缓冲区
+	struct TASK *waiting;						// 等待操作执行完成的任务
+	struct buf_head *bh;						// 缓冲区头指针
+	struct blk_request *next;					// 指向下一个request
+};
+#define IN_ORDER(s1,s2) \
+((s1)->cmd<(s2)->cmd || ((s1)->cmd==(s2)->cmd && \
+((s1)->dev < (s2)->dev || ((s1)->dev == (s2)->dev && \
+(s1)->sector < (s2)->sector))))					// *电梯调度算法
+struct blk_dev_struct {
+	/* 块设备结构 */
+	void (*request_fn)(void);					// 请求操作的函数指针
+	struct blk_request *current_request;		// 请求信息结构
+};
+extern struct blk_dev_struct blk_dev[NR_BLK_DEV];		// 块设备数组，每种块设备占一项
+extern struct request request[NR_REQUEST];				// 请求队列数组
+extern struct TASK *wait_for_request;					// 等待请求的任务结构
+#ifdef MAJOR_NR								// 主设备号
+	/* 目前支持hd和fd还有ramdisk，在有需要时添加 */
+	#if (MAJOR_NR == 1)
+		/* ramdisk，主设备驱动号为1 */
+		#define DEVICE_NAME "ramdisk"
+		#define DEVICE_REQUEST do_rd_request
+		#define DEVICE_NR(device) ((device) & 7)
+		#define DEVICE_ON(device) 
+		#define DEVICE_OFF(device)
+	#elif (MAJOR_NR == 2)
+		/* 软盘，主设备驱动号为2 */
+		#define DEVICE_NAME "floppy"
+		#define DEVICE_INTR do_floppy
+		#define DEVICE_REQUEST do_fd_request
+		#define DEVICE_NR(device) ((device) & 3)
+		#define DEVICE_ON(device) floppy_on(DEVICE_NR(device))
+		#define DEVICE_OFF(device) floppy_off(DEVICE_NR(device))
+	#elif (MAJOR_NR == 3)
+		/* 硬盘，主设备驱动号为3 */
+		#define DEVICE_NAME "harddisk"
+		#define DEVICE_INTR do_hd
+		#define DEVICE_REQUEST do_hd_request
+		#define DEVICE_NR(device) (MINOR(device)/5)
+		#define DEVICE_ON(device)
+		#define DEVICE_OFF(device)
+	#elif
+		/* 未知的块设备 */
+		#error "unknown blk device"
+	#endif
+	
+	#define CURRENT (blk_dev[MAJOR_NR].current_request)
+	#define CURRENT_DEV DEVICE_NR(CURRENT->dev)
+	
+	#ifdef DEVICE_INTR
+		void (*DEVICE_INTR)(void) = NULL;
+	#endif
+	
+	void (DEVICE_REQUEST)(void);		// 释放锁定的缓冲区
+	void unlock_buffer(struct buf_head *bh) {
+		if (!bh->lock)						// 如果释放的缓冲区没有上锁，则进行警告
+			debug_print("BLK>WARNING: " DEVICE_NAME ": free buffer being unlocked\n");
+		bh->lock=0;							// 将缓冲区解锁
+		task_run(bh->wait, -1, 0);			// 等待唤醒缓冲区的task，且不改变等级和优先级
+	}
+	
+	void end_request(int uptodate) {
+		/* 结束请求 */
+		DEVICE_OFF(CURRENT->dev);					// 关闭设备
+		if (CURRENT->bh) {
+			/* CURRENT为指定主设备号当前request结构 */
+			CURRENT->bh->uptodate = uptodate;		// 置更新标志
+			unlock_buffer(CURRENT->bh);				// 解锁缓冲区
+		}
+		if (!uptodate) {
+			/* 如果更新标志为0则显示设备错误信息 */
+			debug_print(DEVICE_NAME " I/O error\n\r");
+			debug_print("dev %04x, block %d\n\r",CURRENT->dev,
+				CURRENT->bh->blocknum);
+		}
+		task_run(CURRENT->waiting, -1, 0);			// 唤醒等待该请求项的task
+		task_run(wait_for_request, -1, 0);			// 唤醒等待请求的task
+		CURRENT->dev = -1;							// 释放请求项
+		CURRENT = CURRENT->next;					// 从请求链表中删除请求项
+	}
+	
+	#define INIT_REQUEST \
+	repeat: \
+		if (!CURRENT) \
+			return; \
+		if (MAJOR(CURRENT->dev) != MAJOR_NR) \
+			panic(DEVICE_NAME ": request list destroyed"); \
+		if (CURRENT->bh) { \
+			if (!CURRENT->bh->b_lock) \
+				panic(DEVICE_NAME ": block not locked"); \
+		}
+#endif
+
+/* hd.c(硬盘驱动程序) */
+#define MAX_ERRORS		7		// (读写硬盘时)允许出现最多错误次数
+#define MAX_HD			2		// 最多硬盘数
 
 /********************************************************************
 *              下面是图形显示部分(从X11,TinyGL,etc.移植)            *

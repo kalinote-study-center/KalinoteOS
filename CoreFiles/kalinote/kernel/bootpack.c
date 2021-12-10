@@ -62,6 +62,7 @@ void KaliMain(void){
 	sysinfo.sysmode = 0;
 	sysinfo.sysmmainver = 1.001;
 	sysinfo.sysver = 400;
+	sysinfo.ide_hd_num = 0;
 	sysinfo.year = get_year();
 	sysinfo.month = get_mon_hex();
 	sysinfo.day = get_day_of_month();
