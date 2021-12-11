@@ -37,4 +37,15 @@ unsigned int get_year() {
 	return (BCD_HEX(read_cmos(CMOS_CUR_CEN))*100)+BCD_HEX(read_cmos(CMOS_CUR_YEAR))-30 + 2010;
 }
 
-
+unsigned char cmos_hd_info() {
+	unsigned char cmos_disks, nr_hd;
+	
+	if ((cmos_disks = read_cmos(CMOS_DEV_TYPE)) & 0xf0)
+		if (cmos_disks & 0x0f)
+			nr_hd = 2;
+		else
+			nr_hd = 1;
+	else
+		nr_hd = 0;
+	return nr_hd;
+}

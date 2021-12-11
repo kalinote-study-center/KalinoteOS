@@ -81,8 +81,8 @@ void KaliMain(void){
 	init_pit();														// 初始化定时器
 	init_keyboard(&fifo, 256);										// 初始化键盘FIFO缓冲区
 	enable_mouse(&fifo, 512, &mdec);								// 初始化鼠标FIFO缓冲区
-	io_out8(PIC0_IMR, 0xb8); 										// 允许PIT、PIC1和PS/2键盘(11111000)
-	io_out8(PIC1_IMR, 0xef); 										// 允许PS/2鼠标(11101111)
+	io_out8(PIC0_IMR, 0xb8); 										// 允许PIT、PIC1和PS/2键盘(10111000)
+	io_out8(PIC1_IMR, 0xcf); 										// 允许PS/2鼠标,FPU异常(11001111)
 	init_acpi();													// 初始化ACPI
 	cpu_init();														// 初始化CPU相关信息
 	

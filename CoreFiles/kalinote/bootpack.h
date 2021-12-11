@@ -582,6 +582,7 @@ unsigned int get_day_of_month();					// 取当前日期
 unsigned int get_day_of_week();						// 取当前星期
 unsigned int get_mon_hex();							// 取当前月份
 unsigned int get_year();							// 取当前年份
+unsigned char cmos_hd_info();						// 获取硬盘信息
 
 /* list.c(双链表结构) */
 struct list_elem {
@@ -890,6 +891,33 @@ extern struct TASK *wait_for_request;					// 等待请求的任务结构
 /* hd.c(硬盘驱动程序) */
 #define MAX_ERRORS		7		// (读写硬盘时)允许出现最多错误次数
 #define MAX_HD			2		// 最多硬盘数
+struct hd_info_struct {
+	/* 该结构体定义了硬盘参数及类型 */
+	/* 从左往右分别是：磁头数、每磁道扇区数、柱面数、写前预补偿柱面号、磁头着陆区柱面号、控制字节 */
+	int head,sect,cyl,wpcom,lzone,ctl;
+};
+struct partition {
+	/* 硬盘分区表结构(?) From linux 0.11 */
+	unsigned char boot_ind;		/* 0x80 - active (unused) */
+	unsigned char head;		/* ? */
+	unsigned char sector;		/* ? */
+	unsigned char cyl;		/* ? */
+	unsigned char sys_ind;		/* ? */
+	unsigned char end_head;		/* ? */
+	unsigned char end_sector;	/* ? */
+	unsigned char end_cyl;		/* ? */
+	unsigned int start_sect;	/* starting sector counting from 0 */
+	unsigned int nr_sects;		/* nr of sectors in partition */
+};
+
+/* FDC软盘控制器 */
+struct FDC {
+	char mode, mot;
+	char cyl, head, sect;
+	char sects;
+	char st0;
+};
+void inthandler26(int *esp);						// 软盘控制器中断程序
 
 /********************************************************************
 *              下面是图形显示部分(从X11,TinyGL,etc.移植)            *
