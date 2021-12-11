@@ -79,6 +79,7 @@ void asm_inthandler0c(void);							// 0cºÅÖĞ¶Ï£¬ÓÃÓÚ´¦ÀíÕ»Òì³£
 void asm_inthandler0d(void);							// 0dºÅÖĞ¶Ï£¬ÓÃÓÚ´¦ÀíÒì³£³ÌĞò
 void asm_inthandler20(void);							// 20ºÅÖĞ¶Ï£¬ÓÃÓÚtimer
 void asm_inthandler21(void);							// 21ºÅÖĞ¶Ï£¬×¢²áÔÚ0x21
+void asm_inthandler26(void);							// 26ºÅÖĞ¶Ï£¬ÓÃÓÚFDC
 void asm_inthandler27(void);							// 27ºÅÖĞ¶Ï£¬×¢²áÔÚ0x27
 void asm_inthandler2c(void);							// 2cºÅÖĞ¶Ï£¬×¢²áÔÚ0x2c
 void asm_inthandler2e(void);							// IDEÓ²ÅÌÖĞ¶Ï
@@ -483,6 +484,7 @@ void cmd_getruntime(struct CONSOLE *cons);															// CMD£º²éÑ¯ÏµÍ³Æô¶¯ÔËĞ
 void cmd_sysinfo(struct CONSOLE *cons, unsigned int memtotal);										// CMD£ºÊä³öÏµÍ³Ïà¹ØĞÅÏ¢
 void cmd_pwd(struct CONSOLE *cons);																	// CMD£º²é¿´µ±Ç°ÃüÁîĞĞÂ·¾¶
 void cmd_cd(struct CONSOLE *cons, char *parameter, int *fat);										// CMD£ºÇĞ»»ÃüÁîĞĞÄ¿Â¼
+void cmd_testfunc(struct CONSOLE *cons);															// ¹¦ÄÜ²âÊÔ×¨ÓÃ
 int cmd_app(struct CONSOLE *cons, int *fat, char *cmdline);											// Íâ²¿Ó¦ÓÃ³ÌĞò
 struct SHEET *open_console(struct SHTCTL *shtctl, unsigned int memtotal, int debug);				// ¿ªÆôÒ»¸öÃüÁî´°¿Ú
 struct TASK *open_constask(struct SHEET *sht, unsigned int memtotal);								// ¿ªÆôÒ»¸öÈÎÎñ
@@ -917,6 +919,18 @@ struct FDC {
 	char sects;
 	char st0;
 };
+void fdcstruct_init(void);							// ³õÊ¼»¯FDC½á¹¹Ìå
+void fdc_init(void);								// ³õÊ¼»¯FDC
+void fdc_initwait(int wait);						// ³õÊ¼»¯¹ı³ÌÖĞµÄµÈ´ı³ÌĞò
+void fdc_sendcmd(int data);							// ÏòFDC·¢ËÍÖ¸Áî
+void fdc_setdma(void);								// ÉèÖÃDMA
+void fdc_sethead(void);								// ÉèÖÃhead
+void fdc_setcmd(void);								// ÉèÖÃÃüÁîÄ£Ê½
+char fdc_getrstatsub(void);							// »ñÈ¡¼Ä´æÆ÷×´Ì¬×Ó³ÌĞò
+void fdc_getint(void);								// »ñÈ¡ÖĞ¶Ï×´Ì¬
+void fdc_getrstat(void);							// »ñÈ¡¼Ä´æÆ÷×´Ì¬
+int fdc_rdwri(void);								// ¿ØÖÆ¶ÁĞ´
+void fdc_task(void);								// FDCÇı¶¯ÈÎÎñ³ÌĞò
 void inthandler26(int *esp);						// ÈíÅÌ¿ØÖÆÆ÷ÖĞ¶Ï³ÌĞò
 
 /********************************************************************

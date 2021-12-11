@@ -1,13 +1,13 @@
-/* ÈíÅÌÇı¶¯ */
+/* è½¯ç›˜é©±åŠ¨ */
 #include "../bootpack.h"
 
-struct FIFO32 *ffifo;		/* FDC taskµÄFIFO */
-struct FIFO32 fififo;		/* ÓÃÓÚÓë FDC ½øĞĞµ÷½âµÄ FIFO */
+struct FIFO32 *ffifo;		/* FDC taskçš„FIFO */
+struct FIFO32 fififo;		/* ç”¨äºä¸ FDC è¿›è¡Œè°ƒè§£çš„ FIFO */
 int ffbuf[32], fibuf[32];
 struct FDC fdc;
 
 void fdcstruct_init(void) {
-	/* FDC½á¹¹Ìå³õÊ¼»¯ */
+	/* FDCç»“æ„ä½“åˆå§‹åŒ– */
 	fdc.mode = 0;
 	fdc.cyl = 0;
 	fdc.head = 0;
@@ -20,10 +20,10 @@ void fdcstruct_init(void) {
 void fdc_init(void) {
 	fdcstruct_init();
 	
-	/* DMA³õÊ¼»¯ */
-	io_out8(0x00d6, 0xc0);	/* ½«Ö÷ch0ÖÃÓÚ¼¶ÁªÄ£Ê½ */
-	io_out8(0x00c0, 0x00);	/* ÔÊĞí´ÓÉè±¸ DMA */
-	io_out8(0x000a, 0x06);	/* ÆÁ±ÎmasterµÄch2µÄDMA */
+	/* DMAåˆå§‹åŒ– */
+	io_out8(0x00d6, 0xc0);	/* å°†ä¸»ch0ç½®äºçº§è”æ¨¡å¼ */
+	io_out8(0x00c0, 0x00);	/* å…è®¸ä»è®¾å¤‡ DMA */
+	io_out8(0x000a, 0x06);	/* å±è”½masterçš„ch2çš„DMA */
 	return;
 }
 
@@ -49,53 +49,53 @@ void fdc_setdma(void) {
 	int addr = ADR_DISKIMG + (fdc.cyl * 36 + fdc.head * 18 + fdc.sect - 1) * 512;
 
 	if(fdc.mode == 1) {
-		io_out8(0x000b, 0x06);	/* ÇëÇó£¬µØÖ·Ôö¼Ó·½Ïò£¬Ğ´ÈëÄÚ´æ£¬ch2 */
+		io_out8(0x000b, 0x06);	/* è¯·æ±‚ï¼Œåœ°å€å¢åŠ æ–¹å‘ï¼Œå†™å…¥å†…å­˜ï¼Œch2 */
 	} else if(fdc.mode == 2) {
-		io_out8(0x000b, 0x0a);	/* ÇëÇó£¬µØÖ·Ôö¼Ó·½Ïò£¬¶ÁÈ¡ÄÚ´æ£¬ch2 */
+		io_out8(0x000b, 0x0a);	/* è¯·æ±‚ï¼Œåœ°å€å¢åŠ æ–¹å‘ï¼Œè¯»å–å†…å­˜ï¼Œch2 */
 	}
 
-	io_out8(0x0005, 0xff);	/* ×Ö½ÚÉèÖÃ */
+	io_out8(0x0005, 0xff);	/* å­—èŠ‚è®¾ç½® */
 	io_out8(0x0005, fdc.sects * 2 - 1);
 
-	io_out8(0x0004, addr & 0xff);	/* ÄÚ´æµØÖ·ÉèÖÃ */
+	io_out8(0x0004, addr & 0xff);	/* å†…å­˜åœ°å€è®¾ç½® */
 	io_out8(0x0004, (addr >> 8) & 0xff);
 	io_out8(0x0081, (addr >> 16) & 0xff);
 
-	io_out8(0x000a, 0x02);	/* È¡ÏûmasterµÄch2ÑÚÂë */
+	io_out8(0x000a, 0x02);	/* å–æ¶ˆmasterçš„ch2æ©ç  */
 	return;
 }
 
 void fdc_sethead(void) {
 	fdc_initwait(0x11);
-	fdc_sendcmd(0x0f);			/* Ñ°ÕÒ */
+	fdc_sendcmd(0x0f);			/* å¯»æ‰¾ */
 	fdc_sendcmd(fdc.head << 2);	/* head */
-	fdc_sendcmd(fdc.cyl);		/* Öù */
+	fdc_sendcmd(fdc.cyl);		/* æŸ± */
 	return;
 }
 
 void fdc_setcmd(void) {
 	fdc_initwait(0x11);
 
-	if(fdc.mode == 1) {	/* Ä£Ê½ */
-		fdc_sendcmd(0xe6);	/* ¶ÁÈ¡ */
+	if(fdc.mode == 1) {	/* æ¨¡å¼ */
+		fdc_sendcmd(0xe6);	/* è¯»å– */
 	} else if(fdc.mode == 2) {
-		fdc_sendcmd(0xc5);	/* Ğ´Èë */
+		fdc_sendcmd(0xc5);	/* å†™å…¥ */
 	}
 
-	fdc_sendcmd(fdc.head << 2);	/* Ö¸¶¨FDµØÖ· */
+	fdc_sendcmd(fdc.head << 2);	/* æŒ‡å®šFDåœ°å€ */
 	fdc_sendcmd(fdc.cyl);
 	fdc_sendcmd(fdc.head);
 	fdc_sendcmd(fdc.sect);
 
-	fdc_sendcmd(0x02);	/* ÉÈÇø³¤¶È£º512B */
+	fdc_sendcmd(0x02);	/* æ‰‡åŒºé•¿åº¦ï¼š512B */
 	if(fdc.mode == 1) {
-		fdc_sendcmd(0x12);	/* ¹ìµÀÊı£º18 */
+		fdc_sendcmd(0x12);	/* è½¨é“æ•°ï¼š18 */
 		fdc_sendcmd(0x01);	/* GAP3 */
 	} else if(fdc.mode == 2) {
 		fdc_sendcmd(0x7f);	/* ? */
 		fdc_sendcmd(0x12);	/* ? */
 	}
-	fdc_sendcmd(0xff);	/* Õë¶ÔÕû¸ö¹ìµÀÉÈÇø´óĞ¡ */
+	fdc_sendcmd(0xff);	/* é’ˆå¯¹æ•´ä¸ªè½¨é“æ‰‡åŒºå¤§å° */
 	return;
 }
 
@@ -113,9 +113,9 @@ char fdc_getrstatsub(void) {
 
 void fdc_getint(void) {
 	fdc_initwait(0x10);
-	fdc_sendcmd(0x08);	/* »ñÈ¡ÖĞ¶Ï×´Ì¬ */
+	fdc_sendcmd(0x08);	/* è·å–ä¸­æ–­çŠ¶æ€ */
 	fdc.st0 = fdc_getrstatsub();
-	fdc_getrstatsub();	/* ÖùÄ©Î²£º¶ªÆú */
+	fdc_getrstatsub();	/* æŸ±æœ«å°¾ï¼šä¸¢å¼ƒ */
 	return;
 }
 
@@ -123,10 +123,10 @@ void fdc_getrstat(void) {
 	fdc.st0 = fdc_getrstatsub();
 	fdc_getrstatsub();	/* st1 */
 	fdc_getrstatsub();	/* st2 */
-	fdc_getrstatsub();	/* ÖùÄ©Î²£º¶ªÆú */
-	fdc_getrstatsub();	/* headÄ©Î²£º¶ªÆú */
-	fdc_getrstatsub();	/* ÉÈÇøÄ©Î²£º¶ªÆú */
-	fdc_getrstatsub();	/* ÉÈÇø´óĞ¡£º¶ªÆú */
+	fdc_getrstatsub();	/* æŸ±æœ«å°¾ï¼šä¸¢å¼ƒ */
+	fdc_getrstatsub();	/* headæœ«å°¾ï¼šä¸¢å¼ƒ */
+	fdc_getrstatsub();	/* æ‰‡åŒºæœ«å°¾ï¼šä¸¢å¼ƒ */
+	fdc_getrstatsub();	/* æ‰‡åŒºå¤§å°ï¼šä¸¢å¼ƒ */
 	return;
 }
 
@@ -138,8 +138,8 @@ int fdc_rdwri(void) {
 	fdc_setdma();
 	if(fdc.mot == 1) {
 		fdc_sethead();
-	} else {	/* µÈ´ıµç»úÆô¶¯¼°×ªËÙÎÈ¶¨ */
-		io_out8(0x03f2, 0x1c);	/* µç»úÆô¶¯  */
+	} else {	/* ç­‰å¾…ç”µæœºå¯åŠ¨åŠè½¬é€Ÿç¨³å®š */
+		io_out8(0x03f2, 0x1c);	/* ç”µæœºå¯åŠ¨  */
 
 		timer = timer_alloc();
 		timer_init(timer, &fififo, 1);
@@ -157,21 +157,21 @@ int fdc_rdwri(void) {
 			if(i == 1) {
 				fdc_sethead();
 			} else if(i == 6) {
-				if(ph == 0) {	/* ËÑË÷Íê³É */
+				if(ph == 0) {	/* æœç´¢å®Œæˆ */
 					fdc_getint();
-					if((fdc.st0 & 0xc0) == 0x00) {	/* Õı³£½áÊø */
+					if((fdc.st0 & 0xc0) == 0x00) {	/* æ­£å¸¸ç»“æŸ */
 						fdc_setcmd();
 						ph = 1;
-					} else {	/* Òì³£×´Ì¬ */
+					} else {	/* å¼‚å¸¸çŠ¶æ€ */
 						ret = 2;
 						goto end;
 					}
-				} else {	/* ÃüÁî½áÊø */
+				} else {	/* å‘½ä»¤ç»“æŸ */
 					fdc_getrstat();
-					if((fdc.st0 & 0xc0) == 0x00) {		/* Õı³£½áÊø */
+					if((fdc.st0 & 0xc0) == 0x00) {		/* æ­£å¸¸ç»“æŸ */
 						ret = 0;
 						goto end;
-					} else if((fdc.st0 & 0xc0) == 0x40) {	/* Òì³£½áÊø */
+					} else if((fdc.st0 & 0xc0) == 0x40) {	/* å¼‚å¸¸ç»“æŸ */
 						if(err > 5) {
 							ret = 1;
 							goto end;
@@ -179,7 +179,7 @@ int fdc_rdwri(void) {
 							err++;
 							fdc_setcmd();
 						}
-					} else {	/* Òì³£×´Ì¬ */
+					} else {	/* å¼‚å¸¸çŠ¶æ€ */
 						ret = 2;
 						goto end;
 					}
@@ -188,9 +188,9 @@ int fdc_rdwri(void) {
 		}
 	}
 
-	/* ÉèÖÃÔÚ×îºó */
+	/* è®¾ç½®åœ¨æœ€å */
 end:
-	io_out8(0x000a, 0x06);	/* master µÄÑÚÂë ch2 */
+	io_out8(0x000a, 0x06);	/* master çš„æ©ç  ch2 */
 
 	if(fdc.mot != 1) {
 		timer_free(timer);
@@ -199,27 +199,27 @@ end:
 	return ret;
 }
 
-/* ½«²Ù×÷µ÷½âµ½ FDC¡£
-  * Ê¹ÓÃcli-sti ·¢ËÍÒÔÏÂÊı¾İµ½ffifo »á·¢ËÍÌØ¶¨Êı¾İµ½Ö¸¶¨µÄ(fifo *)
-  * Òª²Ù×÷µÄÎ»ÖÃÊÇÀ´×ÔDISKIMG_ADDR µÄ´ÅÅÌÓ³ÏñµÄĞéÄâÎ»ÖÃ¡£ 
-  * ¶ÁÈ¡£º[1 << 12 | ÉÈÇøÊı] [ÉÈÇøÊı] [fifo *]
-  * Ğ´£º[2 << 12 | ÉÈÇøÊı] [ÉÈÇøÊı] [fifo *]
-  * ·µ»ØÖµ£º0£ºÕı³£ÖÕÖ¹
-  * 1£ºÒì³£ÖÕÖ¹
-  * 2: ÒÔ·Ç·¨Ö¸ÁîÖÕÖ¹
-  * ÉÈÇøÊı¿ÉÒÔÍ¨¹ı ÖùÃæ*36+´ÅÍ·*18+(sector-1) À´¼ÆËã¡£ 
+/* å°†æ“ä½œè°ƒè§£åˆ° FDCã€‚
+  * ä½¿ç”¨cli-sti å‘é€ä»¥ä¸‹æ•°æ®åˆ°ffifo ä¼šå‘é€ç‰¹å®šæ•°æ®åˆ°æŒ‡å®šçš„(fifo *)
+  * è¦æ“ä½œçš„ä½ç½®æ˜¯æ¥è‡ªDISKIMG_ADDR çš„ç£ç›˜æ˜ åƒçš„è™šæ‹Ÿä½ç½®ã€‚ 
+  * è¯»å–ï¼š[1 << 12 | æ‰‡åŒºæ•°] [æ‰‡åŒºæ•°] [fifo *]
+  * å†™ï¼š[2 << 12 | æ‰‡åŒºæ•°] [æ‰‡åŒºæ•°] [fifo *]
+  * è¿”å›å€¼ï¼š0ï¼šæ­£å¸¸ç»ˆæ­¢
+  * 1ï¼šå¼‚å¸¸ç»ˆæ­¢
+  * 2: ä»¥éæ³•æŒ‡ä»¤ç»ˆæ­¢
+  * æ‰‡åŒºæ•°å¯ä»¥é€šè¿‡ æŸ±é¢*36+ç£å¤´*18+(sector-1) æ¥è®¡ç®—ã€‚
 */ 
 
 void fdc_task(void) {
 	struct TASK *task = task_now();
 	struct FIFO32 *f;
-	struct TIMER *timer;	/* µç»ú¿ØÖÆ¶¨Ê±Æ÷ */
+	struct TIMER *timer;	/* ç”µæœºæ§åˆ¶å®šæ—¶å™¨ */
 	int ret, i, j;
 
 	fifo32_init(&fififo, 32, fibuf, task);
 
 	fdc_init();
-	io_out8(0x03f2, 0x0c);	/* Í£Ö¹µç»ú */
+	io_out8(0x03f2, 0x0c);	/* åœæ­¢ç”µæœº */
 	fdc.mot = 0;
 
 	timer = timer_alloc();
@@ -233,13 +233,13 @@ void fdc_task(void) {
 		} else {
 			i = fifo32_get(&task->fifo);
 			io_sti();
-			if(i == 1) {	/* ¿ÉÒÔÍ£Ö¹µç»ú */
+			if(i == 1) {	/* å¯ä»¥åœæ­¢ç”µæœº */
 				fdc.mot = 0;
 				io_out8(0x03f2, 0x0c);
-			} else {	/* »ñÈ¡µ½Ö¸Áî */
+			} else {	/* è·å–åˆ°æŒ‡ä»¤ */
 				timer_cancel(timer);
 
-				/* ´æ´¢ÔÚ fdc ½á¹¹ÖĞ */
+				/* å­˜å‚¨åœ¨ fdc ç»“æ„ä¸­ */
 				fdc.mode = (char) ((i >> 12) & 0x03);
 
 				j = (short) (i & 0x0fff);
@@ -253,11 +253,11 @@ void fdc_task(void) {
 				if(fdc.mode == 1 || fdc.mode == 2) {
 					ret = fdc_rdwri();
 					fifo32_put(f, ret);
-				} else {	/* ÒÔ·Ç·¨Ö¸Áî½áÊø */
+				} else {	/* ä»¥éæ³•æŒ‡ä»¤ç»“æŸ */
 					fifo32_put(f, 2);
 				}
 
-				/* ÏÂ´Î³õÊ¼»¯ */
+				/* ä¸‹æ¬¡åˆå§‹åŒ– */
 				fdcstruct_init();
 				timer_settime(timer, 300);
 			}
@@ -266,9 +266,9 @@ void fdc_task(void) {
 }
 
 void inthandler26(int *esp) {
-	/* ÈíÅÌÖĞ¶Ï³ÌĞò */
+	/* è½¯ç›˜ä¸­æ–­ç¨‹åº */
 	io_in8(0x03f4);
-	io_out8(PIC0_OCW2, 0x66);	/* Íê³É IRQ-06 µÄÍ¨Öª */
+	io_out8(PIC0_OCW2, 0x66);	/* å®Œæˆ IRQ-06 çš„é€šçŸ¥ */
 	fifo32_put(&fififo, 6);
 	return;
 }

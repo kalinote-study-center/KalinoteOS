@@ -20,6 +20,7 @@
 		GLOBAL	_asm_inthandler00
 		GLOBAL	_asm_inthandler07
 		GLOBAL	_asm_inthandler20, _asm_inthandler21
+		GLOBAL	_asm_inthandler26
 		GLOBAL	_asm_inthandler27, _asm_inthandler2c
 		GLOBAL	_asm_inthandler0c, _asm_inthandler0d
 		GLOBAL	_asm_end_app, _memtest_sub
@@ -28,6 +29,7 @@
 		EXTERN  _inthandler00
 		EXTERN	_inthandler07
 		EXTERN	_inthandler20, _inthandler21
+		EXTERN	_inthandler26
 		EXTERN	_inthandler27, _inthandler2c
 		EXTERN	_inthandler0c, _inthandler0d
 		EXTERN	_kal_api
@@ -250,7 +252,23 @@ _asm_inthandler21:
 		POP		DS
 		POP		ES
 		IRETD
-		
+
+_asm_inthandler26:
+		PUSH	ES
+		PUSH	DS
+		PUSHAD
+		MOV		EAX,ESP
+		PUSH	EAX
+		MOV		AX,SS
+		MOV		DS,AX
+		MOV		ES,AX
+		CALL	_inthandler26
+		POP		EAX
+		POPAD
+		POP		DS
+		POP		ES
+		IRETD
+
 _asm_inthandler27:
 		PUSH	ES
 		PUSH	DS
