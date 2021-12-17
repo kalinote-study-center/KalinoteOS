@@ -1,7 +1,7 @@
 ; Kalinote-ipl
 ; TAB=4
 
-CYLS	EQU		40				; 读取80个柱面
+CYLS	EQU		40				; 读取40个柱面
 
 		ORG		0x7c00			; 程序起始装载地址
 

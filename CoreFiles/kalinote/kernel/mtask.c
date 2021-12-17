@@ -144,6 +144,7 @@ struct TASK *task_alloc(void){
             task->fpu[0] = 0x037f; 				/* CW(control word) */
             task->fpu[1] = 0x0000; 				/* SW(status word)  */
             task->fpu[2] = 0xffff; 				/* TW(tag word)     */
+			task->cmdline = "0";
             for (i = 3; i < 108 / 4; i++) {
                 task->fpu[i] = 0;
             }

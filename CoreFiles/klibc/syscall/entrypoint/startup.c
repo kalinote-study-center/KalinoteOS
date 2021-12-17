@@ -1,7 +1,7 @@
 void KaliMain(void);
-//该文件由hrblib0a修改而来
-void KaliStartup(void)
-{
+
+void KaliStartup(void) {
+	/* 系统(C语言部分)真正的入口其实在这里 */
 	/* 将来在KaliMain执行之前想做什么的话，就在这里写上 */
 
 	KaliMain();

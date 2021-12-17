@@ -4,7 +4,7 @@
 #include <string.h>
 
 void cmd_sysinfo(struct CONSOLE *cons, unsigned int memtotal) {
-	struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;
+	// struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;
 	struct SYSINFO *sysinfo = (struct SYSINFO *) *((int *) SYSINFO_ADDR);
 
 	/* 打印CPU信息 */
@@ -26,13 +26,13 @@ void cmd_sysinfo(struct CONSOLE *cons, unsigned int memtotal) {
 	}
 	
 	/* 打印Disk信息 */
-	cons_printf(cons, "Disk info:\n");
-	cons_printf(cons, "Disk Number:\t%d\n", sysinfo->ide_hd_num);
+	// cons_printf(cons, "Disk info:\n");
+	// cons_printf(cons, "Disk Number:\t%d\n", sysinfo->ide_hd_num);
 
 	/* 打印内存信息 */
 	// cmd_mem(cons,memtotal);
-	cons_printf(cons, "Menory info:\n");
-	cons_printf(cons, "total    %dMB\nfree  %dKB\nsystem   %dKB\n", memtotal / (1024 * 1024), memman_total(memman) / 1024, SYS_MEMORY / 1024);
+	// cons_printf(cons, "Menory info:\n");
+	// cons_printf(cons, "total    %dMB\nfree  %dKB\nsystem   %dKB\n", memtotal / (1024 * 1024), memman_total(memman) / 1024, SYS_MEMORY / 1024);
 
 	/* 打印系统版本号 */
 	cons_printf(cons, "OS info:\n");

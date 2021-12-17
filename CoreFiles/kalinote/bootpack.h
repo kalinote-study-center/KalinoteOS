@@ -292,9 +292,9 @@ void timer_cancelall(struct FIFO32 *fifo);															// È¡ÏûËùÓĞ¶¨Ê±Æ÷
 #define MAX_DIRLENGTH	256																			// ×î´óÃüÁîĞĞÂ·¾¶³¤¶È
 /*ÏÂÃæÕâĞ©ÊÇÈÎÎñ×´Ì¬Âë£¬ÔİÊ±»¹Ã»ÓĞÓÃµ½(2021.6.3) */
 #define	TESK_UNUSED					0					/* Î´Ê¹ÓÃ */
-#define TASK_UNINTERRUPTIBLE		1					/* ¿ÉÖĞ¶ÏË¯Ãß×´Ì¬ */
+#define TASK_UNINTERRUPTIBLE		1					/* ²»¿ÉÖĞ¶ÏË¯Ãß×´Ì¬ */
 #define TASK_RUNNING				2					/* ÕıÔÚÔËĞĞ */
-#define	TASK_INTERRUPTIBLE			3					/* ²»¿ÉÖĞ¶ÏË¯Ãß×´Ì¬ */
+#define	TASK_INTERRUPTIBLE			3					/* ¿ÉÖĞ¶ÏË¯Ãß×´Ì¬ */
 #define	TASK_ZOMBIE					4					/* ½©ËÀ×´Ì¬ */
 #define	TASK_STOPPED				5					/* ÒÑÍ£Ö¹ */
 /*************************************************/
@@ -484,6 +484,7 @@ void cmd_getruntime(struct CONSOLE *cons);															// CMD£º²éÑ¯ÏµÍ³Æô¶¯ÔËĞ
 void cmd_sysinfo(struct CONSOLE *cons, unsigned int memtotal);										// CMD£ºÊä³öÏµÍ³Ïà¹ØĞÅÏ¢
 void cmd_pwd(struct CONSOLE *cons);																	// CMD£º²é¿´µ±Ç°ÃüÁîĞĞÂ·¾¶
 void cmd_cd(struct CONSOLE *cons, char *parameter, int *fat);										// CMD£ºÇĞ»»ÃüÁîĞĞÄ¿Â¼
+void cmd_ps(struct CONSOLE *cons);																	// CMD£º²é¿´ËùÓĞÈÎÎñ¼°×´Ì¬
 void cmd_testfunc(struct CONSOLE *cons);															// ¹¦ÄÜ²âÊÔ×¨ÓÃ
 int cmd_app(struct CONSOLE *cons, int *fat, char *cmdline);											// Íâ²¿Ó¦ÓÃ³ÌĞò
 struct SHEET *open_console(struct SHTCTL *shtctl, unsigned int memtotal, int debug);				// ¿ªÆôÒ»¸öÃüÁî´°¿Ú
@@ -912,14 +913,37 @@ struct partition {
 	unsigned int nr_sects;		/* nr of sectors in partition */
 };
 
-/* FDCÈíÅÌ¿ØÖÆÆ÷ */
+/* io.c(ÊäÈëÊä³ö¿ØÖÆ) */
+#define IO_READ		1	/* ÔØÈë */
+#define IO_WRITE	2	/* Ğ´Èë */
+#define IO_EXIT		3	/* ´¦ÀíÍê±Ï */
+void io_init(void);															// ³õÊ¼»¯IO
+void io_runreq(char mode, int cyl, int head, int *req, int *mem);
+int io_runreqsub(char mode, int cyl, int head, int sect, int sects);
+void io_req(char mode, int s);
+int io_stat(char mode, int s);
+
+/* fdc.c(FDCÈíÅÌ¿ØÖÆÆ÷) */
 struct FDC {
 	char mode, mot;
 	char cyl, head, sect;
 	char sects;
 	char st0;
 };
-void fdcstruct_init(void);							// ³õÊ¼»¯FDC½á¹¹Ìå
+#define DMAC0_CBAR		0x0004
+#define DMAC0_CBCR		0x0005
+#define DMAC0_SMR		0x000a
+#define DMAC0_MODE		0x000b
+#define DMAP_ADDRUP		0x0081
+#define DMAC1_CBAR		0x00c0
+#define DMAC1_MODE		0x00d6
+#define FDC_MOTOR		0x03f2
+#define FDC_STAT		0x03f4
+#define FDC_DATA		0x03f5
+void fdc_tinit(struct TASK *task);					// ³õÊ¼»¯FDCÈÎÎñ
+void fdc_dmainit(void);
+void fdc_req(char mode, char cyl, char head, char sect, char send);
+int fdc_reqstat(void);
 void fdc_init(void);								// ³õÊ¼»¯FDC
 void fdc_initwait(int wait);						// ³õÊ¼»¯¹ı³ÌÖĞµÄµÈ´ı³ÌĞò
 void fdc_sendcmd(int data);							// ÏòFDC·¢ËÍÖ¸Áî

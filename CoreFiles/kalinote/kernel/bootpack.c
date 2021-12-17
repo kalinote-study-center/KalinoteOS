@@ -18,7 +18,7 @@ void KaliMain(void){
 	struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;
 	unsigned int *buf_back, buf_mouse[256], *buf_task_bar;/*, *subbuf_back;*/
 	struct SHEET *sht_back, *sht_mouse, *sht_task_bar, *sht_debug_cons;/* , *btn_sht; */
-	struct TASK *task_a, *task;
+	struct TASK *task_a, *task, *task_fdc;
 	int key_shift = 0, key_leds = (binfo->leds >> 4) & 7, keycmd_wait = -1;
 	int j, x, y, mmx = -1, mmy = -1, mmx2 = 0, subx, suby;
 	struct SHEET *sht = 0, *subsht = 0, *point_sht = 0, *key_win, *sht2;/* , *subsht_back;	*/		/* point_sht是用来处理鼠标移动时指向的层的 */
@@ -29,6 +29,8 @@ void KaliMain(void){
 	extern char fonts[4096];
 	struct SYSINFO sysinfo;
 	int direction = 0;		/* 这个变量用来记录是否按下方向键，0为未按下，1为按下 */
+	char task_a_str[8] = "systask";
+	char task_fdc_str[8] = "fdctask";
 	// struct MENU *start_menu; /* , *desktop_menu; */
 	/* struct WINDOW *debug_window; */
 	// struct BUTTON *start_button;
@@ -81,8 +83,8 @@ void KaliMain(void){
 	init_pit();														// 初始化定时器
 	init_keyboard(&fifo, 256);										// 初始化键盘FIFO缓冲区
 	enable_mouse(&fifo, 512, &mdec);								// 初始化鼠标FIFO缓冲区
-	io_out8(PIC0_IMR, 0xb8); 										// 允许PIT、PIC1和PS/2键盘(10111000)
-	io_out8(PIC1_IMR, 0xcf); 										// 允许PS/2鼠标,FPU异常(11001111)
+	io_out8(PIC0_IMR, /*0xb8*/0x0); 										// 允许PIT、PIC1和PS/2键盘(10111000)
+	io_out8(PIC1_IMR, /*0xcf*/0x0); 										// 允许PS/2鼠标,FPU异常(11001111)
 	init_acpi();													// 初始化ACPI
 	cpu_init();														// 初始化CPU相关信息
 	
@@ -100,9 +102,16 @@ void KaliMain(void){
 	shtctl = shtctl_init(memman, binfo->vram, binfo->scrnx, binfo->scrny);			// 初始化图层管理器
 	task_a = task_init(memman);														// 初始化多任务管理器
 	fifo.task = task_a;																// 系统底层任务
+	task_a->cmdline = task_a_str;
 	task_run(task_a, 0, 2);						/* 系统底部进程(task_a) */
 	*((int *) SHTCTL_ADDR) = (int) shtctl;		/* 把shtctl的值存到地址0xfe4的地方 */
 	task_a->langmode = 0;						/* 将task_a的语言模式设置为ASCII英文 */
+	
+	/* 初始化FDC和I/O */
+	task_fdc = task_alloc();					// 分配FDC任务
+	task_fdc->cmdline = task_fdc_str;
+	fdc_tinit(task_fdc);						// 初始化FDC任务
+	io_init();									// 初始化IO
 	
 	/* DEBUG cons初始化 */
 	*((int *) DEBUG_ADDR) = (int)open_console(shtctl, memtotal, 1);
@@ -320,8 +329,8 @@ void KaliMain(void){
 					sysinfo.min = 0;
 					sysinfo.hour += 1;
 				}
-				if(sysinfo.hour == 24) {
-					/* 24点重新查询cmos进行校准 */
+				if(sysinfo.min == 0) {
+					/* 每分钟重新查询cmos进行校准 */
 					sysinfo.year = get_year();
 					sysinfo.month = get_mon_hex();
 					sysinfo.day = get_day_of_month();

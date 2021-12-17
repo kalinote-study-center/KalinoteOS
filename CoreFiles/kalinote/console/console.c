@@ -12,7 +12,7 @@ void console_task(struct SHEET *sheet, unsigned int memtotal){
 	int i, *fat = (int *) memman_alloc_4k(memman, 4 * 2880);
 	struct CONSOLE cons;
 	struct FILEHANDLE fhandle[8];
-	char cmdline[30];
+	char cmdline[30] = "NOCMDLINE";
 	unsigned char *hzk = (char *) *((int *) 0x0fe8);
 	struct SYSINFO *sysinfo = (struct SYSINFO *) *((int *) SYSINFO_ADDR);
 
@@ -375,6 +375,8 @@ void cons_runcmd(char *cmdline, struct CONSOLE *cons, int *fat, unsigned int mem
 		} else {
 			cmd_cd(cons, ".", fat);
 		}
+	} else if (strcmp(cmdline, "ps") == 0) {
+		cmd_ps(cons);
 	} else if (strcmp(cmdline, "testfunc") == 0) {
 		cmd_testfunc(cons);
 	} else if (cmdline[0] != 0) {
