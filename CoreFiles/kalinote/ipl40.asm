@@ -36,8 +36,32 @@ entry:
 		MOV		SP,0x7c00
 		MOV		DS,AX
 		
-; 读取磁盘
+; 显示信息
+putstartmsg:
+		MOV		AX,0
+		MOV		ES,AX
+		MOV		SI,startmsg
+putmsgloop:
+		MOV		AL,[SI]
+		ADD		SI,1			; SI加1
+		CMP		AL,0
+		JE		read
+		MOV		AH,0x0e			; 显示一个字符的函数
+		MOV		BX,15			; 颜色代码
+		INT		0x10			; 调用显示BIOS
+		JMP		putmsgloop
+startmsg:
+		DB		0x0a
+		DB		"Welcome to use KalinoteOS"
+		DB		0x0a, 0x0a
+		DB		"By:Kalinote"
+		DB		0x0d, 0x0a, 0x0a, 0x0a		; 一个回车三个换行
+		DB		"Loding files..."
+		DB		0x0a
+		DB		0
 		
+; 读取磁盘
+read:	
 		MOV		AX,0x0820
 		MOV		ES,AX
 		MOV		CH,0			; 柱面0
