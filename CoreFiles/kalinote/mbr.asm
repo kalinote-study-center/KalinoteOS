@@ -1,7 +1,8 @@
 ; Kalinote-ipl
 ; TAB=4
 
-CYLS	EQU		40				; 读取40个柱面
+CYLS				EQU		40				; 读取40个柱面
+BASEOFSTACK			EQU		0x7c00			; 为SP(栈指针寄存器)提供栈基址
 
 		ORG		0x7c00			; 程序起始装载地址
 
@@ -9,7 +10,7 @@ CYLS	EQU		40				; 读取40个柱面
 
 		JMP SHORT entry
 		DB		0x90
-		DB		"KALIIPL "		; 启动区名称(8字节)
+		DB		"KALIBOOT"		; 启动区名称(8字节)
 		DW		512				; 每个扇区大小为512
 		DB		1				; 每个簇大小为一个扇区
 		DW		1				; FAT起始位置(boot记录占用扇区数)
@@ -28,41 +29,44 @@ CYLS	EQU		40				; 读取40个柱面
 		DB		"FAT12   "		; 磁盘格式名称(8字节)
 		RESB	18				; 空18字节
 
-; 程序主体
-
+; 程序主体，从这里开始执行
 entry:
-		MOV		AX,0			; 初始化寄存器
+		; 初始化寄存器
+		MOV		AX,CS
 		MOV		SS,AX
-		MOV		SP,0x7c00
+		MOV		ES,AX
 		MOV		DS,AX
+		MOV		SP,BASEOFSTACK
 		
 ; 显示信息
-putstartmsg:
-		MOV		AX,0
-		MOV		ES,AX
-		MOV		SI,startmsg
-putmsgloop:
-		MOV		AL,[SI]
-		ADD		SI,1			; SI加1
-		CMP		AL,0
-		JE		read
-		MOV		AH,0x0e			; 显示一个字符的函数
-		MOV		BX,15			; 颜色代码
-		INT		0x10			; 调用显示BIOS
-		JMP		putmsgloop
-startmsg:
-		DB		0x0a
-		DB		"Welcome to use KalinoteOS"
-		DB		0x0a, 0x0a
-		DB		"By:Kalinote"
-		DB		0x0d, 0x0a, 0x0a, 0x0a		; 一个回车三个换行
-		DB		"Loding files..."
-		DB		0x0a
-		DB		0
+		; 清屏
+		MOV		AX, 0x0600			; 06号功能(AH)，清屏(AL)
+		MOV		BX, 0x0700			; 使用清屏功能时BX,CX,DX的数值不起作用
+		MOV		CX, 0
+		MOV		DX, 0x184f
+		INT		0x10				; INT 10的AH 0x06号功能，AL为0时清屏
 		
-; 读取磁盘
+		; 设定光标位置
+		MOV		AX, 0x0200			; 02号功能(AH)，设定光标位置
+		MOV		BX, 0x0000			; BH页码(0页)
+		MOV		DX, 0x0000			; DH行数，DL列数(0行0列)
+		INT		0x10				; INT 10的AH 0x02号功能为设置屏幕光标位置
+		
+		; 文字显示
+		MOV		AX, 0x1301			; 12号功能(AH)，显示字符串，字符串属性由BL提供，长度由CX提供，光标移动到末尾(AL 01)
+		MOV		BX, 0x000f			; BH为页码(0页)，BL为字符属性(0x0f=0b00001111,白色,高亮,黑色背景,不闪烁)
+		MOV		DX, 0x0000			; 游标坐标
+		MOV		CX, 0x0d			; 字符串长度为13
+		PUSH	AX
+		MOV		AX, DS
+		MOV		ES, AX
+		POP		AX
+		MOV		BP, StartBootMsg
+		INT		0x10				; INT 10的AH 0x12号功能为显示一行字符串
+		
+; 读取磁盘(将磁盘所有文件读进内存)
 read:	
-		MOV		AX,0x0820
+		MOV		AX,0x0820		; 装载到内存0x0820处
 		MOV		ES,AX
 		MOV		CH,0			; 柱面0
 		MOV		DH,0			; 磁头0
@@ -75,6 +79,8 @@ read:
 		MOV		BYTE [0x0ff0],CYLS	; 记录IPL实际读取了多少内容
 		JMP		0xc200
 
+
+; -------------------------磁盘读取出现错误-------------------------
 error:
 		MOV		AX,0
 		MOV		ES,AX
@@ -97,6 +103,7 @@ msg:
 		DB		0x0a			; 换行
 		DB		0
 
+; -------------------------磁盘读取相关代码-------------------------
 readfast:	; 使用AL尽量一次性读取数据
 ;	ES:读取地址, CH:柱面, DH:磁头, CL:扇区, BX:读取扇区数
 
@@ -172,6 +179,14 @@ next:
 .ret:
 		RET
 
-		TIMES 0x1fe-($-$$) DB 0	; 填充0
 
+; -------------------------显示信息-------------------------
+StartBootMsg:
+		DB		"Start Boot..."
+SysFileName:
+		DB		"KALINOTESYS",0
+SysFileNotFound:
+		DB		"KALINOTE.SYS is not found!"
+
+		TIMES 0x1fe-($-$$) DB 0	; 填充0
 		DB		0x55, 0xaa

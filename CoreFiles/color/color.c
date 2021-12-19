@@ -2,9 +2,11 @@
 #include "apilib.h"
 
 void KaliMain(void) {
-	int buf[385 * 200 * 4];
+	int *buf;
 	int win, i;
-	api_initmalloc();
+	
+	api_initmalloc();		// 初始化内存分配
+	buf = api_malloc(385 * 200 * 4);
 	win = api_openwin(buf, 383, 200, -1, "Full color!");
 	for (i = 0; i <= 63; i++) {
 		api_linewin(win, i + 2, 30, i + 2, 190, 0x00ff0000 + 0x00000100 * i * 4);

@@ -38,13 +38,13 @@ DEL      = del
 
 default :
 	$(MAKE) -C libc
-	$(MAKE) ipl40.bin
+	$(MAKE) mbr.bin
 	$(MAKE) kalinote.sys
 
 # 文件生成规则
 
-ipl40.bin : ipl40.asm Makefile
-	$(NASM) -f bin ipl40.asm -o ipl40.bin -l ipl40.lst
+mbr.bin : mbr.asm Makefile
+	$(NASM) -f bin mbr.asm -o mbr.bin -l mbr.lst
 
 asmhead.bin : asmhead.asm Makefile
 	$(NASM) -f bin asmhead.asm -o asmhead.bin -l asmhead.lst
@@ -101,5 +101,5 @@ clean :
 src_only :
 	$(MAKE) clean
 	$(MAKE) -C libc		src_only
-	-$(DEL) ipl40.bin
+	-$(DEL) mbr.bin
 	-$(DEL) kalinote.sys
