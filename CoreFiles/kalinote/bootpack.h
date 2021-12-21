@@ -15,17 +15,32 @@ typedef struct {
 	char oem[13];					/* CPU OEM信息 */
 	char CPUName[49];				/* CPU型号信息 */
 } CPUIDINFO;
+struct VBEINFOBLOCK {
+	/* VBE信息 */
+	char VbeSignature[4];
+	short VbeVersion;
+	int *OemStringPtr;
+	int Capabilities;
+	int *VideoModePtr;
+	short TotalMemory;
+	short OemSoftwareRev;
+	int *OemVerdorNamePtr;
+	int *OemProductNamePtr;
+	int *OemProductRevPtr;
+	char Reserved[222];
+};
 struct SYSINFO {
-	double sysmode;					/* 系统模式 */
-	unsigned int sysmmainver;		/* 系统主版本号 */
-	int sysver;						/* 系统版本号 */
-	unsigned char ide_hd_num;		/* 计算机IDE硬盘数量 */
-	unsigned int free_mem;			/* 系统剩余内存容量 */
-	unsigned int memtotal;			/* 系统总内存 */
-	int year, month, day;			/* 系统日期 */
-	int hour, min, sec;				/* 系统时间 */
-	unsigned long time_counter;		/* 记录系统启动以来的ticks */
-	CPUIDINFO cpuid_info;			/* CPUIDINFO结构体 */
+	double sysmode;							/* 系统模式 */
+	unsigned int sysmmainver;				/* 系统主版本号 */
+	int sysver;								/* 系统版本号 */
+	unsigned char ide_hd_num;				/* 计算机IDE硬盘数量 */
+	unsigned int free_mem;					/* 系统剩余内存容量 */
+	unsigned int memtotal;					/* 系统总内存 */
+	int year, month, day;					/* 系统日期 */
+	int hour, min, sec;						/* 系统时间 */
+	unsigned long time_counter;				/* 记录系统启动以来的ticks */
+	CPUIDINFO cpuid_info;					/* CPUIDINFO结构体 */
+	struct VBEINFOBLOCK vbe_info;			/* VBE信息 */
 };
 #define	SYS_MEMORY		0x00400000			// 系统占用内存
 #define FIFO_ADDR		0x0fec				// FIFO地址
@@ -50,6 +65,7 @@ struct BOOTINFO {		/* 0x0ff0-0x0fff */
 	int *vram;
 };
 #define ADR_BOOTINFO	0x00000ff0						// bootinfo位置
+#define ADR_VBEINFO		0x00001000						// VBEINFO位置
 #define ADR_DISKIMG		0x00100000						// 文件位置(软盘，内存中)
 void io_hlt(void);										// 暂停处理器
 //void write_mem8(int addr, int data);					// 写入内存(被指针取代)
@@ -103,9 +119,32 @@ struct SEGMENT_DESCRIPTOR {
 	/* 在该结构体中为了系统对不同CPU的兼容性，base分为了low(2字节)、mid(1字节)、high(1字节)，加起来是32位 */
 	/* 上限(limit)的长度是20位，在段属性中有一个标志位(Gbit)，用于表示limit的单位，当Gbit为1时，段以页(4KB)为单位，所以limit最高可表示4GB(4KB x 1M) */
 	/* 段属性(access_right)为12位，具体数据见下方常量 */
+	/*
+	* 31-24        23 22   21 20   19-16        15 14-13 12 11-8  7-0          (高32位)
+	* 段基址高8位  G  D/B  L  AVL  段界限高4位  P  DPL   S  TYPE  段基址中8位
+	*                   31-16                          15-0                    (低32位)
+	*                段基址低16位                  段界限低16位
+	*/
+	/*
+	* 对权限(属性)的12位(8-15,20-23)补充说明：
+	* 8-11位的TYPE指定了类型，从高到低*分别为X C(E) R(W) A位，代码段为XCRA，数据段为XEWA。
+	* 其中，X为是否可执行，置位为可执行，代码段始终为可执行，数据段始终为不可执行。
+	* C为一致性，置位为保持一致性。(后续补充说明)
+	* R为可读标志位，置位为可读。
+	* A为已访问位，置位表示该段已被访问过。
+	* E为扩展方向位，置位表示向下扩展，否则向上扩展。
+	* W为是否可读写，置位为可读写，否则为只读。
+	* 12位(S)指定描述符类型，置位为代码/数据段，否则为系统段。
+	* 13-14位(DPL)指定了段描述符特权级，0为最高，一般为内核程序，3为最低，一般为应用程序。
+	* 15位(P)指定了段是否在内存中，置位表示该段已在内存中，如果段寄存器尝试加载不在内存中的段则会出发NP异常
+	* 20位(AVL)为系统使用的位，处理器不使用。不用时置0即可。
+	* 21位(L)是64位代码段标志，保留给64位处理器使用。
+	* 22位(D/B)指定了默认操作数大小，置位指示 32 位的偏移地址或者操作数，否则为16位。
+	* 23位(G)指定了颗粒度大小，置位时颗粒度为4K，最高管理4G内存，否则为1B，最高管理1M内存
+	*/
 	short limit_low, base_low;
 	char base_mid, access_right;
-	char limit_high, base_high;
+	char limit_high, base_high;		/* limit_high的低4位是段界限高4位，高四位是权限(属性)高4位 */
 };
 struct GATE_DESCRIPTOR {
 	/* IDT，中断记录表数据结构，每条记录8字节 */
@@ -122,8 +161,14 @@ void set_gatedesc(struct GATE_DESCRIPTOR *gd, int offset, int selector, int ar);
 #define LIMIT_GDT		0x0000ffff						/* GDT大小64KB */
 #define ADR_BOTPAK		0x00280000						/* bootpack.kal地址 */
 #define LIMIT_BOTPAK	0x0007ffff						/* bootpack.kal大小512KB */
-#define AR_DATA32_RW	0x4092							/* 系统专用，可读写不可执行 */
-#define AR_CODE32_ER	0x409a							/* 系统专用，可读可执行不可写 */
+#define AR_DATA32_RW_R0	0x4092							/* (低8位1001 0010)已在内存中，r0级，代码/数据段，可读写不可执行，未被访问，非一致性(内核) */	/* 9-12位没有使用，所以永远置0，下同 */
+#define AR_DATA32_RW_R1	0x40b2							/* 同上，r1级 */
+#define AR_DATA32_RW_R2	0x40d2                          /* 同上，r2级 */
+#define AR_DATA32_RW_R3	0x40f2                          /* 同上，r3级(应用程序) */
+#define AR_CODE32_ER_R0	0x409a							/* (低8位1001 1010)已在内存中，r0级，代码/数据段，可读可执行不可写，未被访问，非一致性(内核) */
+#define AR_CODE32_ER_R1	0x40ba							/* 同上，r1级 */
+#define AR_CODE32_ER_R2	0x40da							/* 同上，r2级 */
+#define AR_CODE32_ER_R3	0x40fa							/* 同上，r3级(应用程序) */
 #define AR_LDT			0x0082
 #define AR_TSS32		0x0089
 #define AR_INTGATE32	0x008e

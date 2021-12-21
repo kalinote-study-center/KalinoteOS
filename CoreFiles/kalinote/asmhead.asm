@@ -1,8 +1,6 @@
 ; kalinote-os
 ; TAB=4
 
-; [INSTRSET "i486p"]
-
 VBEMODE	EQU		0x118			; 1024x768x32bit色彩
 BOTPAK	EQU		0x00280000		; bootpack安装位置
 DSKCAC	EQU		0x00100000		; 磁盘缓存位置
@@ -27,8 +25,22 @@ SCRNX	EQU		0x0ff4			; 分辨率X
 SCRNY	EQU		0x0ff6			; 分辨率Y
 VRAM	EQU		0x0ff8			; 图像缓冲区开始地址
 
+; VBE_INFO
+VBESIGNATURE		EQU		0x1000
+VBEVERSION			EQU		VBESIGNATURE + 4
+OEMSTRINGPTR		EQU		VBESIGNATURE + 6
+CAPABILITIES		EQU		VBESIGNATURE + 10
+VIDEOMODEPTR		EQU		VBESIGNATURE + 14
+TOTALMEMORY			EQU		VBESIGNATURE + 18
+OEMSOFTWAREREV		EQU		VBESIGNATURE + 20
+OEMVERDORNAMEPTR	EQU		VBESIGNATURE + 22
+OEMPRODUCTNAMEPTR	EQU		VBESIGNATURE + 26
+OEMPRODUCTREVPTR	EQU		VBESIGNATURE + 30
+RESERVED			EQU		VBESIGNATURE + 34
+
 		ORG		0xc200			; 程序被装载到内存0xc200的位置
 
+; -----------------------------------代码从这里开始-----------------------------------
 ; 确认VBE是否存在
 		MOV		AX,0x9000
 		MOV		ES,AX
@@ -42,6 +54,10 @@ VRAM	EQU		0x0ff8			; 图像缓冲区开始地址
 		MOV		AX,[ES:DI+4]
 		CMP		AX,0x0200
 		JB		scrn320			; if (AX < 0x0200) goto scrn320
+		; 记录VBE信息
+		MOV		EAX, [ES:DI]
+		MOV		[VBESIGNATURE], EAX
+		
 
 ; 取得画面模式信息
 		MOV		CX,VBEMODE
@@ -58,6 +74,9 @@ VRAM	EQU		0x0ff8			; 图像缓冲区开始地址
 ;		MOV		AX,[ES:DI+0x00]
 ;		AND		AX,0x0080
 ;		JZ		scrn320			; 模式属性的bit7是0，所以放弃
+
+; 获取SVGA信息
+
 
 ; 画面模式的切换
 		MOV		BX,VBEMODE+0x4000
@@ -87,6 +106,7 @@ keystatus:
 		INT		0x16 			; keyboard BIOS
 		MOV		[LEDS],AL
 
+; -----------------------------------切换到32位-----------------------------------
 ; 从这里开始进入32位
 ; 在osdev.org中，对于切换到受保护模式(Protected Mode)之前，有以下步骤：
 ; 禁用中断，包括NMI（如英特尔开发人员手册建议）。
@@ -128,9 +148,9 @@ keystatus:
 
 ; 转向保护模式
 ; CR0寄存器中含有控制处理器操作模式和状态的系统控制标志
-		LGDT	[GDTR0]			; 设定临时GDT
+		LGDT	[GDTR0]			; 将临时32位GDT加载到GDTR寄存器
 		MOV		EAX,CR0			; 为了设置CR0寄存器的值
-		AND		EAX,0x7fffffff	; 将bit31(最高位)设为0（为了禁止分页）
+		; AND		EAX,0x7fffffff	; 将bit31(最高位)设为0（为了禁止分页）
 		OR		EAX,0x00000001	; 使bit0(最低位)为1(为了切换到保护模式)
 		MOV		CR0,EAX
 		JMP		pipelineflush
@@ -211,6 +231,8 @@ memcpy:
 ; memcpy如果不忘记加入地址复制，也可以写串命令
 
 		ALIGNB	16, DB 0		; 补充0，直到能被16整除。下同
+		
+; -----------------------------------32位临时GDT表-----------------------------------
 GDT0:
 ; 位于数据区的GDT表
 		; RESB	8
@@ -219,8 +241,8 @@ GDT0:
 		DW		0xffff,0x0000,0x9200,0x00cf	; 可读区段32bit					; CPU使用
 		DW		0xffff,0x0000,0x9a28,0x0047	; 可执行段32bit(用于bootpack)	; bootpack.kal使用
 		; 这一段其实跟下面两句代码差不多(kernel/dsctbl.c)：
-		; set_segmdesc(gdt + 1, 0xffffffff,   0x00000000, AR_DATA32_RW);
-		; set_segmdesc(gdt + 2, LIMIT_BOTPAK, ADR_BOTPAK, AR_CODE32_ER);
+		; set_segmdesc(gdt + 1, 0xffffffff,   0x00000000, AR_DATA32_RW_R0);
+		; set_segmdesc(gdt + 2, LIMIT_BOTPAK, ADR_BOTPAK, AR_CODE32_ER_R0);
 
 		DW		0
 GDTR0:

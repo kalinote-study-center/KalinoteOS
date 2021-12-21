@@ -74,6 +74,10 @@ void KaliMain(void){
 	sysinfo.time_counter = 0;
 	sysinfo.cpuid_info.cpuid = FALSE;
 	sysinfo.cpuid_info.brandString = FALSE;
+	sysinfo.vbe_info.VbeSignature[0] = *((char *) ADR_VBEINFO + 0);
+	sysinfo.vbe_info.VbeSignature[1] = *((char *) ADR_VBEINFO + 1);
+	sysinfo.vbe_info.VbeSignature[2] = *((char *) ADR_VBEINFO + 2);
+	sysinfo.vbe_info.VbeSignature[3] = *((char *) ADR_VBEINFO + 3);
 
 	/* 初始化 */
 	init_gdtidt();													// 初始化GDT和IDT
@@ -444,6 +448,9 @@ void KaliMain(void){
 				if (i == 256 + 0x3b && key_shift != 0 && key_win != 0) {/* Shift+F1 强行停止应用程序 */
 					task = key_win->task;
 					if (task != 0 && task->tss.ss0 != 0) {	
+						/* 释放任务栏按钮 */
+						/* 这里需要增加一个判断，先判断是否有窗口，然后再决定是否remove窗口按钮 */
+						// taskbar_removewin(((struct WINDOW *)(sht->win))->tskwinbtn);
 						cons_putstr0(task->cons, "\nBreak(key) :\n");
 						io_cli();	/* 强制结束处理时禁止任务切换 */
 						task->tss.eax = (int) &(task->tss.esp0);

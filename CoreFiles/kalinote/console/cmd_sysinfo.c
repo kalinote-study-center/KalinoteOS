@@ -35,10 +35,10 @@ void cmd_sysinfo(struct CONSOLE *cons, unsigned int memtotal) {
 	// cons_printf(cons, "total    %dMB\nfree  %dKB\nsystem   %dKB\n", memtotal / (1024 * 1024), memman_total(memman) / 1024, SYS_MEMORY / 1024);
 
 	/* 打印系统版本号 */
-	cons_printf(cons, "OS info:\n");
-	cons_printf(cons, "SysMode:\t\t%d\n", sysinfo->sysmode);
-	cons_printf(cons, "Main ver:\t\t%d\n", sysinfo->sysmmainver);
-	cons_printf(cons, "Sub ver:\t\t%d\n", sysinfo->sysver);
+	// cons_printf(cons, "OS info:\n");
+	// cons_printf(cons, "SysMode:\t\t%d\n", sysinfo->sysmode);
+	// cons_printf(cons, "Main ver:\t\t%d\n", sysinfo->sysmmainver);
+	// cons_printf(cons, "Sub ver:\t\t%d\n", sysinfo->sysver);
 
 	return;
 }

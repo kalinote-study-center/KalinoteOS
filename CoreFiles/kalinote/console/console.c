@@ -385,7 +385,7 @@ void cons_runcmd(char *cmdline, struct CONSOLE *cons, int *fat, unsigned int mem
 			/* 不是内部或外部命令 */
 			cons_putstr0(cons, "\"");
 			cons_putstr0(cons, cmdline);
-			cons_putstr0(cons, "\" is not a command.\n\n");
+			cons_putstr0(cons, "\" is not a command or application.\n\n");
 		}
 	}
 	return;
@@ -439,8 +439,8 @@ int cmd_app(struct CONSOLE *cons, int *fat, char *cmdline){
 			datkal = *((int *) (p + 0x0014));					/* .data的初始值列在文件中的位置 */			/* 新标为20 */
 			q = (char *) memman_alloc_4k(memman, segsiz);		/* 分配应用程序段内存空间(数据段) */
 			task->ds_base = (int) q;
-			set_segmdesc(task->ldt + 0, finfo->size - 1, (int) p, AR_CODE32_ER + 0x60);				/* 段定义加上0x60(01100000)可以将该段权限设置为应用程序使用 */	/* 可读可执行不可写 */
-			set_segmdesc(task->ldt + 1, segsiz - 1,      (int) q, AR_DATA32_RW + 0x60);				/* 可读写不可执行 */
+			set_segmdesc(task->ldt + 0, finfo->size - 1, (int) p, AR_CODE32_ER_R3);				/* R3特权级，应用程序使用 */	/* 可读可执行不可写 */
+			set_segmdesc(task->ldt + 1, segsiz - 1,      (int) q, AR_DATA32_RW_R3);			/* 可读写不可执行 */
 			for (i = 0; i < datsiz; i++) {
 				/* 将Kal应用中的数据部分复制到数据段 */
 				q[esp + i] = p[datkal + i];
