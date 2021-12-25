@@ -1,10 +1,10 @@
-OBJS_API =	api_putchar.obj api_putstr0.obj api_putstr1.obj api004.obj api005.obj api006.obj \
-			api007.obj api008.obj api009.obj api010.obj api011.obj api012.obj \
-			api013.obj api014.obj api015.obj api016.obj api017.obj api018.obj \
-			api019.obj api020.obj api021.obj api022.obj api023.obj api024.obj \
-			api025.obj api026.obj api027.obj api029.obj api030.obj api031.obj \
-			api032.obj api033.obj api034.obj api035.obj api036.obj api037.obj \
-			api038.obj api039.obj \
+OBJS_API =	api_putchar.obj api_putstr0.obj api_putstr1.obj api_end.obj api_openwin.obj api_putstrwin.obj \
+			api_boxfilwin.obj api_initmalloc.obj api_malloc.obj api_free.obj api_point.obj api_refreshwin.obj \
+			api_linewin.obj api_closewin.obj api_getkey.obj api_alloctimer.obj api_inittimer.obj api_settimer.obj \
+			api_freetimer.obj api_beep.obj api_fopen.obj api_fclose.obj api_fseek.obj api_fsize.obj \
+			api_fread.obj api_cmdline.obj api_getlang.obj api_cls.obj api_get_year.obj api_get_mon_hex.obj \
+			api_get_day_of_week.obj api_get_day_of_month.obj api_get_hour_hex.obj api_get_min_hex.obj api_get_sec_hex.obj api_get_system_runtime.obj \
+			api_showjpeg.obj api_send_key_to_cmd.obj \
 			alloca.obj
 
 TOOLPATH = ../../../z_tools/

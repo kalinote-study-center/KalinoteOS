@@ -20,10 +20,10 @@ kalinote.img : kalinote/mbr.bin kalinote/kalinote.sys Makefile \
 		beepdown/beepdown.kal beepup/beepup.kal sosu/sosu.kal \
 		cat/cat.kal chklang/chklang.kal \
 		notrec/notrec.kal bball/bball.kal calc/calc.kal \
-		a2048/a2048.kal testapp/testapp.kal timeapp/timeapp.kal \
+		a2048/a2048.kal light/light.kal timeapp/timeapp.kal \
 		pi/pi.kal sincurve/sincurve.kal runtime/runtime.kal \
 		divzero/divzero.kal amiya/amiya.kal randint/randint.kal \
-		aobench/aobench.kal
+		aobench/aobench.kal shape/shape.kal
 	$(EDIMG)   imgin:../z_tools/fdimg0at.tek \
 		wbinimg src:kalinote/mbr.bin len:512 from:0 to:0 \
 		copy from:kalinote/kalinote.sys to:@: \
@@ -48,7 +48,7 @@ kalinote.img : kalinote/mbr.bin kalinote/kalinote.sys Makefile \
 		copy from:resources/startup.kbs to:@: \
 		copy from:amiya/amiya.jpg to:@: \
 		copy from:a2048/a2048.kal to:@: \
-		copy from:testapp/testapp.kal to:@: \
+		copy from:light/light.kal to:@: \
 		copy from:timeapp/timeapp.kal to:@: \
 		copy from:pi/pi.kal to:@: \
 		copy from:sincurve/sincurve.kal to:@: \
@@ -57,6 +57,7 @@ kalinote.img : kalinote/mbr.bin kalinote/kalinote.sys Makefile \
 		copy from:amiya/amiya.kal to:@: \
 		copy from:randint/randint.kal to:@: \
 		copy from:aobench/aobench.kal to:@: \
+		copy from:shape/shape.kal to:@: \
 		imgout:kalinote.img
 
 # √¸¡Ó
@@ -90,7 +91,7 @@ full :
 	$(MAKE) -C bball
 	$(MAKE) -C calc
 	$(MAKE) -C a2048
-	$(MAKE) -C testapp
+	$(MAKE) -C light
 	$(MAKE) -C timeapp
 	$(MAKE) -C pi
 	$(MAKE) -C sincurve
@@ -99,6 +100,7 @@ full :
 	$(MAKE) -C amiya
 	$(MAKE) -C randint
 	$(MAKE) -C aobench
+	$(MAKE) -C shape
 	$(MAKE) kalinote.img
 	$(COPY) kalinote.img ..\z_tools\qemu\kalinoteos.bin
 	$(COPY) kalinote.img ..\z_tools\qemu\kalinoteos.vfd
@@ -152,7 +154,7 @@ clean_full :
 	$(MAKE) -C bball		clean
 	$(MAKE) -C calc			clean
 	$(MAKE) -C a2048		clean
-	$(MAKE) -C testapp		clean
+	$(MAKE) -C light		clean
 	$(MAKE) -C timeapp		clean
 	$(MAKE) -C pi			clean
 	$(MAKE) -C sincurve		clean
@@ -161,6 +163,7 @@ clean_full :
 	$(MAKE) -C amiya		clean
 	$(MAKE) -C randint		clean
 	$(MAKE) -C aobench		clean
+	$(MAKE) -C shape		clean
 
 src_only_full :
 	$(MAKE) -C klibc		src_only
@@ -181,7 +184,7 @@ src_only_full :
 	$(MAKE) -C bball		src_only
 	$(MAKE) -C calc			src_only
 	$(MAKE) -C a2048		src_only
-	$(MAKE) -C testapp		src_only
+	$(MAKE) -C light		src_only
 	$(MAKE) -C timeapp		src_only
 	$(MAKE) -C sincurve		src_only
 	$(MAKE) -C runtime		src_only
@@ -189,6 +192,7 @@ src_only_full :
 	$(MAKE) -C amiya		src_only
 	$(MAKE) -C randint		src_only
 	$(MAKE) -C aobench		src_only
+	$(MAKE) -C shape		src_only
 	-$(DEL) kalinote.img
 
 refresh :

@@ -1,4 +1,4 @@
-/* 多色彩测试[该程序有问题] */
+/* 多色彩测试 */
 #include "apilib.h"
 
 void KaliMain(void) {

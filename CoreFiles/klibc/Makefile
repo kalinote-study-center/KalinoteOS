@@ -12,7 +12,8 @@ OBJS       = abs.obj atof.obj atoi.obj errno.obj frexp.obj ldexp.obj \
 	iscntrl.obj isgraph.obj islower.obj isprint.obj ispunct.obj isupper.obj \
 	isxdigit.obj tolower.obj toupper.obj atol.obj calloc.obj system.obj \
 	fabs.obj atexit.obj bsearch.obj div.obj labs.obj ldiv.obj strcoll.obj \
-	asctime.obj clock.obj time.obj ctime.obj difftime.obj
+	asctime.obj clock.obj time.obj ctime.obj difftime.obj fminf.obj fmaxf.obj \
+	pow.obj expf.obj
 
 # 有空把makefile整理以下，不然标准函数太多太乱
 
@@ -33,11 +34,14 @@ NASKCNV  = $(TOOLPATH)naskcnv0 -l -s -w
 GOLIB    = $(TOOLPATH)golib00
 COPY     = copy
 DELE     = del
-
+NASM	 = nasm
 
 ALL :
 	$(MAKE) $(TARGET).lib
 	$(MAKE) -C syscall
+
+pow.obj : pow.s Makefile
+	as pow.s --32 -o pow.obj
 
 %.ca : %.c Makefile
 	$(SJISCONV) $*.c $*.ca
