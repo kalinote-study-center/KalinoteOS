@@ -126,7 +126,7 @@ int io_stat(char mode, int s) {
 				return 1;
 			}
 		} else {
-			// timer_sleep(1);			
+			timer_sleep(1);			
 		}
 	}
 }

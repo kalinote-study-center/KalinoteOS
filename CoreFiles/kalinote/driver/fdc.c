@@ -263,7 +263,7 @@ int fdc_reqstat(void) {
 			fdc.mode = 0;
 			return (int) fdc.st0;
 		} else {
-			// timer_sleep(1);
+			timer_sleep(1);
 		}
 	}
 }

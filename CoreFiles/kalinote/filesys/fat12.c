@@ -47,7 +47,7 @@ void file_loadfile(int clustno, int size, char *buf, int *fat, char *img){
 
 struct FILEINFO *file_search(char *name, struct FILEINFO *finfo, int max){
 	/* 由于FAT12格式原因，最多储存文件数量为224个(max) */
-	/* 增加路径处理 */
+	/* TODO:增加路径处理 */
 	int i, j;
 	char s[12];
 	
@@ -89,7 +89,7 @@ next:
 }
 
 struct FILEINFO *dir_search(char *name, struct FILEINFO *finfo, int max){
-	/* 搜索目录 */
+	/* 搜索(当前目录下的)子目录 */
 	/* 与文件不同的是，目录没有后缀名 */
 	/* 由于FAT12格式原因，最多储存文件数量为224个(max) */
 	int i, j;
@@ -167,7 +167,7 @@ struct FILEINFO *dir_check(char *dir, int *fat) {
 				* 这样会导致'/'结尾的字符串进行错误判断
 				* 所以如果满足这个if，证明这个字符串是最后一次判断，且以'/'结尾
 				* 所以手动break
-				* 后面再想想这里有没有更好的办法解决
+				* TODO：后面再想想这里有没有更好的办法解决
 				*/
 				break;
 			}
@@ -200,4 +200,19 @@ char *file_loadfile2(int clustno, int *psize, int *fat)
 		}
 	}
 	return buf;
+}
+
+/***************************************************
+*  下面这些代码还没有经过可行性评估，小心使用！！  *
+***************************************************/
+
+struct FILEINFO *file_rename(char *filename, char *newname) {
+	/*
+	* TODO：
+	* 先判断路径(文件名)是绝对路径还是相对路径
+	* 然后通过路径(文件名)获取finfo及其地址
+	* 判断newname是否符合规则
+	* 修改finfo的文件名，并返回finfo
+	*/
+	return finfo;
 }

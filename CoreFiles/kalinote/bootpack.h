@@ -328,6 +328,7 @@ void timer_settime(struct TIMER *timer, unsigned int timeout);										// ÉèÖÃ¶
 void inthandler20(int *esp);																		// 20ºÅÖĞ¶Ï
 int timer_cancel(struct TIMER *timer);																// È¡Ïû¶¨Ê±Æ÷
 void timer_cancelall(struct FIFO32 *fifo);															// È¡ÏûËùÓĞ¶¨Ê±Æ÷
+void timer_sleep(int time);
 
 /* mtask.c(¶àÈÎÎñ) */
 #define MAX_TASKS		2500																		// ×î´óÈÎÎñÊıÁ¿
@@ -551,7 +552,7 @@ int *inthandler00(int *esp);																		// 00ºÅÖĞ¶Ï£¬ÓÃÓÚ´¦Àí³ıÁãÒì³£
 int *inthandler0c(int *esp);																		// 0cºÅÖĞ¶Ï£¬ÓÃÓÚ´¦ÀíÕ»Òì³£
 int *inthandler0d(int *esp);																		// 0dºÅÖĞ¶Ï£¬ÓÃÓÚ´¦ÀíÒ»°ãÒì³£
 
-/* file.c(ÎÄ¼ş´¦Àí£¬ÎÄ¼şÏµÍ³) */
+/* fat12.c(ÎÄ¼ş´¦Àí£¬ÎÄ¼şÏµÍ³) */
 #define FILE_NOINFO			0x00						// Ã»ÓĞÎÄ¼şĞÅÏ¢
 #define FILE_DELETED		0xe5						// ÒÑ¾­±»É¾³ıµÄ
 #define FILE_READONLY		0xfe						// Ö»¶ÁÎÄ¼ş

@@ -188,3 +188,33 @@ void timer_cancelall(struct FIFO32 *fifo)
 	io_store_eflags(e);
 	return;
 }
+
+void timer_sleep(int time) {
+	struct TASK *task = task_now();
+	struct FIFO32 f;
+	struct TIMER *timer;
+	int fbuf[8], i;
+
+	/* FIFO和计时器的初始化 */
+	fifo32_init(&f, 8, fbuf, task);
+
+	timer = timer_alloc();
+	timer_init(timer, &f, 1);
+	timer_settime(timer, time);
+
+	for(;;) {
+		io_cli();
+		if(fifo32_status(&f) == 0) {
+			task_sleep(task);
+			io_sti();
+		} else {
+			i = fifo32_get(&f);
+			io_sti();
+
+			if(i == 1) {
+				timer_free(timer);
+				return;
+			}
+		}
+	}
+}
