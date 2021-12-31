@@ -19,7 +19,7 @@
 		GLOBAL	_check_cpuid, _read_cpuid
 		GLOBAL	_asm_inthandler00
 		GLOBAL	_asm_inthandler07
-		GLOBAL	_asm_inthandler20, _asm_inthandler21
+		GLOBAL	_asm_inthandler_timer, _asm_inthandler21
 		GLOBAL	_asm_inthandler26
 		GLOBAL	_asm_inthandler27, _asm_inthandler2c
 		GLOBAL	_asm_inthandler0c, _asm_inthandler0d
@@ -28,7 +28,7 @@
 		GLOBAL	_asm_kal_api, _start_app
 		EXTERN  _inthandler00
 		EXTERN	_inthandler07
-		EXTERN	_inthandler20, _inthandler21
+		EXTERN	_inthandler_timer, _inthandler21
 		EXTERN	_inthandler26
 		EXTERN	_inthandler27, _inthandler2c
 		EXTERN	_inthandler0c, _inthandler0d
@@ -221,7 +221,7 @@ _asm_inthandler07:				; FPU异常中断
         POP     ES
         IRETD                   ; INT07中ESP+=4；不需要
 
-_asm_inthandler20:
+_asm_inthandler_timer:
 		PUSH	ES
 		PUSH	DS
 		PUSHAD
@@ -230,7 +230,7 @@ _asm_inthandler20:
 		MOV		AX,SS
 		MOV		DS,AX
 		MOV		ES,AX
-		CALL	_inthandler20
+		CALL	_inthandler_timer
 		POP		EAX
 		POPAD
 		POP		DS

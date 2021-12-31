@@ -15,7 +15,7 @@ typedef struct {
 	char oem[13];					/* CPU OEM信息 */
 	char CPUName[49];				/* CPU型号信息 */
 } CPUIDINFO;
-struct VBEINFOBLOCK {
+typedef struct {
 	/* VBE信息 */
 	char VbeSignature[4];
 	short VbeVersion;
@@ -28,7 +28,12 @@ struct VBEINFOBLOCK {
 	int *OemProductNamePtr;
 	int *OemProductRevPtr;
 	char Reserved[222];
-};
+} VBEINFOBLOCK;
+typedef struct {
+	/* 时钟 */
+	int year, month, day;					/* 系统日期 */
+	int hour, min, sec;						/* 系统时间 */
+} DATETIME;
 struct SYSINFO {
 	double sysmode;							/* 系统模式 */
 	unsigned int sysmmainver;				/* 系统主版本号 */
@@ -36,11 +41,12 @@ struct SYSINFO {
 	unsigned char ide_hd_num;				/* 计算机IDE硬盘数量 */
 	unsigned int free_mem;					/* 系统剩余内存容量 */
 	unsigned int memtotal;					/* 系统总内存 */
-	int year, month, day;					/* 系统日期 */
-	int hour, min, sec;						/* 系统时间 */
+	// int year, month, day;				/* (已废弃)系统日期 */
+	// int hour, min, sec;					/* (已废弃)系统时间 */
 	unsigned long time_counter;				/* 记录系统启动以来的ticks */
 	CPUIDINFO cpuid_info;					/* CPUIDINFO结构体 */
-	struct VBEINFOBLOCK vbe_info;			/* VBE信息 */
+	VBEINFOBLOCK vbe_info;					/* VBE信息 TODO：完善VBE信息获取 */
+	DATETIME datetime;						/* 时间和日期 */
 };
 #define	SYS_MEMORY		0x00400000			// 系统占用内存
 #define FIFO_ADDR		0x0fec				// FIFO地址
@@ -93,7 +99,7 @@ void asm_inthandler00(void);							// 00号中断，除零异常
 void asm_inthandler07(void);							// 07号中断，FPU异常中断
 void asm_inthandler0c(void);							// 0c号中断，用于处理栈异常
 void asm_inthandler0d(void);							// 0d号中断，用于处理异常程序
-void asm_inthandler20(void);							// 20号中断，用于timer
+void asm_inthandler_timer(void);						// 20号中断，用于timer
 void asm_inthandler21(void);							// 21号中断，注册在0x21
 void asm_inthandler26(void);							// 26号中断，用于FDC
 void asm_inthandler27(void);							// 27号中断，注册在0x27
@@ -325,7 +331,7 @@ void init_pit(void);																				// 初始化可编程间隔化定时器(PIT)
 void timer_free(struct TIMER *timer);																// 释放定时器
 void timer_init(struct TIMER *timer, struct FIFO32 *fifo, int data);								// 初始化定时器
 void timer_settime(struct TIMER *timer, unsigned int timeout);										// 设置定时器
-void inthandler20(int *esp);																		// 20号中断
+void inthandler_timer(int *esp);																	// 定时器中断
 int timer_cancel(struct TIMER *timer);																// 取消定时器
 void timer_cancelall(struct FIFO32 *fifo);															// 取消所有定时器
 void timer_sleep(int time);
@@ -600,6 +606,10 @@ int decode0_JPEG(struct DLL_STRPICENV *env,int size,unsigned char *fp,int b_type
 
 /* bootpack.c */
 #define KEYCMD_LED		0xed
+
+/* clock.c(时钟) */
+void clock_task(struct SHEET *sht);												// 时钟任务运行主体
+void clock_taskinit(struct TASK *task, struct SHEET *sht);						// 时钟任务初始化
 
 /* kca.c(解压KCA压缩文件) */
 int kca_getsize(unsigned char *p);

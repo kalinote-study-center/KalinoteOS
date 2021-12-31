@@ -202,11 +202,11 @@ int acpi_reset(void) {
 
 	if (!(FADT->Flags & ACPI_FADT_RESET_REGISTER) || !(FADT->ResetReg.Address)) {
 		/* 不支持则进行返回 */
-		debug_print("ACPI>Unsupported ResetReg\n");
-		debug_print("ACPI>FADT Flags = 0x%08x\n", FADT->Flags);
-		debug_print("ACPI>FADT ResetReg Address[0] = 0x%08x\n", FADT->ResetReg.Address[0]);
-		debug_print("ACPI>FADT ResetReg Address[1] = 0x%08x\n", FADT->ResetReg.Address[1]);
-		debug_print("ACPI>FADT ResetReg Address[2] = 0x%08x\n", FADT->ResetReg.Address[2]);
+		// debug_print("ACPI>Unsupported ResetReg\n");
+		// debug_print("ACPI>FADT Flags = 0x%08x\n", FADT->Flags);
+		// debug_print("ACPI>FADT ResetReg Address[0] = 0x%08x\n", FADT->ResetReg.Address[0]);
+		// debug_print("ACPI>FADT ResetReg Address[1] = 0x%08x\n", FADT->ResetReg.Address[1]);
+		// debug_print("ACPI>FADT ResetReg Address[2] = 0x%08x\n", FADT->ResetReg.Address[2]);
 		return 0;
 	}
 

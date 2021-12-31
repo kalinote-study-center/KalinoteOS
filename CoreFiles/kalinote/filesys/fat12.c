@@ -206,13 +206,14 @@ char *file_loadfile2(int clustno, int *psize, int *fat)
 *  下面这些代码还没有经过可行性评估，小心使用！！  *
 ***************************************************/
 
-struct FILEINFO *file_rename(char *filename, char *newname) {
-	/*
-	* TODO：
-	* 先判断路径(文件名)是绝对路径还是相对路径
-	* 然后通过路径(文件名)获取finfo及其地址
-	* 判断newname是否符合规则
-	* 修改finfo的文件名，并返回finfo
-	*/
-	return finfo;
-}
+// struct FILEINFO *file_rename(char *filename, char *newname) {
+	// /*
+	// * TODO：
+	// * 先判断路径(文件名)是绝对路径还是相对路径
+	// * 然后通过路径(文件名)获取finfo及其地址
+	// * 判断newname是否符合规则
+	// * 修改finfo的文件名，并返回finfo
+	// */
+	
+	// return finfo;
+// }

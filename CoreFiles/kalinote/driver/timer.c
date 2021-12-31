@@ -105,7 +105,7 @@ void timer_settime(struct TIMER *timer, unsigned int timeout){
 	}
 }
 
-void inthandler20(int *esp){
+void inthandler_timer(int *esp){
 	/*  ±÷”÷–∂œ≥Ã–Ú */
 	struct TIMER *timer;
 	char ts = 0;

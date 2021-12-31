@@ -18,7 +18,7 @@ void KaliMain(void){
 	struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;
 	unsigned int *buf_back, buf_mouse[256], *buf_task_bar;/*, *subbuf_back;*/
 	struct SHEET *sht_back, *sht_mouse, *sht_task_bar, *sht_debug_cons;/* , *btn_sht; */
-	struct TASK *task_a, *task, *task_fdc;
+	struct TASK *task_a, *task, *task_fdc, *task_clock;
 	int key_shift = 0, key_leds = (binfo->leds >> 4) & 7, keycmd_wait = -1;
 	int j, x, y, mmx = -1, mmy = -1, mmx2 = 0, subx, suby;
 	struct SHEET *sht = 0, *subsht = 0, *point_sht = 0, *key_win, *sht2;/* , *subsht_back;	*/		/* point_sht是用来处理鼠标移动时指向的层的 */
@@ -31,6 +31,7 @@ void KaliMain(void){
 	int direction = 0;		/* 这个变量用来记录是否按下方向键，0为未按下，1为按下 */
 	char task_a_str[8] = "systask";
 	char task_fdc_str[8] = "fdctask";
+	char task_clock_str[6] = "clock";
 	// struct MENU *start_menu; /* , *desktop_menu; */
 	/* struct WINDOW *debug_window; */
 	// struct BUTTON *start_button;
@@ -65,12 +66,12 @@ void KaliMain(void){
 	sysinfo.sysmmainver = 1.001;
 	sysinfo.sysver = 400;
 	sysinfo.ide_hd_num = 0;
-	sysinfo.year = get_year();
-	sysinfo.month = get_mon_hex();
-	sysinfo.day = get_day_of_month();
-	sysinfo.hour = get_hour_hex();
-	sysinfo.min = get_min_hex();
-	sysinfo.sec = get_sec_hex();
+	sysinfo.datetime.year = get_year();
+	sysinfo.datetime.month = get_mon_hex();
+	sysinfo.datetime.day = get_day_of_month();
+	sysinfo.datetime.hour = get_hour_hex();
+	sysinfo.datetime.min = get_min_hex();
+	sysinfo.datetime.sec = get_sec_hex();
 	sysinfo.time_counter = 0;
 	sysinfo.cpuid_info.cpuid = FALSE;
 	sysinfo.cpuid_info.brandString = FALSE;
@@ -173,6 +174,11 @@ void KaliMain(void){
 	// tbutton7 = make_button(memman, 105, 23, 85 + 110*6 , 4, "window7", COL_BGREY, onStartButtonClick);
 	// show_button(sht_task_bar, memman, tbutton7);
 	/* 测试代码 */
+	
+	/* 初始化clock */
+	task_clock = task_alloc();
+	clock_taskinit(task_clock, sht_task_bar);		/* TODO：这里后面换成任务栏的子图层 */
+	task_clock->cmdline = task_clock_str;
 	
 	/* sht_cons */
 	key_win = open_console(shtctl, memtotal, 0);
@@ -319,28 +325,27 @@ void KaliMain(void){
 				/*
 				*  理论上来说定时器是一秒触发一次，但实际上因为系统运行速度较慢，似乎触发的时间远远大于一秒
 				*/
-				// sysinfo.time_counter += 1;			/* 记录系统运行时间 */
 				timer_init(timer, &fifo, 1);		/* 设置一个定时器，下一秒再次更新 */
 				timer_settime(timer, 100);
-				sysinfo.sec += 1;
-				if(sysinfo.sec == 60) {
+				sysinfo.datetime.sec += 1;
+				if(sysinfo.datetime.sec == 60) {
 					/* 分钟进一 */
-					sysinfo.sec = 0;
-					sysinfo.min += 1;
+					sysinfo.datetime.sec = 0;
+					sysinfo.datetime.min += 1;
 				}
-				if(sysinfo.min == 60) {
+				if(sysinfo.datetime.min == 60) {
 					/* 小时进一 */
-					sysinfo.min = 0;
-					sysinfo.hour += 1;
+					sysinfo.datetime.min = 0;
+					sysinfo.datetime.hour += 1;
 				}
-				if(sysinfo.min == 0) {
+				if(sysinfo.datetime.min == 0) {
 					/* 每分钟重新查询cmos进行校准 */
-					sysinfo.year = get_year();
-					sysinfo.month = get_mon_hex();
-					sysinfo.day = get_day_of_month();
-					sysinfo.hour = get_hour_hex();
-					sysinfo.min = get_min_hex();
-					sysinfo.sec = get_sec_hex();
+					sysinfo.datetime.year = get_year();
+					sysinfo.datetime.month = get_mon_hex();
+					sysinfo.datetime.day = get_day_of_month();
+					sysinfo.datetime.hour = get_hour_hex();
+					sysinfo.datetime.min = get_min_hex();
+					sysinfo.datetime.sec = get_sec_hex();
 					
 				}
 				/*
@@ -348,7 +353,7 @@ void KaliMain(void){
 				*/
 				// timer_init(timer, &fifo, 1);		/* 设置一个定时器，下一秒再次提醒 */
 				// timer_settime(timer, 100);
-				sprintf(s,"%02d:%02d:%02d",sysinfo.hour, sysinfo.min, sysinfo.sec);
+				sprintf(s,"%02d:%02d:%02d",sysinfo.datetime.hour, sysinfo.datetime.min, sysinfo.datetime.sec);
 				putfonts8_asc_sht(sht_task_bar, sht_task_bar->bxsize - 70, sht_task_bar->bysize - 20, COL_BLACK, COL_BGREY, s, 8);
 				sheet_refresh(sht_task_bar, sht_task_bar->bxsize - 70, sht_task_bar->bysize - 20, sht_task_bar->bxsize - 70 + 8 * 8, sht_task_bar->bysize - 50 + 16);		/* 暂时不显示日期了 */
 				// /* 日期 */
@@ -358,14 +363,15 @@ void KaliMain(void){
 			} else if (i == 2) {
 				/* 打开新的命令窗口 */
 				/* 这里的代码实际上跟Shift+F2是一样的 */
-				if (key_win != 0) {
-					keywin_off(key_win);
-				}
-				keywin_off(key_win);
-				key_win = open_console(shtctl, memtotal, 0);
-				sheet_slide(key_win, 32, 4);
-				sheet_updown(key_win, shtctl->top);
-				keywin_on(key_win);
+				goto new_console;
+				// if (key_win != 0) {
+					// keywin_off(key_win);
+				// }
+				// keywin_off(key_win);
+				// key_win = open_console(shtctl, memtotal, 0);
+				// sheet_slide(key_win, 32, 4);
+				// sheet_updown(key_win, shtctl->top);
+				// keywin_on(key_win);
 			} else if (256 <= i && i <= 511) { /* 键盘数据 */
 				// debug_print("keyboard>0x%x\n", i);
 				if (direction == 1) {
@@ -461,6 +467,7 @@ void KaliMain(void){
 				}
 				if (i == 256 + 0x3c && key_shift != 0) {	/* Shift+F2 打开新的命令窗口 */
 					/* 自动将输入焦点切换到新打开的命令行窗口 */
+new_console:
 					if (key_win != 0) {
 						keywin_off(key_win);
 					}

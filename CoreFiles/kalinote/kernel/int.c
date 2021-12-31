@@ -29,13 +29,7 @@ void init_pic(void){
 }
 
 void inthandler27(int *esp){
-/* 来自PIC0的不完全中断对策 */
-/* 由于芯片组的原因，在PIC初始化时，Athlon 64X2机等会发生一次中断 */
-/*
-* 为什么什么都不做？
-* →该中断是由于PIC初始化时的电气噪声造成的
-* 不必认真处理什么。
-*/
+	/* 这个中断没有任何作用 */
 	io_out8(PIC0_OCW2, 0x67); /* 将IRQ-07受理完成通知PIC（参照7-1） */
 	return;
 }
