@@ -163,7 +163,7 @@ pipelineflush:
 		MOV		FS,AX
 		MOV		GS,AX
 		MOV		SS,AX
-		
+
 ; bootpack的传送
 ; 将bootpack传送到相应的内存位置
 		MOV		ESI,bootpack	; 传送源

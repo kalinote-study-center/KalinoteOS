@@ -278,9 +278,9 @@ void KaliMain(void){
 	// memman_free_4k(memman, (int) fat_jp, 4 * 2880);
 	
 	/* 时钟更新定时器 */
-	timer = timer_alloc();
-	timer_init(timer, &fifo, 1);
-	timer_settime(timer, 1);	/* 激活时间 */
+	// timer = timer_alloc();
+	// timer_init(timer, &fifo, 1);
+	// timer_settime(timer, 1);	/* 激活时间 */
 	
 	for(;;){
 		/***************************************************************
@@ -325,37 +325,37 @@ void KaliMain(void){
 				/*
 				*  理论上来说定时器是一秒触发一次，但实际上因为系统运行速度较慢，似乎触发的时间远远大于一秒
 				*/
-				timer_init(timer, &fifo, 1);		/* 设置一个定时器，下一秒再次更新 */
-				timer_settime(timer, 100);
-				sysinfo.datetime.sec += 1;
-				if(sysinfo.datetime.sec == 60) {
-					/* 分钟进一 */
-					sysinfo.datetime.sec = 0;
-					sysinfo.datetime.min += 1;
-				}
-				if(sysinfo.datetime.min == 60) {
-					/* 小时进一 */
-					sysinfo.datetime.min = 0;
-					sysinfo.datetime.hour += 1;
-				}
-				if(sysinfo.datetime.min == 0) {
-					/* 每分钟重新查询cmos进行校准 */
-					sysinfo.datetime.year = get_year();
-					sysinfo.datetime.month = get_mon_hex();
-					sysinfo.datetime.day = get_day_of_month();
-					sysinfo.datetime.hour = get_hour_hex();
-					sysinfo.datetime.min = get_min_hex();
-					sysinfo.datetime.sec = get_sec_hex();
+				// timer_init(timer, &fifo, 1);		/* 设置一个定时器，下一秒再次更新 */
+				// timer_settime(timer, 100);
+				// sysinfo.datetime.sec += 1;
+				// if(sysinfo.datetime.sec == 60) {
+					// /* 分钟进一 */
+					// sysinfo.datetime.sec = 0;
+					// sysinfo.datetime.min += 1;
+				// }
+				// if(sysinfo.datetime.min == 60) {
+					// /* 小时进一 */
+					// sysinfo.datetime.min = 0;
+					// sysinfo.datetime.hour += 1;
+				// }
+				// if(sysinfo.datetime.min == 0) {
+					// /* 每分钟重新查询cmos进行校准 */
+					// sysinfo.datetime.year = get_year();
+					// sysinfo.datetime.month = get_mon_hex();
+					// sysinfo.datetime.day = get_day_of_month();
+					// sysinfo.datetime.hour = get_hour_hex();
+					// sysinfo.datetime.min = get_min_hex();
+					// sysinfo.datetime.sec = get_sec_hex();
 					
-				}
+				// }
 				/*
 				* 这里还可以优化一下，可以把时分秒分别显示和刷新，避免不必要的画面刷新
 				*/
 				// timer_init(timer, &fifo, 1);		/* 设置一个定时器，下一秒再次提醒 */
 				// timer_settime(timer, 100);
-				sprintf(s,"%02d:%02d:%02d",sysinfo.datetime.hour, sysinfo.datetime.min, sysinfo.datetime.sec);
-				putfonts8_asc_sht(sht_task_bar, sht_task_bar->bxsize - 70, sht_task_bar->bysize - 20, COL_BLACK, COL_BGREY, s, 8);
-				sheet_refresh(sht_task_bar, sht_task_bar->bxsize - 70, sht_task_bar->bysize - 20, sht_task_bar->bxsize - 70 + 8 * 8, sht_task_bar->bysize - 50 + 16);		/* 暂时不显示日期了 */
+				// sprintf(s,"%02d:%02d:%02d",sysinfo.datetime.hour, sysinfo.datetime.min, sysinfo.datetime.sec);
+				// putfonts8_asc_sht(sht_task_bar, sht_task_bar->bxsize - 70, sht_task_bar->bysize - 20, COL_BLACK, COL_BGREY, s, 8);
+				// sheet_refresh(sht_task_bar, sht_task_bar->bxsize - 70, sht_task_bar->bysize - 20, sht_task_bar->bxsize - 70 + 8 * 8, sht_task_bar->bysize - 50 + 16);		/* 暂时不显示日期了 */
 				// /* 日期 */
 				// sprintf(s,"%d/%d/%d",get_year(), get_mon_hex(), get_day_of_month());
 				// putfonts8_asc_sht(sht_task_bar, sht_task_bar->bxsize - 160, sht_task_bar->bysize - 20, COL_BLACK, COL_BGREY, s, 10);

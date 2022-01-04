@@ -110,6 +110,7 @@ struct TASK *task_init(struct MEMMAN *memman){
 	idle->tss.ds = 1 * 8;
 	idle->tss.fs = 1 * 8;
 	idle->tss.gs = 1 * 8;
+	idle->cmdline = "idle";
 	task_run(idle, MAX_TASKLEVELS - 1, 1);
 
 	taskctl->task_fpu = 0;		/* 先把FPU对应任务置0 */

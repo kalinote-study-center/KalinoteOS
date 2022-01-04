@@ -343,7 +343,7 @@ void timer_sleep(int time);
 #define MAX_TASKLEVELS	10																			// 最高任务层数(321页)
 #define MAX_DIRLENGTH	256																			// 最大命令行路径长度
 /*下面这些是任务状态码，暂时还没有用到(2021.6.3) */
-#define	TESK_UNUSED					0					/* 未使用 */
+#define	TASK_UNUSED					0					/* 未使用 */
 #define TASK_UNINTERRUPTIBLE		1					/* 不可中断睡眠状态 */
 #define TASK_RUNNING				2					/* 正在运行 */
 #define	TASK_INTERRUPTIBLE			3					/* 可中断睡眠状态 */
