@@ -610,6 +610,7 @@ int decode0_JPEG(struct DLL_STRPICENV *env,int size,unsigned char *fp,int b_type
 /* clock.c(时钟) */
 void clock_task(struct SHEET *sht);												// 时钟任务运行主体
 void clock_taskinit(struct TASK *task, struct SHEET *sht);						// 时钟任务初始化
+void rtc_syn(void);																// 从cmos同步时间
 
 /* kca.c(解压KCA压缩文件) */
 int kca_getsize(unsigned char *p);

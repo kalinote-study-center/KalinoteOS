@@ -49,13 +49,14 @@ void console_task(struct SHEET *sheet, unsigned int memtotal){
 		/* DEBUG窗口不操作 */
 		if (sysinfo->sysmode == 0) {
 			/* 普通模式 */
-				cons_putchar(&cons, '>', 1);			//命令提示符
+			cons_putchar(&cons, '>', 1);			//命令提示符
+			// cons_putstr0(&cons, "%s >", task->dir);
 		} else if (sysinfo->sysmode == 1) {
 			/* 调试模式 */
-			cons_putchar(&cons, 10001, 1);
+			cons_putstr0(&cons, "DEBUG >");
 		} else {
 			/* 未知系统模式 */
-			cons_putchar(&cons, 10002, 1);
+			cons_putstr0(&cons, "UNKNOWSYSMODE >");
 		}
 	}
 
@@ -146,12 +147,13 @@ void console_task(struct SHEET *sheet, unsigned int memtotal){
 					if (sysinfo->sysmode == 0) {
 						/* 普通模式 */
 						cons_putchar(&cons, '>', 1);					//命令提示符
+						// cons_printf(&cons, "%s >", task->dir)
 					} else if (sysinfo->sysmode == 1) {
 						/* 调试模式 */
-						cons_putchar(&cons, 10001, 1);
+						cons_putstr0(&cons, "DEBUG >");
 					} else {
 						/* 未知系统模式 */
-						cons_putchar(&cons, 10002, 1);
+						cons_putstr0(&cons, "UNKNOWSYSMODE >");
 					}
 				} else {
 					/* 一般字符 */
@@ -208,28 +210,28 @@ void cons_putchar(struct CONSOLE *cons, int chr, char move){
 		cons_newline(cons);
 	} else if (s[0] == 0x0d) {	/* 回车 */
 		/* 这里暂时不进行任何操作 */
-	} else if (chr == 10001) {	/* 系统调试模式 */
-		if (cons->sht != 0) {
-			putfonts8_asc_sht(cons->sht, cons->cur_x, cons->cur_y, COL_WHITE, COL_BLACK, "DEBUG >", 7);
-		}
-		if (move != 0) {
-			/* move为0时光标不后移 */
-			cons->cur_x += 8 * 7;
-			if (cons->cur_x == 56 + 464) {
-				cons_newline(cons);
-			}
-		}
-	} else if (chr == 10002) {	/* 系统未知模式 */
-		if (cons->sht != 0) {
-			putfonts8_asc_sht(cons->sht, cons->cur_x, cons->cur_y, COL_WHITE, COL_BLACK, "UNKNOWSYSMODE >", 15);
-		}
-		if (move != 0) {
-			/* move为0时光标不后移 */
-			cons->cur_x += 8 * 15;
-			if (cons->cur_x == 120 + 400) {
-				cons_newline(cons);
-			}
-		}
+	// } else if (chr == 10001) {	/* 系统调试模式 */
+		// if (cons->sht != 0) {
+			// putfonts8_asc_sht(cons->sht, cons->cur_x, cons->cur_y, COL_WHITE, COL_BLACK, "DEBUG >", 7);
+		// }
+		// if (move != 0) {
+			// /* move为0时光标不后移 */
+			// cons->cur_x += 8 * 7;
+			// if (cons->cur_x == 56 + 464) {
+				// cons_newline(cons);
+			// }
+		// }
+	// } else if (chr == 10002) {	/* 系统未知模式 */
+		// if (cons->sht != 0) {
+			// putfonts8_asc_sht(cons->sht, cons->cur_x, cons->cur_y, COL_WHITE, COL_BLACK, "UNKNOWSYSMODE >", 15);
+		// }
+		// if (move != 0) {
+			// /* move为0时光标不后移 */
+			// cons->cur_x += 8 * 15;
+			// if (cons->cur_x == 120 + 400) {
+				// cons_newline(cons);
+			// }
+		// }
 	} else {	/* 一般字符，系统为正常模式 */
 		if (cons->sht != 0) {
 			putfonts8_asc_sht(cons->sht, cons->cur_x, cons->cur_y, COL_WHITE, COL_BLACK, s, 1);

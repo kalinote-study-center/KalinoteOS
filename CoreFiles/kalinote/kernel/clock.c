@@ -43,7 +43,6 @@ void clock_task(struct SHEET *sht) {
 					sysinfo->datetime.hour = get_hour_hex();
 					sysinfo->datetime.min = get_min_hex();
 					sysinfo->datetime.sec = get_sec_hex();
-					
 				}
 				sprintf(s,"%02d:%02d:%02d",sysinfo->datetime.hour, sysinfo->datetime.min, sysinfo->datetime.sec);
 				putfonts8_asc_sht(sht, sht->bxsize - 70, sht->bysize - 20, COL_BLACK, COL_BGREY, s, 8);
@@ -77,4 +76,14 @@ void clock_taskinit(struct TASK *task, struct SHEET *sht) {
 	return;
 }
 
-
+void rtc_syn(void) {
+	struct SYSINFO *sysinfo = (struct SYSINFO *) *((int *) SYSINFO_ADDR);
+	
+	sysinfo->datetime.year = get_year();
+	sysinfo->datetime.month = get_mon_hex();
+	sysinfo->datetime.day = get_day_of_month();	
+	sysinfo->datetime.hour = get_hour_hex();	
+	sysinfo->datetime.min = get_min_hex();	
+	sysinfo->datetime.sec = get_sec_hex();	
+	return;
+}
