@@ -12,7 +12,7 @@ void cmd_type(struct CONSOLE *cons, int *fat, char *cmdline){
 		p = (char *) memman_alloc_4k(memman, finfo->size);
 		file_loadfile(finfo->clustno, finfo->size, p, fat, (char *) (ADR_DISKIMG + 0x003e00));	/* ¥≈≈Ã”≥œÒ÷–µƒµÿ÷∑ = clustno * 512 +0x003e00 */
 		for (i = 0; i < finfo->size; i++) {
-			cons_putchar(cons, p[i], 1);
+			cons_putchar(cons, p[i], 1, COL_WHITE, COL_BLACK);
 		}
 		memman_free_4k(memman, (int) p, finfo->size);
 	} else {

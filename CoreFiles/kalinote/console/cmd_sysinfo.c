@@ -11,7 +11,7 @@ void cmd_sysinfo(struct CONSOLE *cons, unsigned int memtotal) {
 	cons_printf(cons, "CPU info:\n");
 	if(sysinfo->cpuid_info.cpuid) {
 		/* 可用CPUID */
-		cons_printf(cons, "CPUID available\n");
+		cons_col_putstr0(cons, "CPUID available\n", COL_DGREEN, COL_WHITE);
 		cons_printf(cons,"MAX CPUID number:\t%d\n",sysinfo->cpuid_info.max_cpuid_num);
 		cons_printf(cons,"CPU OEM:%s\n",sysinfo->cpuid_info.oem);
 		cons_printf(cons,"Brand String support: %s\n", sysinfo->cpuid_info.brandString?"yes":"no");

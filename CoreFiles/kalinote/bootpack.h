@@ -504,6 +504,7 @@ void taskbar_removewin(int index);												// 从任务栏删除一个按钮
 
 /* console.c(命令行) */
 #define DEBUG_ADDR		0x30000				// DEBUG console位置
+#define DEBUG_WAR_STR	"cannot run this command in debug console\n"
 struct CONSOLE {
 	struct SHEET *sht;
 	int cur_x, cur_y, cur_c;
@@ -516,9 +517,11 @@ struct FILEHANDLE {
 };
 void console_task(struct SHEET *sheet, unsigned int memtotal);										// 命令窗口任务
 void cons_newline(struct CONSOLE *cons);															// 命令窗口换行
-void cons_putchar(struct CONSOLE *cons, int chr, char move);										// 在命令窗口上显示文字
+void cons_putchar(struct CONSOLE *cons, int chr, char move, int font_color, int back_color);		// 在命令窗口上显示文字
 void cons_putstr0(struct CONSOLE *cons, char *s);													// 显示字符串(通过字符编码0结尾)
 void cons_putstr1(struct CONSOLE *cons, char *s, int l);											// 显示字符串(通过指定长度)
+void cons_col_putstr0(struct CONSOLE *cons, char *s, int font_color, int back_color);				// 显示自定义颜色和背景的字符串(通过字符编码0结尾)
+void cons_col_putstr1(struct CONSOLE *cons, char *s, int l, int font_color, int back_color);		// 显示自定义颜色和背景的字符串(通过指定长度)
 void cons_runcmd(char *cmdline, struct CONSOLE *cons, int *fat,
 	unsigned int memtotal, char sysmode);															// 执行命令
 void cmd_mem(struct CONSOLE *cons, unsigned int memtotal);											// CMD：查询内存使用状态
@@ -554,6 +557,8 @@ void kal_api_linewin(struct SHEET *sht, int x0, int y0, int x1, int y1, int col)
 
 
 /* exception.c(异常中断处理) */
+#define WARMSG_CH	"********************%s********************\n   系统在尝试运行应用时遇到了错误。\n   %s如果该错误第一次出现，请尝试重新启动该应用程序，如果该错误反复出现，请联系软件的开发者。\n   下面是此次错误的信息：\n"
+#define WARMSG_EN	"********************%s********************\n   The system encountered an error while trying to run the application. \n    %s If this error occurs for the first time, please try to restart the application. If this error occurs repeatedly, please contact the software developer. \n the following is the error message:\n"
 int *inthandler00(int *esp);																		// 00号中断，用于处理除零异常
 int *inthandler0c(int *esp);																		// 0c号中断，用于处理栈异常
 int *inthandler0d(int *esp);																		// 0d号中断，用于处理一般异常

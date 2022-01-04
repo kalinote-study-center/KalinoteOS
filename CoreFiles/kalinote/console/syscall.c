@@ -23,7 +23,7 @@ int *kal_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int 
 
 	if (edx == 1) {
 		//´òÓ¡×Ö·û
-		cons_putchar(cons, eax & 0xff, 1);
+		cons_putchar(cons, eax & 0xff, 1, COL_WHITE, COL_BLACK);
 	} else if (edx == 2) {
 		//´òÓ¡×Ö·û´®(ÒÔ×Ö·û±àÂë0½áÎ²)
 		cons_putstr0(cons, (char *) ebx + ds_base);

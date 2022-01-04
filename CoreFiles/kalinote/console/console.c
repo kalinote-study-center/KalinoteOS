@@ -49,7 +49,7 @@ void console_task(struct SHEET *sheet, unsigned int memtotal){
 		/* DEBUG窗口不操作 */
 		if (sysinfo->sysmode == 0) {
 			/* 普通模式 */
-			cons_putchar(&cons, '>', 1);			//命令提示符
+			cons_putchar(&cons, '>', 1 , COL_WHITE, COL_BLACK);			//命令提示符
 			// cons_putstr0(&cons, "%s >", task->dir);
 		} else if (sysinfo->sysmode == 1) {
 			/* 调试模式 */
@@ -106,28 +106,28 @@ void console_task(struct SHEET *sheet, unsigned int memtotal){
 						/* 普通模式 */
 						if (cons.cur_x > 2 * 8) {
 							/* 用空格键把光标消去后，前移一次光标 */
-							cons_putchar(&cons, ' ', 0);
+							cons_putchar(&cons, ' ', 0, COL_WHITE, COL_BLACK);
 							cons.cur_x -= 8;
 						}
 					} else if (sysinfo->sysmode == 1) {
 						/* 调试模式 */
 						if (cons.cur_x > 8 * 8) {
 							/* 用空格键把光标消去后，前移一次光标 */
-							cons_putchar(&cons, ' ', 0);
+							cons_putchar(&cons, ' ', 0, COL_WHITE, COL_BLACK);
 							cons.cur_x -= 8;
 						}
 					} else {
 						/* 未知系统模式 */
 						if (cons.cur_x > 16 * 8) {
 							/* 用空格键把光标消去后，前移一次光标 */
-							cons_putchar(&cons, ' ', 0);
+							cons_putchar(&cons, ' ', 0, COL_WHITE, COL_BLACK);
 							cons.cur_x -= 8;
 						}
 					}
 				} else if (i == 10 + 256) {
 					/* Enter */
 					/* 用空格将光标擦除 */
-					cons_putchar(&cons, ' ', 0);
+					cons_putchar(&cons, ' ', 0, COL_WHITE, COL_BLACK);
 					if (sysinfo->sysmode == 0) {
 						/* 普通模式 */
 						cmdline[cons.cur_x / 8 - 2] = 0;				//命令提示符
@@ -146,7 +146,7 @@ void console_task(struct SHEET *sheet, unsigned int memtotal){
 					/* 显示提示符 */
 					if (sysinfo->sysmode == 0) {
 						/* 普通模式 */
-						cons_putchar(&cons, '>', 1);					//命令提示符
+						cons_putchar(&cons, '>', 1, COL_WHITE, COL_BLACK);					//命令提示符
 						// cons_printf(&cons, "%s >", task->dir)
 					} else if (sysinfo->sysmode == 1) {
 						/* 调试模式 */
@@ -170,7 +170,7 @@ void console_task(struct SHEET *sheet, unsigned int memtotal){
 							/* 未知系统模式 */
 							cmdline[cons.cur_x / 8 - 16] = i - 256;
 						}
-						cons_putchar(&cons, i - 256, 1);
+						cons_putchar(&cons, i - 256, 1, COL_WHITE, COL_BLACK);
 					}
 				}
 			}
@@ -186,7 +186,7 @@ void console_task(struct SHEET *sheet, unsigned int memtotal){
 	}
 }
 
-void cons_putchar(struct CONSOLE *cons, int chr, char move){
+void cons_putchar(struct CONSOLE *cons, int chr, char move, int font_color, int back_color){
 	/*
 	* 这里关于系统模式切换还需要改进
 	*/
@@ -196,7 +196,7 @@ void cons_putchar(struct CONSOLE *cons, int chr, char move){
 	if (s[0] == 0x09) {	/* 制表符 */
 		for (;;) {
 			if (cons->sht != 0) {
-				putfonts8_asc_sht(cons->sht, cons->cur_x, cons->cur_y, COL_WHITE, COL_BLACK, " ", 1);
+				putfonts8_asc_sht(cons->sht, cons->cur_x, cons->cur_y, font_color, back_color, " ", 1);
 			}
 			cons->cur_x += 8;
 			if (cons->cur_x == 8 + 512) {
@@ -234,7 +234,7 @@ void cons_putchar(struct CONSOLE *cons, int chr, char move){
 		// }
 	} else {	/* 一般字符，系统为正常模式 */
 		if (cons->sht != 0) {
-			putfonts8_asc_sht(cons->sht, cons->cur_x, cons->cur_y, COL_WHITE, COL_BLACK, s, 1);
+			putfonts8_asc_sht(cons->sht, cons->cur_x, cons->cur_y, font_color, back_color, s, 1);
 		}
 		if (move != 0) {
 			/* move为0时光标不后移 */
@@ -294,7 +294,15 @@ void cons_newline(struct CONSOLE *cons){
 void cons_putstr0(struct CONSOLE *cons, char *s){
 	/* 显示字符串：结尾字符编码0时停止 */
 	for (; *s != 0; s++) {
-		cons_putchar(cons, *s, 1);
+		cons_putchar(cons, *s, 1, COL_WHITE, COL_BLACK);
+	}
+	return;
+}
+
+void cons_col_putstr0(struct CONSOLE *cons, char *s, int font_color, int back_color){
+	/* 显示字符串：结尾字符编码0时停止(自定义颜色) */
+	for (; *s != 0; s++) {
+		cons_putchar(cons, *s, 1, font_color, back_color);
 	}
 	return;
 }
@@ -303,7 +311,16 @@ void cons_putstr1(struct CONSOLE *cons, char *s, int l){
 	/* 显示字符串：指定长度并显示 */
 	int i;
 	for (i = 0; i < l; i++) {
-		cons_putchar(cons, s[i], 1);
+		cons_putchar(cons, s[i], 1, COL_WHITE, COL_BLACK);
+	}
+	return;
+}
+
+void cons_col_putstr1(struct CONSOLE *cons, char *s, int l, int font_color, int back_color){
+	/* 显示字符串：指定长度并显示(自定义颜色) */
+	int i;
+	for (i = 0; i < l; i++) {
+		cons_putchar(cons, s[i], 1, font_color, back_color);
 	}
 	return;
 }
@@ -339,21 +356,21 @@ void cons_runcmd(char *cmdline, struct CONSOLE *cons, int *fat, unsigned int mem
 	} else if (strcmp(cmdline, "exit") == 0) {
 		if(cons->sht->flags == SHEET_DEBUG_CONS) {
 		/* debug窗口不处理 */
-			cons_putstr0(cons, "cannot run this command in debug console\n");
+			cons_putstr0(cons, DEBUG_WAR_STR);
 			return;
 		}
 		cmd_exit(cons, fat);
 	} else if (strncmp(cmdline, "start ", 6) == 0) {
 		if(cons->sht->flags == SHEET_DEBUG_CONS) {
 		/* debug窗口不处理 */
-			cons_putstr0(cons, "cannot run this command in debug console\n");
+			cons_putstr0(cons, DEBUG_WAR_STR);
 			return;
 		}
 		cmd_start(cons, cmdline, memtotal);
 	} else if (strncmp(cmdline, "run ", 4) == 0) {
 		if(cons->sht->flags == SHEET_DEBUG_CONS) {
 		/* debug窗口不处理 */
-			cons_putstr0(cons, "cannot run this command in debug console\n");
+			cons_putstr0(cons, DEBUG_WAR_STR);
 			return;
 		}
 		cmd_run(cons, cmdline, memtotal);
@@ -472,7 +489,7 @@ int cmd_app(struct CONSOLE *cons, int *fat, char *cmdline){
 			} else {
 				/* 英文或日文模式 */
 				cons_putstr0(cons, "\nUnrecognized file format.\n");
-		}
+			}
 		}
 		memman_free_4k(memman, (int) p, finfo->size);
 		cons_newline(cons);
