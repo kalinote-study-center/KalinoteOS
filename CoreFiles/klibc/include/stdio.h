@@ -16,6 +16,21 @@
 #define BUFSIZ			8192		// 这个宏是一个整数，该整数代表了 setbuf 函数使用的缓冲区大小。
 #define FOPEN_MAX		16			// (暂定)这个宏是一个整数，该整数代表了系统可以同时打开的文件数量。
 #define FILENAME_MAX	8			// (限制于FAT12)这个宏是一个整数，该整数代表了字符数组可以存储的文件名的最大长度。如果实现没有任何限制，则该值应为推荐的最大值。
+/* FILE的模式代码 */
+#define _MOPENR         0x1
+#define _MOPENW         0x2
+#define _MOPENA         0x4
+#define _MTRUNC         0x8
+#define _MCREAT         0x10
+#define _MBIN           0x20
+#define _MALBUF         0x40
+#define _MALFIL			0x80		// FILE类型的数据对象在关闭时必须释放，则设置它
+#define _MEOF			0x100
+#define _MERR			0x200
+#define _MLBF			0x400
+#define _MNBF			0x800
+#define _MREAD			0x1000
+#define _MWRITE			0x2000
 
 /* 文件流结构体 */
 typedef struct {
@@ -33,6 +48,7 @@ typedef struct {
 	unsigned char _Nback;		/* 记录回退字符个数 */
 	char *_Tmpnam;				/* 指向关闭文件时要删除的临时文件名的指针，或一个空指针 */
 } FILE;
+extern FILE *_Files[FOPEN_MAX];
 
 int sprintf(char *s, const char *format, ...);				// 发送格式化输出到字符串。
 int vsprintf(char *s, const char *format, va_list arg);		// 使用参数列表发送格式化输出到字符串。
@@ -43,7 +59,8 @@ int getchar(void);											// 从标准输入 stdin 获取一个字符（一�
 int puts(const char *str);									// 把一个字符串写入到标准输出 stdout，直到空字符，但不包括空字符。换行符会被追加到输出中。
 char *gets(char *str);										// 从标准输入 stdin 读取一行，并把它存储在 str 所指向的字符串中。当读取到换行符时，或者到达文件末尾时，它会停止，具体视情况而定。
 /* 文件的io函数暂时还没有做，等系统调用更完善再写 */
-
+FILE *fopen(const char *name, const char *modes);
+FILE *freopen(const char *name, const char *mods, FILE *str);
 
 #if (defined(__cplusplus))
 	}

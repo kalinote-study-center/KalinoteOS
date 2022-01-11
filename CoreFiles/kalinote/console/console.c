@@ -397,7 +397,7 @@ void cons_runcmd(char *cmdline, struct CONSOLE *cons, int *fat, unsigned int mem
 	} else if (strcmp(cmdline, "ps") == 0) {
 		cmd_ps(cons);
 	} else if (strcmp(cmdline, "testfunc") == 0) {
-		cmd_testfunc(cons);
+		cmd_testfunc(cons, fat);
 	} else if (cmdline[0] != 0) {
 		/* 执行cmd_app(),如果不是一个应用，会返回0 */
 		if (cmd_app(cons, fat, cmdline) == 0) {

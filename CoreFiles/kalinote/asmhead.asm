@@ -57,6 +57,7 @@ RESERVED			EQU		VBESIGNATURE + 34
 		; 记录VBE信息
 		MOV		EAX, [ES:DI]
 		MOV		[VBESIGNATURE], EAX
+		; TODO：完成VBE信息获取
 		
 
 ; 取得画面模式信息

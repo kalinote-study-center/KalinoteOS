@@ -2,7 +2,7 @@
 #include "../bootpack.h"
 #include <stdio.h>
 
-int *inthandler00(int *esp){
+int *inthandler_divzero(int *esp){
 	/* ³ýÁãÒì³£ */
 	struct TASK *task = task_now();
 	struct CONSOLE *cons = task->cons;

@@ -17,7 +17,7 @@
 		GLOBAL	_load_tr
 		GLOBAL  _clts, _fnsave, _frstor
 		GLOBAL	_check_cpuid, _read_cpuid
-		GLOBAL	_asm_inthandler00
+		GLOBAL	_asm_inthandler_divzero
 		GLOBAL	_asm_inthandler07
 		GLOBAL	_asm_inthandler_timer, _asm_inthandler21
 		GLOBAL	_asm_inthandler26
@@ -26,7 +26,7 @@
 		GLOBAL	_asm_end_app, _memtest_sub
 		GLOBAL	_farjmp, _farcall
 		GLOBAL	_asm_kal_api, _start_app
-		EXTERN  _inthandler00
+		EXTERN  _inthandler_divzero
 		EXTERN	_inthandler07
 		EXTERN	_inthandler_timer, _inthandler21
 		EXTERN	_inthandler26
@@ -183,7 +183,7 @@ _read_cpuid:	; int read_cpuid(int code, int *ebx, int *edx, int *ecx);	/* ¥”CPUI
 		POP EBX
 		RET
 
-_asm_inthandler00:				; ≥˝¡„“Ï≥£
+_asm_inthandler_divzero:				; ≥˝¡„“Ï≥£
         STI
         PUSH    ES
         PUSH    DS
@@ -193,7 +193,7 @@ _asm_inthandler00:				; ≥˝¡„“Ï≥£
         MOV     AX,SS
         MOV     DS,AX
         MOV     ES,AX
-        CALL    _inthandler00
+        CALL    _inthandler_divzero
         CMP     EAX,0
         JNE     _asm_end_app
         POP     EAX

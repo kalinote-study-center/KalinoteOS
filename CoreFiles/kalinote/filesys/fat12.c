@@ -217,3 +217,68 @@ char *file_loadfile2(int clustno, int *psize, int *fat)
 	
 	// return finfo;
 // }
+
+// void file_writefat(int *fat, int no, int data) {
+	// unsigned char *img = (unsigned char *) ADR_FAT;
+	// int i = no / 2, j, k;
+
+	// /* 向img写入数据 */
+	// fat[no] = data;
+
+	// if((no & 1) == 0) {	/* 如果no是偶数的话就和之前的一起更新 */
+		// j = fat[no - 1];
+		// k = fat[no];
+	// } else {	/* 是奇数的话，就和后面的东西一起更新 */
+		// j = fat[no];
+		// k = fat[no + 1];
+	// }
+
+	// /* 更新主文件 */
+	// img[i * 3] = (unsigned char) (j & 0x0ff);
+	// img[i * 3 + 1] = (unsigned char) ((k & 0x00f) << 4 | (j & 0xf00) >> 8);
+	// img[i * 3 + 2] = (unsigned char) ((k & 0xff0) >> 4);
+
+	// /* 更新从设备 */
+	// img[2880 + i * 3] = img[i * 3];
+	// img[2880 + i * 3 + 1] = img[i * 3 + 1];
+	// img[2880 + i * 3 + 2] = img[i * 3 + 1];
+	// return;
+// }
+
+// int fat_flush(void) {
+	// int i, j;
+
+	// /* 向I/O请求处理 */
+	// for(i = 1; i <= 18; i++) {
+		// io_req(IO_WRITE, i);
+	// }
+
+	// /* 从I/O获取处理状态 */
+	// for(i = 1; i <= 18; i++) {
+		// j = io_stat(IO_WRITE, i);
+		// if(j == 1) {
+			// return 1;
+		// }
+	// }
+	// return 0;
+// }
+
+// int file_delete(int *fat, struct FILEINFO *file) {
+	// int clustno, ncno, i;
+
+	// /* 将目录设置为删除 */
+	// file->name[0] = 0xe5;
+
+	// /* 取消FAT标记 */
+	// ncno = file->clustno;
+	// for(; fat[ncno] >= 0x0ff8;) {
+		// clustno = ncno;
+		// ncno = fat[clustno];
+		// file_writefat(fat, clustno, 0x0000);
+	// }
+	// i = fat_flush();
+	// if(i != 0) {
+		// return 1;
+	// }
+	// return 0;
+// }

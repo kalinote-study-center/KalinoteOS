@@ -27,7 +27,7 @@ void api_inittimer(int timer, int data);                                        
 void api_settimer(int timer, int time);                                         // 设置指定计时器的定时
 void api_freetimer(int timer);                                                  // 释放指定计时器
 void api_beep(int tone);                                                        // 控制蜂鸣器发生
-int api_fopen(char *fname);                                                     // 打开一个文件，并返回文件句柄
+int api_fopen(const char *fname);                                               // 打开一个文件，并返回文件句柄
 void api_fclose(int fhandle);                                                   // 关闭一个文件
 void api_fseek(int fhandle, int offset, int mode);                              // 寻找文件
 int api_fsize(int fhandle, int mode);                                           // 获取文件大小

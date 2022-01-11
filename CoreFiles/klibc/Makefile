@@ -13,7 +13,7 @@ OBJS       = abs.obj atof.obj atoi.obj errno.obj frexp.obj ldexp.obj \
 	isxdigit.obj tolower.obj toupper.obj atol.obj calloc.obj system.obj \
 	fabs.obj atexit.obj bsearch.obj div.obj labs.obj ldiv.obj strcoll.obj \
 	asctime.obj clock.obj time.obj ctime.obj difftime.obj fminf.obj fmaxf.obj \
-	pow.obj expf.obj
+	pow.obj expf.obj fopen.obj xfiles.obj freopen.obj fclose.obj
 
 # 有空把makefile整理以下，不然标准函数太多太乱
 

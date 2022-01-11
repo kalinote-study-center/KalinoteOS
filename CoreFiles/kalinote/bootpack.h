@@ -95,7 +95,7 @@ void store_cr0(int cr0);								// 存入CR0寄存器
 void load_tr(int tr);									// 加载TR寄存器
 int check_cpuid(void);									// 检查CPUID是否可用
 int read_cpuid(int code, int *ebx, int *edx, int *ecx);	// 从CPUID获取信息
-void asm_inthandler00(void);							// 00号中断，除零异常
+void asm_inthandler_divzero(void);							// 00号中断，除零异常
 void asm_inthandler07(void);							// 07号中断，FPU异常中断
 void asm_inthandler0c(void);							// 0c号中断，用于处理栈异常
 void asm_inthandler0d(void);							// 0d号中断，用于处理异常程序
@@ -540,7 +540,7 @@ void cmd_sysinfo(struct CONSOLE *cons, unsigned int memtotal);										// CMD：
 void cmd_pwd(struct CONSOLE *cons);																	// CMD：查看当前命令行路径
 void cmd_cd(struct CONSOLE *cons, char *parameter, int *fat);										// CMD：切换命令行目录
 void cmd_ps(struct CONSOLE *cons);																	// CMD：查看所有任务及状态
-void cmd_testfunc(struct CONSOLE *cons);															// 功能测试专用
+void cmd_testfunc(struct CONSOLE *cons, int *fat);													// 功能测试专用
 int cmd_app(struct CONSOLE *cons, int *fat, char *cmdline);											// 外部应用程序
 struct SHEET *open_console(struct SHTCTL *shtctl, unsigned int memtotal, int debug);				// 开启一个命令窗口
 struct TASK *open_constask(struct SHEET *sht, unsigned int memtotal);								// 开启一个任务
@@ -559,7 +559,7 @@ void kal_api_linewin(struct SHEET *sht, int x0, int y0, int x1, int y1, int col)
 /* exception.c(异常中断处理) */
 #define WARMSG_CH	"********************%s********************\n   系统在尝试运行应用时遇到了错误。\n   %s如果该错误第一次出现，请尝试重新启动该应用程序，如果该错误反复出现，请联系软件的开发者。\n   下面是此次错误的信息：\n"
 #define WARMSG_EN	"********************%s********************\n   The system encountered an error while trying to run the application. \n    %s If this error occurs for the first time, please try to restart the application. If this error occurs repeatedly, please contact the software developer. \n the following is the error message:\n"
-int *inthandler00(int *esp);																		// 00号中断，用于处理除零异常
+int *inthandler_divzero(int *esp);																	// 00号中断，用于处理除零异常
 int *inthandler0c(int *esp);																		// 0c号中断，用于处理栈异常
 int *inthandler0d(int *esp);																		// 0d号中断，用于处理一般异常
 
@@ -570,6 +570,7 @@ int *inthandler0d(int *esp);																		// 0d号中断，用于处理一般异常
 #define FILE_SYSTEM			0xfb						// 系统文件
 #define FILE_DIR			0xef						// 目录
 #define FILE_NORMAL			0xdf						// 普通文件
+#define ADR_FAT				(ADR_DISKIMG+0x200)			// FAT地址
 struct FILEINFO {
 	//文件结构(详见第367页)
 	unsigned char name[8], ext[3], type;
@@ -598,6 +599,9 @@ void file_loadfile(int clustno, int size, char *buf, int *fat, char *img);						
 char *file_loadfile2(int clustno, int *psize, int *fat);											// 加载kca压缩文件
 struct FILEINFO *dir_search(char *name, struct FILEINFO *finfo, int max);							// 在finfo搜索名称为name的目录
 struct FILEINFO *dir_check(char *dir, int *fat);													// 通过绝对路径获取文件信息
+// int file_delete(int *fat, struct FILEINFO *file);																// 删除文件
+// void file_writefat(int *fat, int no, int data);														// 写fat表
+// int fat_flush(void);																				// 将fat表更改写入FDC流
 
 /* jpeg.c(处理jpg图片) */
 struct DLL_STRPICENV{
@@ -827,153 +831,27 @@ int acpi_reset(void);													/* 通过ACPI的I/O总线实现重启 */
 
 /* cpuid.h(CPUID相关宏) */
 /* 供应商设置 */
-#define CPUID_VENDOR_OLDAMD      		"AMDisbetter!"					/* 早期AMD处理器的工程样品 */
-#define CPUID_VENDOR_AMD         		"AuthenticAMD"
+// #define CPUID_VENDOR_OLDAMD      		"AMDisbetter!"					/* 早期AMD处理器的工程样品 */
+// #define CPUID_VENDOR_AMD         		"AuthenticAMD"
 #define CPUID_VENDOR_INTEL       		"GenuineIntel"
-#define CPUID_VENDOR_OLDTRANSMETA		"TransmetaCPU"
-#define CPUID_VENDOR_TRANSMETA   		"GenuineTMx86"
-#define CPUID_VENDOR_CYRIX       		"CyrixInstead"
-#define CPUID_VENDOR_CENTAUR     		"CentaurHauls"
-#define CPUID_VENDOR_NEXGEN      		"NexGenDriven"
-#define CPUID_VENDOR_UMC         		"UMC UMC UMC "
-#define CPUID_VENDOR_SIS         		"SiS SiS SiS "
-#define CPUID_VENDOR_NSC         		"Geode by NSC"
-#define CPUID_VENDOR_RISE        		"RiseRiseRise"
-#define CPUID_VENDOR_VORTEX      		"Vortex86 SoC"
-#define CPUID_VENDOR_VIA         		"VIA VIA VIA "
+// #define CPUID_VENDOR_OLDTRANSMETA		"TransmetaCPU"
+// #define CPUID_VENDOR_TRANSMETA   		"GenuineTMx86"
+// #define CPUID_VENDOR_CYRIX       		"CyrixInstead"
+// #define CPUID_VENDOR_CENTAUR     		"CentaurHauls"
+// #define CPUID_VENDOR_NEXGEN      		"NexGenDriven"
+// #define CPUID_VENDOR_UMC         		"UMC UMC UMC "
+// #define CPUID_VENDOR_SIS         		"SiS SiS SiS "
+// #define CPUID_VENDOR_NSC         		"Geode by NSC"
+// #define CPUID_VENDOR_RISE        		"RiseRiseRise"
+// #define CPUID_VENDOR_VORTEX      		"Vortex86 SoC"
+// #define CPUID_VENDOR_VIA         		"VIA VIA VIA "
 /* 虚拟机的供应商设置 */		
-#define CPUID_VENDOR_VMWARE      		"VMwareVMware"
-#define CPUID_VENDOR_XENHVM      		"XenVMMXenVMM"
-#define CPUID_VENDOR_MICROSOFT_HV		"Microsoft Hv"
-#define CPUID_VENDOR_PARALLELS   		" lrpepyh vr"
+// #define CPUID_VENDOR_VMWARE      		"VMwareVMware"
+// #define CPUID_VENDOR_XENHVM      		"XenVMMXenVMM"
+// #define CPUID_VENDOR_MICROSOFT_HV		"Microsoft Hv"
+// #define CPUID_VENDOR_PARALLELS   		" lrpepyh vr"
 void cpu_init(void);													/* 初始化CPU相关信息 */
 int cpu_64_check(void);													/* 检测CPU是否支持64位 */
-
-/* blk.h(块设备参数) */
-#define NR_BLK_DEV	7							// 块设备数量
-#define NR_REQUEST	32							// 请求队列包含项数
-#define BLKREQ_READ		0						// 读命令
-#define BLKREQ_WRITE	1						// 写命令
-struct blk_request {
-	int dev;									// 设备号
-	int cmd;									// 命令号
-	int errors;									// 错误计数
-	unsigned long sector;						// 起始扇区(1块 = 2扇区)
-	char *buf;									// 数据缓冲区
-	struct TASK *waiting;						// 等待操作执行完成的任务
-	struct buf_head *bh;						// 缓冲区头指针
-	struct blk_request *next;					// 指向下一个request
-};
-#define IN_ORDER(s1,s2) \
-((s1)->cmd<(s2)->cmd || ((s1)->cmd==(s2)->cmd && \
-((s1)->dev < (s2)->dev || ((s1)->dev == (s2)->dev && \
-(s1)->sector < (s2)->sector))))					// *电梯调度算法
-struct blk_dev_struct {
-	/* 块设备结构 */
-	void (*request_fn)(void);					// 请求操作的函数指针
-	struct blk_request *current_request;		// 请求信息结构
-};
-extern struct blk_dev_struct blk_dev[NR_BLK_DEV];		// 块设备数组，每种块设备占一项
-extern struct request request[NR_REQUEST];				// 请求队列数组
-extern struct TASK *wait_for_request;					// 等待请求的任务结构
-#ifdef MAJOR_NR								// 主设备号
-	/* 目前支持hd和fd还有ramdisk，在有需要时添加 */
-	#if (MAJOR_NR == 1)
-		/* ramdisk，主设备驱动号为1 */
-		#define DEVICE_NAME "ramdisk"
-		#define DEVICE_REQUEST do_rd_request
-		#define DEVICE_NR(device) ((device) & 7)
-		#define DEVICE_ON(device) 
-		#define DEVICE_OFF(device)
-	#elif (MAJOR_NR == 2)
-		/* 软盘，主设备驱动号为2 */
-		#define DEVICE_NAME "floppy"
-		#define DEVICE_INTR do_floppy
-		#define DEVICE_REQUEST do_fd_request
-		#define DEVICE_NR(device) ((device) & 3)
-		#define DEVICE_ON(device) floppy_on(DEVICE_NR(device))
-		#define DEVICE_OFF(device) floppy_off(DEVICE_NR(device))
-	#elif (MAJOR_NR == 3)
-		/* 硬盘，主设备驱动号为3 */
-		#define DEVICE_NAME "harddisk"
-		#define DEVICE_INTR do_hd
-		#define DEVICE_REQUEST do_hd_request
-		#define DEVICE_NR(device) (MINOR(device)/5)
-		#define DEVICE_ON(device)
-		#define DEVICE_OFF(device)
-	#elif
-		/* 未知的块设备 */
-		#error "unknown blk device"
-	#endif
-	
-	#define CURRENT (blk_dev[MAJOR_NR].current_request)
-	#define CURRENT_DEV DEVICE_NR(CURRENT->dev)
-	
-	#ifdef DEVICE_INTR
-		void (*DEVICE_INTR)(void) = NULL;
-	#endif
-	
-	void (DEVICE_REQUEST)(void);		// 释放锁定的缓冲区
-	void unlock_buffer(struct buf_head *bh) {
-		if (!bh->lock)						// 如果释放的缓冲区没有上锁，则进行警告
-			debug_print("BLK>WARNING: " DEVICE_NAME ": free buffer being unlocked\n");
-		bh->lock=0;							// 将缓冲区解锁
-		task_run(bh->wait, -1, 0);			// 等待唤醒缓冲区的task，且不改变等级和优先级
-	}
-	
-	void end_request(int uptodate) {
-		/* 结束请求 */
-		DEVICE_OFF(CURRENT->dev);					// 关闭设备
-		if (CURRENT->bh) {
-			/* CURRENT为指定主设备号当前request结构 */
-			CURRENT->bh->uptodate = uptodate;		// 置更新标志
-			unlock_buffer(CURRENT->bh);				// 解锁缓冲区
-		}
-		if (!uptodate) {
-			/* 如果更新标志为0则显示设备错误信息 */
-			debug_print(DEVICE_NAME " I/O error\n\r");
-			debug_print("dev %04x, block %d\n\r",CURRENT->dev,
-				CURRENT->bh->blocknum);
-		}
-		task_run(CURRENT->waiting, -1, 0);			// 唤醒等待该请求项的task
-		task_run(wait_for_request, -1, 0);			// 唤醒等待请求的task
-		CURRENT->dev = -1;							// 释放请求项
-		CURRENT = CURRENT->next;					// 从请求链表中删除请求项
-	}
-	
-	#define INIT_REQUEST \
-	repeat: \
-		if (!CURRENT) \
-			return; \
-		if (MAJOR(CURRENT->dev) != MAJOR_NR) \
-			panic(DEVICE_NAME ": request list destroyed"); \
-		if (CURRENT->bh) { \
-			if (!CURRENT->bh->b_lock) \
-				panic(DEVICE_NAME ": block not locked"); \
-		}
-#endif
-
-/* hd.c(硬盘驱动程序) */
-#define MAX_ERRORS		7		// (读写硬盘时)允许出现最多错误次数
-#define MAX_HD			2		// 最多硬盘数
-struct hd_info_struct {
-	/* 该结构体定义了硬盘参数及类型 */
-	/* 从左往右分别是：磁头数、每磁道扇区数、柱面数、写前预补偿柱面号、磁头着陆区柱面号、控制字节 */
-	int head,sect,cyl,wpcom,lzone,ctl;
-};
-struct partition {
-	/* 硬盘分区表结构(?) From linux 0.11 */
-	unsigned char boot_ind;		/* 0x80 - active (unused) */
-	unsigned char head;		/* ? */
-	unsigned char sector;		/* ? */
-	unsigned char cyl;		/* ? */
-	unsigned char sys_ind;		/* ? */
-	unsigned char end_head;		/* ? */
-	unsigned char end_sector;	/* ? */
-	unsigned char end_cyl;		/* ? */
-	unsigned int start_sect;	/* starting sector counting from 0 */
-	unsigned int nr_sects;		/* nr of sectors in partition */
-};
 
 /* io.c(输入输出控制) */
 #define IO_READ		1	/* 载入 */
