@@ -43,7 +43,7 @@ struct SYSINFO {
 	unsigned int memtotal;					/* 系统总内存 */
 	// int year, month, day;				/* (已废弃)系统日期 */
 	// int hour, min, sec;					/* (已废弃)系统时间 */
-	unsigned long time_counter;				/* 记录系统启动以来的ticks */
+	unsigned long volatile time_counter;	/* 记录系统启动以来的ticks */
 	CPUIDINFO cpuid_info;					/* CPUIDINFO结构体 */
 	VBEINFOBLOCK vbe_info;					/* VBE信息 TODO：完善VBE信息获取 */
 	DATETIME datetime;						/* 时间和日期 */
@@ -115,8 +115,9 @@ void start_app(int eip, int cs,
 	int esp, int ds, int *tss_esp0);					//启动应用程序
 void asm_end_app(void);									//结束应用程序
 void clts(void);
-void fnsave(int *addr);
-void frstor(int *addr);
+void io_fnsave(int *addr);
+void io_frstor(int *addr);
+void fwait(void);
 
 //dsctbl.c(GDT,IDT)
 struct SEGMENT_DESCRIPTOR {
@@ -336,13 +337,47 @@ int timer_cancel(struct TIMER *timer);																// 取消定时器
 void timer_cancelall(struct FIFO32 *fifo);															// 取消所有定时器
 void timer_sleep(int time);
 
+/* signal.c(信号处理) */
+typedef int sig_atomic_t;
+typedef unsigned int sigset_t;
+#define MAX_SIG				32					// 信号种类数量(最大)
+#define SIGHUP				 1					// 挂断任务
+#define SIGINT				 2                  // 键盘中断
+#define SIGQUIT				 3                  // 键盘退出(Shift+F1)
+#define SIGILL				 4                  // 非法指令(0x06号exception)
+#define SIGTRAP				 5                  // 跟踪断点
+#define SIGABRT				 6                  // 异常结束
+#define SIGIOT				 6                  // 异常结束
+#define SIGUNUSED			 7                  // 保留
+#define SIGFPE				 8                  // 协处理器错误(0x07号exception)
+#define SIGKILL				 9                  // 强迫进程终止
+#define SIGUSR1				10                  // 用户信号1，进程可使用
+#define SIGSEGV				11                  // 无效内存引用
+#define SIGUSR2				12                  // 用户信号2，进程可使用
+#define SIGPIPE				13                  // 管道写出错，没有reader
+#define SIGALRM				14                  // RTC Alarm
+#define SIGTERM				15                  // 进程终止
+#define SIGSTKFLT			16                  // 栈出错(0x0c号exception)
+#define SIGCHLD				17                  // 子进程停止(终止)
+#define SIGCONT				18                  // 恢复进程继续执行
+#define SIGSTOP				19                  // 停止进程执行
+#define SA_NOCLDSTOP		1					// 子进程处于停止状态，则不对SIGCHLD处理
+#define SA_NOMASK			0x40000000			// 不阻止在指定的信号处理程序(信号句柄)中再次接收到该信号
+#define SA_ONESHOT			0x80000000			// 信号句柄一旦被调用过就恢复默认处理句柄
+struct SIGACTION {
+	void (*sa_handler)(int);
+	sigset_t sa_mask;
+	int sa_flags;
+	void (*sa_restorer)(void);
+};
+
 /* mtask.c(多任务) */
-#define MAX_TASKS		2500																		// 最大任务数量
+#define MAX_TASKS		250																			// 最大任务数量
 #define TASK_GDT0		3																			// 定义从GDT的几号开始分配给TSS
-#define MAX_TASKS_LV	250																			// 每层最多任务数
+#define MAX_TASKS_LV	25																			// 每层最多任务数
 #define MAX_TASKLEVELS	10																			// 最高任务层数(321页)
 #define MAX_DIRLENGTH	256																			// 最大命令行路径长度
-/*下面这些是任务状态码，暂时还没有用到(2021.6.3) */
+/*下面这些是任务状态码 */
 #define	TASK_UNUSED					0					/* 未使用 */
 #define TASK_UNINTERRUPTIBLE		1					/* 不可中断睡眠状态 */
 #define TASK_RUNNING				2					/* 正在运行 */
@@ -350,6 +385,22 @@ void timer_sleep(int time);
 #define	TASK_ZOMBIE					4					/* 僵死状态 */
 #define	TASK_STOPPED				5					/* 已停止 */
 /*************************************************/
+struct TASK_SEGMENT_ADDR {
+	/* 记录任务相关段地址 */
+	unsigned int start_code;						// 代码段地址
+	unsigned int end_code;							// 代码长度(字节)
+	unsigned int end_data;							// 代码长度+数据长度
+	unsigned int brk;								// 总长度(字节)
+	unsigned int start_stack;						// 堆栈地址
+};
+struct TASK_ID_NUM {
+	/* 进程相关标识号 */
+	int pid;                                        // 进程号
+	int father;                                     // 父进程号
+	int pgrp;                                       // 进程组号
+	int session;                                    // 会话号
+	int leader;                                     // 会话首领
+};
 struct TSS32 {
 	/* 任务状态段(104字节)，用于切换任务时保存寄存器数据，这个是32位版，如果以后系统会升级到64位则更新64位版 */
 	int backlink, esp0, ss0, esp1, ss1, esp2, ss2, cr3;
@@ -371,7 +422,15 @@ struct TASK {
 	char *cmdline;
 	unsigned char langmode, langbyte1;
 	char dir[MAX_DIRLENGTH];								// 命令行所在路径
+	struct SIGACTION sigaction[MAX_SIG];					// 信号处理程序操作和标志信息
+	/* TODO */
 	// char *task_name;										// 任务名称
+	// int signal;											// 信号，每一个bit代表一种信号
+	// int blocked;											// 进程信号屏蔽码
+	// int exit_code;										// 执行停止的退出码，交给父进程处理
+	// struct TASK_SEGMENT_ADDR task_segment_addr;			// 记录任务相关段(数据段、代码段等)地址
+	// struct TASK_ID_NUM task_id_num;						// 任务相关标识号
+	// unsigned int start_time;								// 进程开始时间(tik)
 };
 struct TASKLEVEL {
 	int running; /* 正在运行的任务数量 */
@@ -387,6 +446,7 @@ struct TASKCTL {
 };
 extern struct TASKCTL *taskctl;
 extern struct TIMER *task_timer;
+extern struct TASK *idle;
 void task_add(struct TASK *task);																	// 向struct TASKLEVEL中添加一个进程
 void task_remove(struct TASK *task);																// 向struct TASKLEVEL中删除一个进程
 struct TASK *task_init(struct MEMMAN *memman);														// 初始化进程

@@ -15,8 +15,9 @@
 		GLOBAL	_load_gdtr, _load_idtr
 		GLOBAL	_load_cr0, _store_cr0
 		GLOBAL	_load_tr
-		GLOBAL  _clts, _fnsave, _frstor
+		GLOBAL  _clts, _io_fnsave, _io_frstor
 		GLOBAL	_check_cpuid, _read_cpuid
+		GLOBAL	_fwait
 		GLOBAL	_asm_inthandler_divzero
 		GLOBAL	_asm_inthandler07
 		GLOBAL	_asm_inthandler_timer, _asm_inthandler21
@@ -146,12 +147,12 @@ _clts:          ; void clts(void);
         CLTS
         RET
 
-_fnsave:        ; void fnsave(int *addr);
+_io_fnsave:        ; void io_fnsave(int *addr);
         MOV     EAX,[ESP+4]     ; addr
         FNSAVE  [EAX]
         RET
 
-_frstor:        ; void frstor(int *addr);
+_io_frstor:        ; void io_frstor(int *addr);
         MOV     EAX,[ESP+4]     ; addr
         FRSTOR  [EAX]
         RET
@@ -181,6 +182,10 @@ _read_cpuid:	; int read_cpuid(int code, int *ebx, int *edx, int *ecx);	/* ¥”CPUI
 		MOV [ESI],ECX
 		POP ESI
 		POP EBX
+		RET
+
+_fwait:			; void fwait(void);
+		FWAIT
 		RET
 
 _asm_inthandler_divzero:				; ≥˝¡„“Ï≥£

@@ -26,7 +26,7 @@ void cmd_sysmode(struct CONSOLE *cons, char *cmdline) {
 			cons_putstr0(cons,"System switch to normal mode\n");
 		}
 		sysinfo->sysmode = mode;
-	} else if (mode == 1) {
+	} else {
 		sysinfo->sysmode = mode;
 		/* 显示DEBUG console */
 		sheet_updown(sht_debug_cons, sht_debug_cons->ctl->top);
@@ -37,17 +37,6 @@ void cmd_sysmode(struct CONSOLE *cons, char *cmdline) {
 		} else {
 			/* 英文或日文模式 */
 			cons_putstr0(cons,"System switch to debug mode\n");
-		}
-	} else {
-		sysinfo->sysmode = mode;
-		if (task->langmode == 1) {
-			/* 中文模式 */
-			sprintf(s,"该系统模式未定义，模式码：%d\n",sysinfo->sysmode);
-			cons_putstr0(cons,s);
-		} else {
-			/* 英文或日文模式 */
-			sprintf(s,"This system mode is not defined,mode code:%d\n",sysinfo->sysmode);
-			cons_putstr0(cons,s);
 		}
 	}
 	return;

@@ -23,7 +23,7 @@ kalinote.img : kalinote/mbr.bin kalinote/kalinote.sys Makefile \
 		a2048/a2048.kal light/light.kal timeapp/timeapp.kal \
 		pi/pi.kal sincurve/sincurve.kal runtime/runtime.kal \
 		divzero/divzero.kal amiya/amiya.kal randint/randint.kal \
-		aobench/aobench.kal shape/shape.kal
+		aobench/aobench.kal shape/shape.kal shell/shell.kal
 	$(EDIMG)   imgin:../z_tools/fdimg0at.tek \
 		wbinimg src:kalinote/mbr.bin len:512 from:0 to:0 \
 		copy from:kalinote/kalinote.sys to:@: \
@@ -58,6 +58,7 @@ kalinote.img : kalinote/mbr.bin kalinote/kalinote.sys Makefile \
 		copy from:randint/randint.kal to:@: \
 		copy from:aobench/aobench.kal to:@: \
 		copy from:shape/shape.kal to:@: \
+		copy from:shell/shell.kal to:@: \
 		imgout:kalinote.img
 
 # √¸¡Ó
@@ -101,6 +102,7 @@ full :
 	$(MAKE) -C randint
 	$(MAKE) -C aobench
 	$(MAKE) -C shape
+	$(MAKE) -C shell
 	$(MAKE) kalinote.img
 	$(COPY) kalinote.img ..\z_tools\qemu\kalinoteos.bin
 	$(COPY) kalinote.img ..\z_tools\qemu\kalinoteos.vfd
@@ -164,6 +166,7 @@ clean_full :
 	$(MAKE) -C randint		clean
 	$(MAKE) -C aobench		clean
 	$(MAKE) -C shape		clean
+	$(MAKE) -C shell		clean
 
 src_only_full :
 	$(MAKE) -C klibc		src_only
@@ -193,6 +196,7 @@ src_only_full :
 	$(MAKE) -C randint		src_only
 	$(MAKE) -C aobench		src_only
 	$(MAKE) -C shape		src_only
+	$(MAKE) -C shell		src_only
 	-$(DEL) kalinote.img
 
 refresh :

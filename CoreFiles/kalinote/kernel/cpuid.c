@@ -22,7 +22,6 @@ void cpu_init(void) {
 	
 	/* 检查是否支持Brand String */
 	eax = read_cpuid(0x80000000, &ebx, &edx, &ecx);
-	// debug_print("CPUID>Brand String support: %s\n", eax >= 0x80000004? "yes":"no");		// 想什么呢，这个时候debug窗口还没有初始化
 	sysinfo->cpuid_info.brandString = ((eax>=0x80000004)?TRUE:FALSE);
 
 	/* 读取CPU信息 */
@@ -45,15 +44,14 @@ void cpu_init(void) {
 }
 
 int cpu_64_check(void) {
-	/* 检测CPU是否支持长模式(IntelCPU,通过CPUID:0x80000002) */
-	/* 这里的功能是否正常仍有待检查 */
+	/* TODO：检测CPU是否支持长模式(IntelCPU,通过CPUID:0x80000002) */
 	struct SYSINFO *sysinfo = (struct SYSINFO *) *((int *) SYSINFO_ADDR);
 	// unsigned int eax,ebx,ecx,edx;
 	// int i;
 	
 	if (!sysinfo->cpuid_info.cpuid)return FALSE;											/* 如果不支持CPUID */
 	if (!(strncmp(sysinfo->cpuid_info.oem, CPUID_VENDOR_INTEL, 12) == 0))return FALSE;		/* 不是intelCPU(查询方式不同) */
-	debug_print("CPUID>64 bit Check\n");
+	// debug_print("CPUID>64 bit Check\n");
 	// eax = read_cpuid(0x80000002, &ebx, &edx, &ecx);
 	// debug_print("EAX:0x%08x\n",eax);
 	// debug_print("EBX:0x%08x\n",ebx);

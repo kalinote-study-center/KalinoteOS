@@ -1,9 +1,10 @@
-/* 多任务处理 */
+/* 多任务(Multitasking)处理 */
 
 #include "../bootpack.h"
 
 struct TASKCTL *taskctl;
 struct TIMER *task_timer;
+struct TASK *idle;				/* 底层闲置任务 */
 
 struct TASK *task_now(void){
 	/* 返回现在正在活动中的struct TASK地址 */
@@ -16,7 +17,7 @@ void task_add(struct TASK *task){
 	struct TASKLEVEL *tl = &taskctl->level[task->level];
 	tl->tasks[tl->running] = task;
 	tl->running++;
-	task->flags = 2; /* 活动中 */
+	task->flags = TASK_RUNNING; /* 活动中 */
 	return;
 }
 
@@ -41,7 +42,7 @@ void task_remove(struct TASK *task){
 		/* 如果now的值出现异常，则进行修正 */
 		tl->now = 0;
 	}
-	task->flags = 1; /* 休眠中 */
+	task->flags = TASK_UNINTERRUPTIBLE; /* 休眠中 */
 
 	/* 移动 */
 	for (; i < tl->running; i++) {
@@ -75,12 +76,12 @@ void task_idle(void){
 struct TASK *task_init(struct MEMMAN *memman){
 	/* 任务管理器初始化 */
 	int i;
-	struct TASK *task, *idle;
+	struct TASK *task;
 	struct SEGMENT_DESCRIPTOR *gdt = (struct SEGMENT_DESCRIPTOR *) ADR_GDT;
 	
 	taskctl = (struct TASKCTL *) memman_alloc_4k(memman, sizeof (struct TASKCTL));
 	for (i = 0; i < MAX_TASKS; i++) {
-		taskctl->tasks0[i].flags = 0;
+		taskctl->tasks0[i].flags = TASK_UNUSED;
 		taskctl->tasks0[i].sel = (TASK_GDT0 + i) * 8;
 		taskctl->tasks0[i].tss.ldtr = (TASK_GDT0 + MAX_TASKS + i) * 8;
 		set_segmdesc(gdt + TASK_GDT0 + i, 103, (int) &taskctl->tasks0[i].tss, AR_TSS32);
@@ -92,7 +93,7 @@ struct TASK *task_init(struct MEMMAN *memman){
 	}
 	
 	task = task_alloc();					/* 系统主进程 */
-	task->flags = 2;						/* 活动中标志 */
+	task->flags = TASK_RUNNING;				/* 活动中标志 */
 	task->priority = 10; 					/* 优先级10(0.1秒进行任务切换) */
 	task->level = 0;						/* 最高等级(后面还可以通过task_run重新设置level) */
 	task_add(task);			
@@ -123,10 +124,10 @@ struct TASK *task_alloc(void){
 	int i;
 	struct TASK *task;
 	for (i = 0; i < MAX_TASKS; i++) {
-		if (taskctl->tasks0[i].flags == 0) {
+		if (taskctl->tasks0[i].flags == TASK_UNUSED) {
 			/* 寻找一个没有使用的任务结构体 */
 			task = &taskctl->tasks0[i];
-			task->flags = 1; /* 正在使用的标志 */
+			task->flags = TASK_UNINTERRUPTIBLE; 	/* 正在使用的标志(不可中断睡眠) */
 			task->tss.eflags = 0x00000202; /* IF = 1; */
 			task->tss.eax = 0; /* 先置0 */
 			task->tss.ecx = 0;
@@ -171,10 +172,10 @@ void task_run(struct TASK *task, int level, int priority){
 		task->priority = priority;  /* 设置进程优先级 */
 	}
 
-	if (task->flags == 2 && task->level != level) { /* 改变活动中的level */
+	if (task->flags == TASK_RUNNING && task->level != level) { /* 改变活动中的level */
 		task_remove(task); /* 这里执行之后flag的值会变为1，于是下面的if语块也会被执行 */
 	}
-	if (task->flags != 2) {
+	if (task->flags != TASK_RUNNING) {
 		/* 从休眠状态唤醒的情形 */
 		task->level = level;
 		task_add(task);
@@ -206,8 +207,14 @@ void task_switch(void){
 }
 
 void task_sleep(struct TASK *task) {
+	/* 将任务休眠(切换到不可中断睡眠模式) */
+	/* 处于不可中断睡眠模式的任务只有在使用task_run函数重新运行时才会醒来 */
+	if(task == idle) {
+		/* 尝试睡眠底层闲置任务 */
+		/* TODO：触发panic */
+	}
 	struct TASK *now_task;
-	if (task->flags == 2) {
+	if (task->flags == TASK_RUNNING) {
 		/* 如果处于活动状态 */
 		now_task = task_now();
 		task_remove(task); /* 执行此语句的话flags将变为1 */
@@ -228,11 +235,23 @@ int *inthandler07(int *esp){
     clts();
     if (taskctl->task_fpu != now) {
         if (taskctl->task_fpu != 0) {
-            fnsave(taskctl->task_fpu->fpu);
+            io_fnsave(taskctl->task_fpu->fpu);
         }
-        frstor(now->fpu);
+        io_frstor(now->fpu);
         taskctl->task_fpu = now;
     }
     io_sti();
     return 0;
+}
+
+/* 下面这些函数尚未经过可行性评估 */
+int task_pause(void) {
+	/* 将当前任务切换为可中断睡眠模式 */
+	/* 处于可中断睡眠模式的任务在接收到一个信号时进行返回 */
+	struct TASK *task = task_now();
+	if(task->flags == TASK_RUNNING) {
+		task->flags = TASK_INTERRUPTIBLE;
+	}
+	/* TODO：完善这个函数 */
+	return 0;
 }

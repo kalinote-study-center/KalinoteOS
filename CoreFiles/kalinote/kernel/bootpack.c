@@ -28,7 +28,7 @@ void KaliMain(void){
 	// struct FILEINFO *finfo_jp;
 	extern char fonts[4096];
 	struct SYSINFO sysinfo;
-	int direction = 0;		/* 这个变量用来记录是否按下方向键，0为未按下，1为按下 */
+	int funcbtn = 0;		/* 这个变量用来记录是否按下方向键，0为未按下，1为按下 */
 	char task_a_str[8] = "systask";
 	char task_fdc_str[8] = "fdctask";
 	char task_clock_str[6] = "clock";
@@ -177,7 +177,7 @@ void KaliMain(void){
 	
 	/* 初始化clock */
 	task_clock = task_alloc();
-	clock_taskinit(task_clock, sht_task_bar);		/* TODO：这里后面换成任务栏的子图层 */
+	clock_taskinit(task_clock, sht_task_bar);
 	task_clock->cmdline = task_clock_str;
 	
 	/* sht_cons */
@@ -374,7 +374,8 @@ void KaliMain(void){
 				// keywin_on(key_win);
 			} else if (256 <= i && i <= 511) { /* 键盘数据 */
 				// debug_print("keyboard>0x%x\n", i);
-				if (direction == 1) {
+				if (funcbtn == 1) {
+					/* 功能键处理 */
 					if(i == 0x48 + 256) {
 						/* 上 */
 						// debug_print("keyboard>press UP\n");
@@ -391,10 +392,10 @@ void KaliMain(void){
 						/* 右 */
 						// debug_print("keyboard>press RIGHT\n");
 					}
-					direction = 0;
+					funcbtn = 0;
 				} else {
 					if (i < 0x80 + 256) { /* 将按键编码转换为字符编码 */
-						/* 如果是在方向键模式，则将74-77分别处理为上、下、左、右 */
+						/* 如果是在功能键模式，则将74-77分别处理为上、下、左、右 */
 						if (key_shift == 0) {
 							/* shift未按下 */
 							s[0] = keytable0[i - 256];	
@@ -413,9 +414,11 @@ void KaliMain(void){
 					}
 				}
 				if (s[0] != 0 && key_win != 0) { /* 一般字符、BackSpace、Enter */
+					/* 向聚焦的窗口的fifo发送数据 */
 					fifo32_put(&key_win->task->fifo, s[0] + 256);
 				}
-				if (i == 256 + 0x0f && key_win != 0){	/* Tab */
+				if (i == 256 + 0x0f && key_shift != 0 && key_win != 0){	/* Shift + Tab(原来只有tab，现在保留tab给代码补全[TODO]) */
+					/* 切换聚焦窗口 */
 					keywin_off(key_win);
 					j = key_win->height - 1;
 					if (j == 0 || j == 1) {
@@ -480,9 +483,9 @@ new_console:
 				if (i == 256 + 0x57 && shtctl->top > 2) {	/* F11 切换窗口 */
 					sheet_updown(shtctl->sheets[2], shtctl->top - 1);
 				}
-				if (i == 256 + 0xe0) {	/* 方向键 */
-					// debug_print("keyboard>direction key\n");
-					direction = 1;
+				if (i == 256 + 0xe0) {	/* 方向键、功能键等 */
+					// debug_print("keyboard>funcbtn key\n");
+					funcbtn = 1;
 				}
 				if (i == 256 + 0xfa) {	/* 键盘成功接收到数据 */
 					keycmd_wait = -1;
@@ -525,13 +528,14 @@ new_console:
 						y = my - point_sht->vy0;
 						if(0 <= x && x < point_sht->bxsize && 0 <= y && y < point_sht->bysize) {
 							/* 如果鼠标指针在图层范围内 */
-							if (point_sht->buf[y * point_sht->bxsize + x] != point_sht->col_inv) {/* 如果不是透明层 */
+							//if (point_sht->buf[y * point_sht->bxsize + x] != point_sht->col_inv) {/* 如果不是透明层 */
+								/* 一般情况下来说，菜单层不会有透明层 */
 								if(point_sht->flags == SHEET_MENU) {
 									/* 如果是菜单层 */
 									option_change((struct MENU *)(point_sht->win), y);
-									break;
 								}
-							}
+								break;
+							//}
 						}
 					}
 					if ((mdec.btn & 0x01) != 0) {

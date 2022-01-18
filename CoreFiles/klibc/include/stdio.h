@@ -61,6 +61,7 @@ char *gets(char *str);										// 从标准输入 stdin 读取一行，并把�
 /* 文件的io函数暂时还没有做，等系统调用更完善再写 */
 FILE *fopen(const char *name, const char *modes);
 FILE *freopen(const char *name, const char *mods, FILE *str);
+int fclose(FILE *str);
 
 #if (defined(__cplusplus))
 	}

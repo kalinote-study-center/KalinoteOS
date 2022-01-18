@@ -51,12 +51,9 @@ void console_task(struct SHEET *sheet, unsigned int memtotal){
 			/* 普通模式 */
 			cons_putchar(&cons, '>', 1 , COL_WHITE, COL_BLACK);			//命令提示符
 			// cons_putstr0(&cons, "%s >", task->dir);
-		} else if (sysinfo->sysmode == 1) {
+		} else {
 			/* 调试模式 */
 			cons_putstr0(&cons, "DEBUG >");
-		} else {
-			/* 未知系统模式 */
-			cons_putstr0(&cons, "UNKNOWSYSMODE >");
 		}
 	}
 
@@ -97,6 +94,7 @@ void console_task(struct SHEET *sheet, unsigned int memtotal){
 				cmd_exit(&cons, fat);
 			}
 			if (256 <= i && i <= 511 && cons.sht->flags != SHEET_DEBUG_CONS) { /* 键盘数据(通过任务A)，debug窗口不接受键盘数据(暂时) */
+			/* TODO：cmdline的长度可能还需要扩大 */
 				if (i == 8 + 256) {
 					/* backspace */
 					/*
@@ -109,16 +107,9 @@ void console_task(struct SHEET *sheet, unsigned int memtotal){
 							cons_putchar(&cons, ' ', 0, COL_WHITE, COL_BLACK);
 							cons.cur_x -= 8;
 						}
-					} else if (sysinfo->sysmode == 1) {
+					} else {
 						/* 调试模式 */
 						if (cons.cur_x > 8 * 8) {
-							/* 用空格键把光标消去后，前移一次光标 */
-							cons_putchar(&cons, ' ', 0, COL_WHITE, COL_BLACK);
-							cons.cur_x -= 8;
-						}
-					} else {
-						/* 未知系统模式 */
-						if (cons.cur_x > 16 * 8) {
 							/* 用空格键把光标消去后，前移一次光标 */
 							cons_putchar(&cons, ' ', 0, COL_WHITE, COL_BLACK);
 							cons.cur_x -= 8;
@@ -131,12 +122,9 @@ void console_task(struct SHEET *sheet, unsigned int memtotal){
 					if (sysinfo->sysmode == 0) {
 						/* 普通模式 */
 						cmdline[cons.cur_x / 8 - 2] = 0;				//命令提示符
-					} else if (sysinfo->sysmode == 1) {
+					} else {
 						/* 调试模式 */
 						cmdline[cons.cur_x / 8 - 8] = 0;
-					} else {
-						/* 未知系统模式 */
-						cmdline[cons.cur_x / 8 - 16] = 0;
 					}
 					cons_newline(&cons);
 					cons_runcmd(cmdline, &cons, fat, memtotal, sysinfo->sysmode);	/* 运行命令 */
@@ -148,13 +136,10 @@ void console_task(struct SHEET *sheet, unsigned int memtotal){
 						/* 普通模式 */
 						cons_putchar(&cons, '>', 1, COL_WHITE, COL_BLACK);					//命令提示符
 						// cons_printf(&cons, "%s >", task->dir)
-					} else if (sysinfo->sysmode == 1) {
+					} else {
 						/* 调试模式 */
 						cons_putstr0(&cons, "DEBUG >");
-					} else {
-						/* 未知系统模式 */
-						cons_putstr0(&cons, "UNKNOWSYSMODE >");
-					}
+					} 
 				} else {
 					/* 一般字符 */
 					//if (cons.cur_x < 240) {
@@ -163,12 +148,9 @@ void console_task(struct SHEET *sheet, unsigned int memtotal){
 						if (sysinfo->sysmode == 0) {
 							/* 普通模式 */
 							cmdline[cons.cur_x / 8 - 2] = i - 256;		//命令提示符
-						} else if (sysinfo->sysmode == 1) {
+						} else {
 							/* 调试模式 */
 							cmdline[cons.cur_x / 8 - 8] = i - 256;
-						} else {
-							/* 未知系统模式 */
-							cmdline[cons.cur_x / 8 - 16] = i - 256;
 						}
 						cons_putchar(&cons, i - 256, 1, COL_WHITE, COL_BLACK);
 					}
@@ -193,7 +175,21 @@ void cons_putchar(struct CONSOLE *cons, int chr, char move, int font_color, int 
 	char s[2];
 	s[0] = chr;
 	s[1] = 0;
-	if (s[0] == 0x09) {	/* 制表符 */
+	if (s[0] == 0x08) {		/* BackSpace */
+		if(cons->cur_x > 8) {
+			/* 不是一行的第一个字符(不需要改变cur_y) */
+			cons->cur_x -= 8;
+			putfonts8_asc_sht(cons->sht, cons->cur_x, cons->cur_y, font_color, back_color, " ", 1);
+		} else {
+			/* 是一行的第一个字符 */
+			if(cons->cur_y > 28) {
+				/* 不是第一行 */
+				cons->cur_y -= 16;
+				cons->cur_x = 512;
+				putfonts8_asc_sht(cons->sht, cons->cur_x, cons->cur_y, font_color, back_color, " ", 1);
+			}
+		}
+	} else if (s[0] == 0x09) {	/* 制表符 */
 		for (;;) {
 			if (cons->sht != 0) {
 				putfonts8_asc_sht(cons->sht, cons->cur_x, cons->cur_y, font_color, back_color, " ", 1);
@@ -210,10 +206,12 @@ void cons_putchar(struct CONSOLE *cons, int chr, char move, int font_color, int 
 		cons_newline(cons);
 	} else if (s[0] == 0x0d) {	/* 回车 */
 		/* 这里暂时不进行任何操作 */
+		/* TODO：回车不换行 */
 	// } else if (chr == 10001) {	/* 系统调试模式 */
 		// if (cons->sht != 0) {
 			// putfonts8_asc_sht(cons->sht, cons->cur_x, cons->cur_y, COL_WHITE, COL_BLACK, "DEBUG >", 7);
 		// }
+		
 		// if (move != 0) {
 			// /* move为0时光标不后移 */
 			// cons->cur_x += 8 * 7;
@@ -252,7 +250,7 @@ void cons_newline(struct CONSOLE *cons){
 	int x, y;
 	struct SHEET *sheet = cons->sht;
 	struct TASK *task = task_now();
-	struct SYSINFO *sysinfo = (struct SYSINFO *) *((int *) SYSINFO_ADDR);
+	// struct SYSINFO *sysinfo = (struct SYSINFO *) *((int *) SYSINFO_ADDR);
 	if (cons->cur_y < 28 + 432) {
 		cons->cur_y += 16; /* 换行 */
 	} else {
@@ -272,18 +270,18 @@ void cons_newline(struct CONSOLE *cons){
 		}
 	}
 	
-	if (sysinfo->sysmode == 0) {
-		/* 普通模式 */
-		cons->cur_x = 8;
-	} else if (sysinfo->sysmode == 1) {
-		/* 调试模式 */
-		//cons->cur_x = 8 * 7;
-		cons->cur_x = 8;
-	} else {
-		/* 未知系统模式 */
-		//cons->cur_x = 8 * 15;
-		cons->cur_x = 8;
-	}
+	// if (sysinfo->sysmode == 0) {
+		// /* 普通模式 */
+		// cons->cur_x = 8;
+	// } else if (sysinfo->sysmode == 1) {
+		// /* 调试模式 */
+		// cons->cur_x = 8;
+	// } else {
+		// /* 未知系统模式 */
+		// cons->cur_x = 8;
+	// }
+	cons->cur_x = 8;
+	
 	if (task->langmode == 1 && task->langbyte1 != 0) {
 		cons->cur_x = 16;
 	}
@@ -293,9 +291,7 @@ void cons_newline(struct CONSOLE *cons){
 
 void cons_putstr0(struct CONSOLE *cons, char *s){
 	/* 显示字符串：结尾字符编码0时停止 */
-	for (; *s != 0; s++) {
-		cons_putchar(cons, *s, 1, COL_WHITE, COL_BLACK);
-	}
+	cons_col_putstr0(cons, s, COL_WHITE, COL_BLACK);
 	return;
 }
 
@@ -309,10 +305,7 @@ void cons_col_putstr0(struct CONSOLE *cons, char *s, int font_color, int back_co
 
 void cons_putstr1(struct CONSOLE *cons, char *s, int l){
 	/* 显示字符串：指定长度并显示 */
-	int i;
-	for (i = 0; i < l; i++) {
-		cons_putchar(cons, s[i], 1, COL_WHITE, COL_BLACK);
-	}
+	cons_col_putstr1(cons, s, l, COL_WHITE, COL_BLACK);
 	return;
 }
 
@@ -326,6 +319,7 @@ void cons_col_putstr1(struct CONSOLE *cons, char *s, int l, int font_color, int 
 }
 
 void cons_runcmd(char *cmdline, struct CONSOLE *cons, int *fat, unsigned int memtotal, char sysmode){
+	/* TODO：在这里加入词法分析 */
 	debug_print("command>try run %s at %d\n", cmdline, cons);
 	if (strcmp(cmdline, "mem") == 0) {
 		cmd_mem(cons, memtotal);
