@@ -1,8 +1,7 @@
 /* 获取当前语言模式API的程序 */
-#include "apilib.h"
+#include <apilib.h>
 
-void KaliMain(void)
-{
+int main() {
 	int langmode = api_getlang();
 	static char s1[23] = {	/* 日文SHIFT-JIS模式 */
 		0x93, 0xfa, 0x96, 0x7b, 0x8c, 0xea, 0x83, 0x56, 0x83, 0x74, 0x83, 0x67,
@@ -24,5 +23,5 @@ void KaliMain(void)
 	if (langmode == 3) {
 		api_putstr0(s2);
 	}
-	api_end();
+	return 0;
 }

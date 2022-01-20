@@ -1,5 +1,5 @@
 /* 用于测试简单的动态窗口 */
-#include "apilib.h"
+#include <apilib.h>
 #include <stdio.h>
 #include <math.h>
 #include <stdlib.h>
@@ -51,7 +51,7 @@ float sample(float x, float y) {
     return sum / N;
 }
 
-void KaliMain(void){
+int main(){
 	int *buf;
 	int win, p, x, y;
 	
@@ -75,5 +75,5 @@ void KaliMain(void){
 		if (api_getkey(1) == 0x1b)
 			break;
 		
-	api_end();
+	return 0;
 }

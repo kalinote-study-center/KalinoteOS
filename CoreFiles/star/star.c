@@ -1,9 +1,8 @@
 /* 绘制点的测试程序 */
-#include "apilib.h"
+#include <apilib.h>
+#include <stdlib.h>
 
-int rand(void);
-
-void KaliMain(void){
+int main(){
 	int *buf;
 	int win, i, x, y;
 	api_initmalloc();
@@ -21,5 +20,5 @@ void KaliMain(void){
 			break; /* Enter to break; */
 		}
 	}
-	api_end();
+	return 0;
 }

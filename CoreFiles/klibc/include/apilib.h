@@ -46,6 +46,10 @@ unsigned long api_get_system_runtime(void);                                     
 void api_showjpeg(char *filename, int x, int y, int win);                       // 在指定窗口的指定位置显示一张图片
 int api_send_key_to_cmd(char *str);                                             // 向命令行发送键值
 
+
+void KaliStartup(void);										// 程序入口
+
+
 #if (defined(__cplusplus))
 	}
 #endif

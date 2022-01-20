@@ -1,7 +1,7 @@
-#include "apilib.h"
+/* 用于测试FPU */
+#include <apilib.h>
 
-void KaliMain(void)
-{
+int main() {
     /* 圆周率计算pi=4arctan（1）=4（1-1/3+1/5-1/7+1/9-…） */
     double s = 0.0;
     int i, d;
@@ -19,5 +19,5 @@ void KaliMain(void)
         }
     }
     api_putchar('\n');
-    api_end();
+    return 0;
 }

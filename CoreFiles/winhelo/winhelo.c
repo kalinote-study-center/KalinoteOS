@@ -1,7 +1,7 @@
 /* 生成一个窗口的应用程序的演示代码 */
-#include "apilib.h"
+#include <apilib.h>
 
-void KaliMain(void){
+int main(){
 	int *buf;
 	int win;
 
@@ -16,5 +16,5 @@ void KaliMain(void){
 		}
 	}
 	// api_end();
-	return;
+	return 0;
 }

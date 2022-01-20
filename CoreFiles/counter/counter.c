@@ -1,8 +1,8 @@
 /* 性能测试 */
 #include <stdio.h>
-#include "apilib.h"
+#include <apilib.h>
 
-void KaliMain(void){
+int main(){
 	int *buf;
 	char s[10];
 	int counter = 0;
@@ -17,5 +17,5 @@ void KaliMain(void){
 		api_putstrwin(win,15,50,0,8,s);
 		api_refreshwin(win,0,0,160,100);
 	}
-	api_end();
+	return 0;
 }

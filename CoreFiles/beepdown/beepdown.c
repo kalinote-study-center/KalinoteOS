@@ -1,7 +1,7 @@
 /* ·äÃùÆ÷²âÊÔ³ÌĞò */
-#include "apilib.h"
+#include <apilib.h>
 
-void KaliMain(void)
+int main(void)
 {
 	int i, timer;
 	timer = api_alloctimer();
@@ -16,5 +16,5 @@ void KaliMain(void)
 		}
 	}
 	api_beep(0);	/* Í£Ö¹·¢Éù */
-	api_end();
+	return 0;
 }

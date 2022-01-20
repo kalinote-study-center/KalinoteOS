@@ -1,8 +1,8 @@
 /* 简单的定时器程序 */
 #include <stdio.h>
-#include "apilib.h"
+#include <apilib.h>
 
-void KaliMain(void){
+int main(){
 	int *buf;
 	char s[12];
 	int win, timer, sec = 0, min = 0, hou = 0;
@@ -29,5 +29,5 @@ void KaliMain(void){
 			}
 		}
 	}
-	api_end();
+	return 0;
 }

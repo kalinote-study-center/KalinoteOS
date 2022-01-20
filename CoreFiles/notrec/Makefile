@@ -1,5 +1,5 @@
 APP      = notrec
 STACK    = 42k
-MALLOC   = 0k
+MALLOC   = 42k
 
 include ../app_make.txt

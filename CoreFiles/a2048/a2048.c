@@ -1,6 +1,6 @@
 /* 2048游戏 */
 #include <stdio.h>
-#include "apilib.h"
+#include <apilib.h>
 
 int rand(void);
 
@@ -92,7 +92,7 @@ int add(void)/*对中间变量数组进行处理*/
     return change;
 }
 
-void KaliMain(void){
+int main(void){
     int gameover=0;/*判断游戏是否结束，1结束，0继续*/
     int i,j;
     int change=1;/*判断格子中的数是否改变，0不变*/
@@ -210,5 +210,5 @@ void KaliMain(void){
                     gameover=0;/*所有格子都填满则游戏结束*/
     }
 	api_putstr0("你竟然通关了！\n");
-	api_end();
+	return 0;
 }

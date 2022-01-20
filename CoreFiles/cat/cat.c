@@ -1,8 +1,7 @@
 /* 用于???取命令行参数的程序 */
 #include "apilib.h"
 
-void KaliMain(void)
-{
+int main() {
 	int fh;
 	char c, cmdline[30], *p;
 
@@ -20,5 +19,5 @@ void KaliMain(void)
 	} else {
 		api_putstr0("File not found.\n");
 	}
-	api_end();
+	return 0;
 }

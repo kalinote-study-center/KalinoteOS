@@ -1,8 +1,7 @@
 /* ª≠œﬂ≤‚ ‘≥Ã–Ú */
-#include "apilib.h"
+#include <apilib.h>
 
-void KaliMain(void)
-{
+int main() {
 	int *buf;
 	int win, i;
 	api_initmalloc();
@@ -19,5 +18,5 @@ void KaliMain(void)
 		}
 	}
 	api_closewin(win);
-	api_end();
+	return 0;
 }

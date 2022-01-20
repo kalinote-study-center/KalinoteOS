@@ -2,7 +2,7 @@
 #include <apilib.h>
 #include <stdio.h>
 
-void KaliMain(void) {
+int main(void) {
 	char key;
 	char s[30], buf[1024];
 	int i = 0;
@@ -34,5 +34,5 @@ start_shell:
 		}
 		/* 在这里处理一行命令 */
 	}
-	
+	return 0;
 }

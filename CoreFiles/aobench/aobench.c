@@ -1,4 +1,4 @@
-#include "apilib.h"
+#include <apilib.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -284,7 +284,7 @@ void init_scene() {
 #define W  (WIDTH + 16)
 #define H  (HEIGHT + 16 + 18)
 
-int KaliMain() {
+int main() {
 	int buf[W * H *4];
 	int win = api_openwin(buf, W, H, -1, "aobench");
 	int i,j;
@@ -309,5 +309,5 @@ int KaliMain() {
 	for (;;)
 		if (api_getkey(1) == 0x1b)
 			break;
-	api_end();
+	return 0;
 }

@@ -1,5 +1,5 @@
 /* 图形时钟APP */
-#include "apilib.h"
+#include <apilib.h>
 
 #include <stdio.h>
 #include <math.h>
@@ -8,7 +8,7 @@
 #define Width 320
 #define PI 3.14159
 
-void KaliMain(void) {
+int main(void) {
 	int *win_buf;	/* 窗口内存缓冲区 */
 	int win;		/* 窗口句柄 */
 	int i;			/* 角度 */
@@ -41,5 +41,5 @@ void KaliMain(void) {
 		}
 	}
 
-	api_end();
+	return 0;
 }

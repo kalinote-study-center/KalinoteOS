@@ -1,7 +1,7 @@
 /* ¶àÉ«²Ê²âÊÔ */
-#include "apilib.h"
+#include <apilib.h>
 
-void KaliMain(void) {
+int main() {
 	int *buf;
 	int win, i;
 	
@@ -28,5 +28,5 @@ void KaliMain(void) {
 	}
 	api_refreshwin(win, 0, 0, 200, 190);
 	api_getkey(1);
-	api_end();
+	return 0;
 }

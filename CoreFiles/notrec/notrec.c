@@ -1,8 +1,7 @@
 /* ´°¿ÚÍ¸Ã÷Í¼²ã²âÊÔ³ÌÐò */
 #include <apilib.h>
 
-void KaliMain(void)
-{
+int main() {
 	int win;
 	int buf[150 * 70 * 4];
 	win = api_openwin(buf, 150, 70, 255, "notrec");
@@ -14,5 +13,5 @@ void KaliMain(void)
 			break; /* Enter to break; */
 		}
 	}
-	api_end();
+	return 0;
 }

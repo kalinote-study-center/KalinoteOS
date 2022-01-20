@@ -1,7 +1,7 @@
-#include "apilib.h"
+#include <apilib.h>
 #include <math.h>
 
-void KaliMain(void)
+int main(void)
 {
     char buf[160 * 100];
     int win, i;
@@ -10,5 +10,5 @@ void KaliMain(void)
         api_point(win, i + 8, sin(i * 0.05) * 30 + 60, 0);
     }
     api_getkey(1); /* 按任意键结束 */
-    api_end();
+    return 0;
 }

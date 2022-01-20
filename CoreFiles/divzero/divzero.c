@@ -1,13 +1,14 @@
 /* 除0测试 */
-#include "apilib.h"
+#include <apilib.h>
 #include <stdio.h>
+#include <stdlib.h>
 
-void KaliMain(void){
-	int i = 15;
+int main(){
+	int i = rand();
 	if(i/0 < 0){
 		printf("AAAAA");
 	} else {
 		printf("BBBBB");
 	}
-	api_end();
+	return 0;
 }

@@ -1,10 +1,10 @@
 /* 求素数的程序 */
 #include <stdio.h>
-#include "apilib.h"
+#include <apilib.h>
 
 #define MAX		10000
 
-void KaliMain(void)
+int main(void)
 {
 	char flag[MAX], s[8];
 	int i, j;
@@ -21,5 +21,5 @@ void KaliMain(void)
 			}
 		}
 	}
-	api_end();
+	return 0;
 }

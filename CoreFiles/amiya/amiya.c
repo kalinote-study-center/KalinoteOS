@@ -1,10 +1,10 @@
 /* 显示图片API测试 */
-#include "apilib.h"
+#include <apilib.h>
 
 #define HEIGHT	450
 #define WIDTH	450
 
-void KaliMain(void) {
+int main(void) {
 	int *buf;
 	int win;
 	
@@ -19,5 +19,5 @@ void KaliMain(void) {
 			break; /* Enter结束 */
 		}
 	}
-	api_end();
+	return 0;
 }

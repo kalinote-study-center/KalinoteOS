@@ -1,7 +1,7 @@
 /* 一个简单绘制球形的程序 */
-#include "apilib.h"
+#include <apilib.h>
 
-void KaliMain(void)
+int main(void)
 {
 	int win, i, j, dis;
 	int buf[216 * 237 *4];
@@ -41,5 +41,5 @@ void KaliMain(void)
 			break; /* Enter to break; */
 		}
 	}
-	api_end();
+	return 0;
 }

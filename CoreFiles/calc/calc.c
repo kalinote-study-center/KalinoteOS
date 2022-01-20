@@ -1,5 +1,5 @@
 /* –½—ßs?ZŠí */
-#include "apilib.h"
+#include <apilib.h>
 #include <stdio.h>		/* sprintf */
 
 #define INVALID		-0x7fffffff
@@ -9,7 +9,7 @@ int strtol(char *s, char **endp, int base);	/* ?y”Ÿ”istdlib.hj */
 char *skipspace(char *p);
 int getnum(char **pp, int priority);
 
-void KaliMain(void){
+int main(void){
 	int i;
 	char s[30], *p;
 
@@ -22,7 +22,7 @@ void KaliMain(void){
 		sprintf(s, "= %d = 0x%x\n", i, i);
 		api_putstr0(s);
 	}
-	api_end();
+	return 0;
 }
 
 char *skipspace(char *p){
