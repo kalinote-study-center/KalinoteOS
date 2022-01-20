@@ -4,7 +4,7 @@ format:
 
 file:
 	./libc/libc.lib;
-	../klibc/syscall/entrypoint/entrypoint.lib;
+	./libc/entrypoint/entrypoint.lib;
 
 label:
 	_KaliStartup;

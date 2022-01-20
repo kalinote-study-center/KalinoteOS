@@ -463,7 +463,7 @@ void KaliMain(void){
 						cons_putstr0(task->cons, "\nBreak(key) :\n");
 						io_cli();	/* 强制结束处理时禁止任务切换 */
 						task->tss.eax = (int) &(task->tss.esp0);
-						task->tss.eip = (int) asm_end_app;
+						task->tss.eip = (int) asm_end_app;			/* 在这里将应用程序跳转到asm_end_app(nasmfunc.asm) */
 						io_sti();
 						task_run(task, -1, 0);	/* 为了确实执行结束处理，如果处于休眠状态则唤醒 */
 					}

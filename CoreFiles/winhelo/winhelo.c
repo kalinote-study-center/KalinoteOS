@@ -15,5 +15,6 @@ void KaliMain(void){
 			break; /* Enter½áÊø */
 		}
 	}
-	api_end();
+	// api_end();
+	return;
 }

@@ -39,6 +39,7 @@ NASM	 = nasm
 ALL :
 	$(MAKE) $(TARGET).lib
 	$(MAKE) -C syscall
+	$(MAKE) -C crt0
 
 pow.obj : pow.s Makefile
 	as pow.s --32 -o pow.obj
@@ -84,8 +85,10 @@ clean :
 	-$(DELE) $(TARGET).map
 	-$(DELE) $(TARGET).org
 	$(MAKE) -C syscall		clean
+	$(MAKE) -C crt0			clean
 	
 src_only: clean Makefile
 	-$(DELE) $(TARGET).lib
 	$(MAKE) -C syscall		src_only
+	$(MAKE) -C crt0			src_only
 	

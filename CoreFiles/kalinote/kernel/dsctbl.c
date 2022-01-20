@@ -27,16 +27,16 @@ void init_gdtidt(void) {
 	/* IDT的设定(中断注册) */
 	/* 这里的2<<3表示中断段号为2，左移3位是因为最低3位有其他作用 */
 	/* 注册方法：set_gatedesc(idt + 中断号, 偏移量(offset，中断程序标签), 中断段号(固定2 << 3), 权限(系统中断一般为AR_INTGATE32，应用程序需要加上0x60(01100000))); */
-	set_gatedesc(idt + 0x00, (int) asm_inthandler_divzero, 2 << 3, AR_INTGATE32);				/* 除0异常中断 */
-	set_gatedesc(idt + 0x07, (int) asm_inthandler07, 2 << 3, AR_INTGATE32);						/* FPU异常中断 */
-	set_gatedesc(idt + 0x0c, (int) asm_inthandler0c, 2 << 3, AR_INTGATE32);						/* 栈异常中断 */
-	set_gatedesc(idt + 0x0d, (int) asm_inthandler0d, 2 << 3, AR_INTGATE32);						/* 一般保护异常中断 */
-	set_gatedesc(idt + 0x20, (int) asm_inthandler_timer, 2 << 3, AR_INTGATE32);					/* 时钟中断 */
-	set_gatedesc(idt + 0x21, (int) asm_inthandler21, 2 << 3, AR_INTGATE32);						/* 键盘中断 */
-	set_gatedesc(idt + 0x26, (int) asm_inthandler26, 2 << 3, AR_INTGATE32);						/* FDC中断 */
-	set_gatedesc(idt + 0x27, (int) asm_inthandler27, 2 << 3, AR_INTGATE32);						/* 没用的中断，仅为了避免老硬件发生错误 */
-	set_gatedesc(idt + 0x2c, (int) asm_inthandler2c, 2 << 3, AR_INTGATE32);						/* 鼠标中断 */
-	set_gatedesc(idt + 0x40, (int) asm_kal_api,      2 << 3, AR_INTGATE32 + 0x60);				/* 应用程序API中断，段定义加上0x60(01100000)可以将该段权限设置为应用程序使用 */
+	set_gatedesc(idt + 0x00, (int) asm_inthandler_divzero,				2 << 3, AR_INTGATE32);				/* 除0异常中断 */
+	set_gatedesc(idt + 0x07, (int) asm_inthandler_device_not_available, 2 << 3, AR_INTGATE32);				/* FPU异常中断 */
+	set_gatedesc(idt + 0x0c, (int) asm_inthandler_stack_segment,		2 << 3, AR_INTGATE32);				/* 栈异常中断 */
+	set_gatedesc(idt + 0x0d, (int) asm_inthandler_general_protection,	2 << 3, AR_INTGATE32);				/* 一般保护异常中断 */
+	set_gatedesc(idt + 0x20, (int) asm_inthandler_timer,				2 << 3, AR_INTGATE32);				/* 时钟中断 */
+	set_gatedesc(idt + 0x21, (int) asm_inthandler21,					2 << 3, AR_INTGATE32);				/* 键盘中断 */
+	set_gatedesc(idt + 0x26, (int) asm_inthandler26,					2 << 3, AR_INTGATE32);				/* FDC中断 */
+	set_gatedesc(idt + 0x27, (int) asm_inthandler27,					2 << 3, AR_INTGATE32);				/* 没用的中断，仅为了避免老硬件发生错误 */
+	set_gatedesc(idt + 0x2c, (int) asm_inthandler2c,					2 << 3, AR_INTGATE32);				/* 鼠标中断 */
+	set_gatedesc(idt + 0x40, (int) asm_kal_api,     					2 << 3, AR_INTGATE32 + 0x60);		/* 应用程序API中断，段定义加上0x60(01100000)可以将该段权限设置为应用程序使用 */
 
 	return;
 }

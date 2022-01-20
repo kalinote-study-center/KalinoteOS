@@ -4,7 +4,7 @@ format:
 
 file:
 	../klibc/klibc.lib;
-	../klibc/syscall/entrypoint/entrypoint.lib;
+	../klibc/crt0/crt0.lib;
 
 label:
 	_KaliStartup;

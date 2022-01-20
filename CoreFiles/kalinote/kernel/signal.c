@@ -64,12 +64,12 @@ int sigaction(int signum, struct SIGACTION *action, struct SIGACTION *oldaction)
 	return 0;
 }
 
-void do_signal() {
+void do_signal(int sig_num, int eax, int ebx, int ecx, int edx, int fs, int es, int ds, int eip, int cs, int eflags, unsigned int *esp, int ss) {
 	/* 
 	* 这段代码将信号处理句柄插入到用户程序堆栈中，
 	* 并在系统调用结束后立刻执行信号处理句柄程序，
 	* 然后继续执行用户的程序
 	*/
 	/* TODO：这段程序有点麻烦，后面来实现(先完善syscall) */
-	
+	return;
 }

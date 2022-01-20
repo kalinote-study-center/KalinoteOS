@@ -92,16 +92,7 @@ struct TASK *task_init(struct MEMMAN *memman){
 		taskctl->level[i].now = 0;
 	}
 	
-	task = task_alloc();					/* 系统主进程 */
-	task->flags = TASK_RUNNING;				/* 活动中标志 */
-	task->priority = 10; 					/* 优先级10(0.1秒进行任务切换) */
-	task->level = 0;						/* 最高等级(后面还可以通过task_run重新设置level) */
-	task_add(task);			
-	task_switchsub();						/* level设定 */
-	load_tr(task->sel);
-	task_timer = timer_alloc();				/* 用于控制任务切换的timer */
-	timer_settime(task_timer, task->priority);
-
+	/* 底层闲置任务 */
 	idle = task_alloc();
 	idle->tss.esp = memman_alloc_4k(memman, 64 * 1024) + 64 * 1024;
 	idle->tss.eip = (int) &task_idle;
@@ -113,6 +104,17 @@ struct TASK *task_init(struct MEMMAN *memman){
 	idle->tss.gs = 1 * 8;
 	idle->cmdline = "idle";
 	task_run(idle, MAX_TASKLEVELS - 1, 1);
+
+	/* systask */
+	task = task_alloc();					/* 系统主进程 */
+	task->flags = TASK_RUNNING;				/* 活动中标志 */
+	task->priority = 10; 					/* 优先级10(0.1秒进行任务切换) */
+	task->level = 0;						/* 最高等级(后面还可以通过task_run重新设置level) */
+	task_add(task);			
+	task_switchsub();						/* level设定 */
+	load_tr(task->sel);
+	task_timer = timer_alloc();				/* 用于控制任务切换的timer */
+	timer_settime(task_timer, task->priority);
 
 	taskctl->task_fpu = 0;		/* 先把FPU对应任务置0 */
 
@@ -228,7 +230,7 @@ void task_sleep(struct TASK *task) {
 	return;
 }
 
-int *inthandler07(int *esp){
+int *inthandler_device_not_available(int *esp){
 	/* FPU异常中断函数，FPU不存在时触发 */
     struct TASK *now = task_now();
     io_cli();

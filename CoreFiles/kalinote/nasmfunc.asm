@@ -2,10 +2,7 @@
 ; TAB=4
 ; 这个文件的存在是为了解决C语言不能解决的问题
 
-; [FORMAT "WCOFF"]				; 制作目标文件的模式
-; [INSTRSET "i486p"]				; 给486用的指令
 [BITS 32]						; 制作32位模式用的机器语言
-; [FILE "naskfunc.nas"]			; 源文件名信息
 		
 		GLOBAL	_io_hlt, _io_cli, _io_sti, _io_stihlt
 		GLOBAL	_io_in8,  _io_in16,  _io_in32
@@ -19,20 +16,20 @@
 		GLOBAL	_check_cpuid, _read_cpuid
 		GLOBAL	_fwait
 		GLOBAL	_asm_inthandler_divzero
-		GLOBAL	_asm_inthandler07
+		GLOBAL	_asm_inthandler_device_not_available
 		GLOBAL	_asm_inthandler_timer, _asm_inthandler21
 		GLOBAL	_asm_inthandler26
 		GLOBAL	_asm_inthandler27, _asm_inthandler2c
-		GLOBAL	_asm_inthandler0c, _asm_inthandler0d
+		GLOBAL	_asm_inthandler_stack_segment, _asm_inthandler_general_protection
 		GLOBAL	_asm_end_app, _memtest_sub
 		GLOBAL	_farjmp, _farcall
 		GLOBAL	_asm_kal_api, _start_app
 		EXTERN  _inthandler_divzero
-		EXTERN	_inthandler07
+		EXTERN	_inthandler_device_not_available
 		EXTERN	_inthandler_timer, _inthandler21
 		EXTERN	_inthandler26
 		EXTERN	_inthandler27, _inthandler2c
-		EXTERN	_inthandler0c, _inthandler0d
+		EXTERN	_inthandler_stack_segment, _inthandler_general_protection
 		EXTERN	_kal_api
 
 [SECTION .text]					; 目标文件中写了这些之后在写程序
@@ -207,7 +204,7 @@ _asm_inthandler_divzero:				; 除零异常
         POP     ES
         IRETD
 
-_asm_inthandler07:				; FPU异常中断
+_asm_inthandler_device_not_available:				; FPU异常中断
         STI
         PUSH    ES
         PUSH    DS
@@ -217,7 +214,7 @@ _asm_inthandler07:				; FPU异常中断
         MOV     AX,SS
         MOV     DS,AX
         MOV     ES,AX
-        CALL    _inthandler07
+        CALL    _inthandler_device_not_available
         CMP     EAX,0
         JNE     _asm_end_app
         POP     EAX
@@ -306,7 +303,7 @@ _asm_inthandler2c:
 		POP		ES
 		IRETD
 
-_asm_inthandler0c:
+_asm_inthandler_stack_segment:
 		STI
 		PUSH	ES
 		PUSH	DS
@@ -316,7 +313,7 @@ _asm_inthandler0c:
 		MOV		AX,SS
 		MOV		DS,AX
 		MOV		ES,AX
-		CALL	_inthandler0c
+		CALL	_inthandler_stack_segment
 		CMP		EAX,0
 		JNE		_asm_end_app
 		POP		EAX
@@ -326,7 +323,7 @@ _asm_inthandler0c:
 		ADD		ESP,4
 		IRETD
 
-_asm_inthandler0d:						; 异常中断
+_asm_inthandler_general_protection:						; 异常中断
 		STI
 		PUSH	ES
 		PUSH	DS
@@ -336,7 +333,7 @@ _asm_inthandler0d:						; 异常中断
 		MOV		AX,SS
 		MOV		DS,AX
 		MOV		ES,AX
-		CALL	_inthandler0d
+		CALL	_inthandler_general_protection
 		CMP		EAX,0
 		JNE		_asm_end_app
 		POP		EAX
@@ -387,7 +384,7 @@ _farcall:								; void farcall(int eip, int cs);
 		CALL	FAR	[ESP+4]				; eip, cs
 		RET
 
-_asm_kal_api:
+_asm_kal_api:							; 系统调用入口
 		STI
 		PUSH	DS
 		PUSH	ES
@@ -397,12 +394,14 @@ _asm_kal_api:
 		MOV		DS,AX		; 将操作系统用段地址存入DS和SS
 		MOV		ES,AX
 		CALL	_kal_api
-		CMP		EAX,0		; 当EAX不为0时程序结束
+		CMP		EAX,0		; 当EAX(返回值)不为0时程序结束，并将返回值当作task->tss.esp0来处理
 		JNE		_asm_end_app
 		ADD		ESP,32
 		POPAD
 		POP		ES
 		POP		DS
+.ret_from_kal_api:			; 从API返回后执行信号处理(do_signal)
+		; 这里还没搞懂linux是怎么处理的，还要再学习一个
 		IRETD
 		
 _asm_end_app:
@@ -417,7 +416,7 @@ _start_app:								; void start_app(int eip, int cs, int esp, int ds, int *tss_e
 		MOV		ECX,[ESP+40]			; 应用程序用的CS
 		MOV		EDX,[ESP+44]			; 应用程序用的ESP
 		MOV		EBX,[ESP+48]			; 应用程序用的DS/SS
-		MOV		EBP,[ESP+52]			; tss.esp0的番地
+		MOV		EBP,[ESP+52]			; tss.esp0的地址
 		MOV		[EBP  ],ESP				; 保存操作系统用的ESP
 		MOV		[EBP+4],SS				; 保存操作系统用的SS
 		MOV		ES,BX

@@ -26,6 +26,7 @@ DELE     = del
 
 ALL :
 	$(MAKE) $(TARGET).lib
+	$(MAKE) -C entrypoint
 
 %.ca : %.c Makefile
 	$(SJISCONV) $*.c $*.ca
@@ -66,8 +67,9 @@ clean :
 	-$(DELE) $(TARGET).bim
 	-$(DELE) $(TARGET).map
 	-$(DELE) $(TARGET).org
-	
+	$(MAKE) -C entrypoint		clean
 
 src_only :
 	$(MAKE) clean
 	-$(DELE) $(TARGET).lib
+	$(MAKE) -C entrypoint		src_only

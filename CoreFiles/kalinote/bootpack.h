@@ -5,6 +5,14 @@
  * Èç¹ûÓĞĞèÒª£¬¿ÉÒÔ·½±ãµØ²ğ·Ö³É²»Í¬Í·ÎÄ¼ş
  */
 
+/*
+* ÓĞĞ©Ê±ºò¿ÉÄÜ»áÓÃµ½Ç¶ÈëÊ½»ã±à´úÂë£¬ÏÖÔÚÔÚÕâÀï¶ÔÆä¸ñÊ½½øĞĞËµÃ÷£º
+* asm("»ã±àÓï¾ä"
+*	: Êä³ö¼Ä´æÆ÷
+*	: ÊäÈë¼Ä´æÆ÷
+*	: »á±»ĞŞ¸ÄµÄ¼Ä´æÆ÷)
+*/
+
 /* ÏµÍ³È«¾Ö¶¨Òå */
 /* sysinfo(bootpack.cÏµÍ³È«¾ÖĞÅÏ¢) */
 typedef struct {
@@ -95,10 +103,10 @@ void store_cr0(int cr0);								// ´æÈëCR0¼Ä´æÆ÷
 void load_tr(int tr);									// ¼ÓÔØTR¼Ä´æÆ÷
 int check_cpuid(void);									// ¼ì²éCPUIDÊÇ·ñ¿ÉÓÃ
 int read_cpuid(int code, int *ebx, int *edx, int *ecx);	// ´ÓCPUID»ñÈ¡ĞÅÏ¢
-void asm_inthandler_divzero(void);							// 00ºÅÖĞ¶Ï£¬³ıÁãÒì³£
-void asm_inthandler07(void);							// 07ºÅÖĞ¶Ï£¬FPUÒì³£ÖĞ¶Ï
-void asm_inthandler0c(void);							// 0cºÅÖĞ¶Ï£¬ÓÃÓÚ´¦ÀíÕ»Òì³£
-void asm_inthandler0d(void);							// 0dºÅÖĞ¶Ï£¬ÓÃÓÚ´¦ÀíÒì³£³ÌĞò
+void asm_inthandler_divzero(void);						// 00ºÅÖĞ¶Ï£¬³ıÁãÒì³£
+void asm_inthandler_device_not_available(void);			// 07ºÅÖĞ¶Ï£¬ÊıÑ§Ğ­´¦ÀíÆ÷²»´æÔÚ
+void asm_inthandler_stack_segment(void);				// 0cºÅÖĞ¶Ï£¬ÓÃÓÚ´¦ÀíÕ»Òì³£
+void asm_inthandler_general_protection(void);			// 0dºÅÖĞ¶Ï£¬ÓÃÓÚ´¦ÀíÒì³£³ÌĞò
 void asm_inthandler_timer(void);						// 20ºÅÖĞ¶Ï£¬ÓÃÓÚtimer
 void asm_inthandler21(void);							// 21ºÅÖĞ¶Ï£¬×¢²áÔÚ0x21
 void asm_inthandler26(void);							// 26ºÅÖĞ¶Ï£¬ÓÃÓÚFDC
@@ -280,7 +288,7 @@ void sheet_updown(struct SHEET *sht, int height);													// µ÷Õûsheet¸ß¶È
 void sheet_refresh(struct SHEET *sht, int bx0, int by0, int bx1, int by1);							// Ë¢ĞÂÍ¼²ã(ÇøÓò)
 void sheet_slide(struct SHEET *sht, int vx0, int vy0);												// ÒÆ¶¯Í¼²ã
 void sheet_free(struct SHEET *sht);																	// ÊÍ·ÅÒÑÊ¹ÓÃµÄÍ¼²ãÄÚ´æ
-																									   
+
 //graphic.c(»­ÃæÏÔÊ¾)                                                                                  
 //void init_palette(void);																			// ³õÊ¼»¯µ÷É«°åº¯Êı
 //void set_palette(int start, int end, unsigned char *rgb);											// ÉèÖÃµ÷É«°å
@@ -370,6 +378,11 @@ struct SIGACTION {
 	int sa_flags;
 	void (*sa_restorer)(void);
 };
+int signal(int signum, int handler, int restorer);													// ÎªÖ¸¶¨ĞÅºÅÉèÖÃĞÅºÅ´¦Àí³ÌĞò
+int sigaction(int signum, struct SIGACTION *action, struct SIGACTION *oldaction);					// ¸Ä±ä½ø³ÌÊÕµ½ĞÅºÅÊ±µÄ²Ù×÷
+void do_signal(int sig_num, int eax, int ebx,
+	int ecx, int edx, int fs, int es, int ds,
+	int eip, int cs, int eflags, unsigned int *esp, int ss);										// ĞÅºÅ´¦Àí³ÌĞò(TODO)
 
 /* mtask.c(¶àÈÎÎñ) */
 #define MAX_TASKS		250																			// ×î´óÈÎÎñÊıÁ¿
@@ -455,7 +468,7 @@ struct TASK *task_now(void);																		// ·µ»ØÏÖÔÚÕıÔÚ»î¶¯ÖĞµÄTASK½á¹¹Ìåµ
 void task_run(struct TASK *task, int level, int priority);											// ÔËĞĞ³ÌĞò
 void task_switch(void);																				// ÇĞ»»³ÌĞò
 void task_sleep(struct TASK *task);																	// ³ÌĞòË¯Ãß
-int *inthandler07(int *esp);																		// FPUÒì³£ÖĞ¶Ï
+int *inthandler_device_not_available(int *esp);														// ÊıÑ§Ğ­´¦ÀíÆ÷²»´æÔÚ
 
 /* window.c(´°¿Ú»æÖÆ) */
 #define TIT_ACT_DEFAULT		0x00ffc1c1				// Ä¬ÈÏ´°¿Ú±êÌâÀ¸Ñ¡ÖĞÑÕÉ«	
@@ -620,8 +633,8 @@ void kal_api_linewin(struct SHEET *sht, int x0, int y0, int x1, int y1, int col)
 #define WARMSG_CH	"********************%s********************\n   ÏµÍ³ÔÚ³¢ÊÔÔËĞĞÓ¦ÓÃÊ±Óöµ½ÁË´íÎó¡£\n   %sÈç¹û¸Ã´íÎóµÚÒ»´Î³öÏÖ£¬Çë³¢ÊÔÖØĞÂÆô¶¯¸ÃÓ¦ÓÃ³ÌĞò£¬Èç¹û¸Ã´íÎó·´¸´³öÏÖ£¬ÇëÁªÏµÈí¼şµÄ¿ª·¢Õß¡£\n   ÏÂÃæÊÇ´Ë´Î´íÎóµÄĞÅÏ¢£º\n"
 #define WARMSG_EN	"********************%s********************\n   The system encountered an error while trying to run the application. \n    %s If this error occurs for the first time, please try to restart the application. If this error occurs repeatedly, please contact the software developer. \n the following is the error message:\n"
 int *inthandler_divzero(int *esp);																	// 00ºÅÖĞ¶Ï£¬ÓÃÓÚ´¦Àí³ıÁãÒì³£
-int *inthandler0c(int *esp);																		// 0cºÅÖĞ¶Ï£¬ÓÃÓÚ´¦ÀíÕ»Òì³£
-int *inthandler0d(int *esp);																		// 0dºÅÖĞ¶Ï£¬ÓÃÓÚ´¦ÀíÒ»°ãÒì³£
+int *inthandler_stack_segment(int *esp);															// 0cºÅÖĞ¶Ï£¬ÓÃÓÚ´¦ÀíÕ»Òì³£
+int *inthandler_general_protection(int *esp);														// 0dºÅÖĞ¶Ï£¬ÓÃÓÚ´¦ÀíÒ»°ãÒì³£
 
 /* fat12.c(ÎÄ¼ş´¦Àí£¬ÎÄ¼şÏµÍ³) */
 #define FILE_NOINFO			0x00						// Ã»ÓĞÎÄ¼şĞÅÏ¢
@@ -1009,3 +1022,6 @@ typedef struct {
   int colormap_size;
   int bits_per_rgb;
 } XVisualInfo;
+
+/* ÒÔÏÂ´úÂëÓÃÓÚ²âÊÔ(µ÷ÊÔ)£¬ÔÚÏµÍ³Õı³£Ê¹ÓÃÊ±(¶àÊıÇé¿ö)²»»áÓÃµ½ */
+

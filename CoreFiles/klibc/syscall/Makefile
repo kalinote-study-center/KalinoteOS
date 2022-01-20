@@ -17,7 +17,6 @@ DEL      = del
 
 default :
 	$(MAKE) apilib.lib
-	$(MAKE) -C entrypoint
 
 apilib.lib : Makefile $(OBJS_API)
 	$(GOLIB) $(OBJS_API) out:apilib.lib
@@ -28,9 +27,7 @@ apilib.lib : Makefile $(OBJS_API)
 clean :
 	-$(DEL) *.lst
 	-$(DEL) *.obj
-	$(MAKE) -C entrypoint		clean
 
 src_only :
 	$(MAKE) clean
 	-$(DEL) apilib.lib
-	$(MAKE) -C entrypoint		src_only

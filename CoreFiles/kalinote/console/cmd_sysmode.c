@@ -7,7 +7,6 @@ void cmd_sysmode(struct CONSOLE *cons, char *cmdline) {
 	struct SYSINFO *sysinfo = (struct SYSINFO *) *((int *) SYSINFO_ADDR);
 	struct TASK *task = task_now();
 	char mode = cmdline[8] - '0';
-	char s[64];
 	struct SHEET *sht_debug_cons = (struct SHEET *) *((int *) DEBUG_ADDR);
 	if(sysinfo->sysmode == mode) {
 		/* ²»±ä */
