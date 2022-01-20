@@ -1,10 +1,9 @@
-/* –½—ßs?ZŠí */
 #include <apilib.h>
 #include <stdio.h>		/* sprintf */
 
 #define INVALID		-0x7fffffff
 
-int strtol(char *s, char **endp, int base);	/* ?y”Ÿ”istdlib.hj */
+int strtol(char *s, char **endp, int base);
 
 char *skipspace(char *p);
 int getnum(char **pp, int priority);
@@ -14,7 +13,7 @@ int main(void){
 	char s[30], *p;
 
 	api_cmdline(s, 30);
-	for (p = s; *p > ' '; p++) { }	/* ˆê’¼?“‹óŠi?~ */
+	for (p = s; *p > ' '; p++) { }
 	i = getnum(&p, 9);
 	if (i == INVALID) {
 		api_putstr0("error!\n");
@@ -26,7 +25,7 @@ int main(void){
 }
 
 char *skipspace(char *p){
-	for (; *p == ' '; p++) { }	/* ’µ?‹óŠi */
+	for (; *p == ' '; p++) { }
 	return p;
 }
 
@@ -35,7 +34,6 @@ int getnum(char **pp, int priority){
 	int i = INVALID, j;
 	p = skipspace(p);
 
-	/* ???Z•„ */
 	if (*p == '+') {
 		p = skipspace(p + 1);
 		i = getnum(&p, 0);
@@ -51,7 +49,7 @@ int getnum(char **pp, int priority){
 		if (i != INVALID) {
 			i = ~i;
 		}
-	} else if (*p == '(') {	/* Š‡† */
+	} else if (*p == '(') {
 		p = skipspace(p + 1);
 		i = getnum(&p, 9);
 		if (*p == ')') {
@@ -59,13 +57,12 @@ int getnum(char **pp, int priority){
 		} else {
 			i = INVALID;
 		}
-	} else if ('0' <= *p && *p <= '9') { /* ”’l */
+	} else if ('0' <= *p && *p <= '9') {
 		i = strtol(p, &p, 0);
 	} else { /* ?? */
 		i = INVALID;
 	}
 
-	/* “ñ??Z•„ */
 	for (;;) {
 		if (i == INVALID) {
 			break;

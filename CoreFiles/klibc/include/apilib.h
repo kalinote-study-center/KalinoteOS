@@ -14,7 +14,6 @@ void api_end(void);                                                             
 int api_openwin(int *buf, int xsiz, int ysiz, int col_inv, char *title);        // 打开窗口，返回窗口句柄
 void api_putstrwin(int win, int x, int y, int col, int len, char *str);         // 在窗口指定未知打印字符串
 void api_boxfilwin(int win, int x0, int y0, int x1, int y1, int col);           // 在窗口指定位置画一个指定大小的方块
-void api_initmalloc(void);                                                      // 初始化内存管理结构
 int *api_malloc(unsigned int size);                                             // 分配内存，并返回一个执行可用内存地址的指针
 void api_free(char *addr, int size);                                            // 释放已分配的内存
 void api_point(int win, int x, int y, int col);                                 // 在窗口指定位置绘制一个点
@@ -32,7 +31,6 @@ void api_fclose(int fhandle);                                                   
 void api_fseek(int fhandle, int offset, int mode);                              // 寻找文件
 int api_fsize(int fhandle, int mode);                                           // 获取文件大小
 int api_fread(char *buf, int maxsize, int fhandle);                             // 读取文件
-int api_cmdline(char *buf, int maxsize);                                        // 获取命令行参数
 int api_getlang(void);                                                          // 获取语言模式，返回语言模式代码
 void api_cls(void);                                                             // 清空命令行
 unsigned int api_get_year(void);                                                // 获取系统年
@@ -46,6 +44,9 @@ unsigned long api_get_system_runtime(void);                                     
 void api_showjpeg(char *filename, int x, int y, int win);                       // 在指定窗口的指定位置显示一张图片
 int api_send_key_to_cmd(char *str);                                             // 向命令行发送键值
 
+/* 下面的函数均不在用户应用程序中使用，而是在crt0.c中处理 */
+void api_initmalloc(void);                                                      // 初始化内存管理结构
+int api_cmdline(char *buf, int maxsize);                                        // 获取命令行参数
 
 void KaliStartup(void);										// 程序入口
 
