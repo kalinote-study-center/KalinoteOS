@@ -11,7 +11,7 @@ void cmd_exit(struct CONSOLE *cons, int *fat){
 		timer_cancel(cons->timer);
 	}
 	// taskbar_removewin(((struct WINDOW *)(cons->sht->win))->tskwinbtn);
-	memman_free_4k(memman, (int) fat, 4 * 2880);
+	memman_free_4k(memman, (int) fat, 4 * 2880);		/* ÊÍ·ÅfatÄÚ´æ */
 	io_cli();
 	if (cons->sht != 0) {
 		fifo32_put(fifo, cons->sht - shtctl->sheets0 + 768);	/* 768¡«1023 */

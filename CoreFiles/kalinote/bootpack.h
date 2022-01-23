@@ -51,7 +51,6 @@ struct SYSINFO {
 	unsigned int memtotal;					/* 系统总内存 */
 	// int year, month, day;				/* (已废弃)系统日期 */
 	// int hour, min, sec;					/* (已废弃)系统时间 */
-	unsigned long volatile time_counter;	/* 记录系统启动以来的ticks */
 	CPUIDINFO cpuid_info;					/* CPUIDINFO结构体 */
 	VBEINFOBLOCK vbe_info;					/* VBE信息 TODO：完善VBE信息获取 */
 	DATETIME datetime;						/* 时间和日期 */
@@ -121,7 +120,7 @@ void farcall(int eip, int cs);							//转移到调用的子程序(指定偏移)
 void asm_kal_api(void);									//KalinoteOS 系统API
 void start_app(int eip, int cs,			
 	int esp, int ds, int *tss_esp0);					//启动应用程序
-void asm_end_app(void);									//结束应用程序
+void asm_end_app(int* esp);								//结束应用程序
 void clts(void);
 void io_fnsave(int *addr);
 void io_frstor(int *addr);
@@ -300,6 +299,7 @@ void init_mouse_cursor8(int *mouse, int bc);														// 初始化鼠标指针
 void putblock8_8(int *vram, int vxsize, int pxsize,                                                    
 	int pysize, int px0, int py0, int *buf, int bxsize);											// 鼠标背景色处理
 int read_image_32(char *filename, int x0, int y0, int width, int *fat, unsigned int *vram);			// 32位色彩模式下读取图片
+void kal_api_linewin(struct SHEET *sht, int x0, int y0, int x1, int y1, int col);					// 绘制一条直线(系统调用)
 // 15种颜色常数定义，此系统支持RGB全彩色，所以可以使用0xRGB(普通的RGB表示方法)来表示颜色
 #define COL_BLACK		0x00000000
 #define COL_BRED		0x00ff0000
@@ -385,11 +385,11 @@ void do_signal(int sig_num, int eax, int ebx,
 	int eip, int cs, int eflags, unsigned int *esp, int ss);										// 信号处理程序(TODO)
 
 /* mtask.c(多任务) */
-#define MAX_TASKS		250																			// 最大任务数量
-#define TASK_GDT0		3																			// 定义从GDT的几号开始分配给TSS
-#define MAX_TASKS_LV	25																			// 每层最多任务数
-#define MAX_TASKLEVELS	10																			// 最高任务层数(321页)
-#define MAX_DIRLENGTH	256																			// 最大命令行路径长度
+#define MAX_TASKS		250							// 最大任务数量
+#define TASK_GDT0		3							// 定义从GDT的几号开始分配给TSS
+#define MAX_TASKS_LV	25							// 每层最多任务数
+#define MAX_TASKLEVELS	10							// 最高任务层数(321页)
+#define MAX_DIRLENGTH	256							// 最大命令行路径长度
 /*下面这些是任务状态码 */
 #define	TASK_UNUSED					0					/* 未使用 */
 #define TASK_UNINTERRUPTIBLE		1					/* 不可中断睡眠状态 */
@@ -414,11 +414,28 @@ struct TASK_ID_NUM {
 	int session;                                    // 会话号
 	int leader;                                     // 会话首领
 };
+struct USER_ID {
+	/* 用户相关标识号(TODO：等以后做了用户部分再来完善这里) */
+	unsigned int uid;								// 用户id(标识号)
+	unsigned int euid;								// 有效用户id
+	unsigned int suid;								// 保存的用户id
+	unsigned int gid;								// 组id(标识号)
+	unsigned int egid;								// 有效组id
+	unsigned int sgid;								// 保存组id
+};
+struct TASK_TIME {
+	/* 任务相关时间记录 */
+	unsigned int utime;								// (任务周期,下同)用户态运行时间(tik,下同)
+	unsigned int stime;								// 系统态运行时间
+	unsigned int cutime;							// 子进程用户态运行时间
+	unsigned int cstime;							// 子进程系统态运行时间
+	unsigned int start_time;						// 进程开始时间
+};
 struct TSS32 {
-	/* 任务状态段(104字节)，用于切换任务时保存寄存器数据，这个是32位版，如果以后系统会升级到64位则更新64位版 */
+	/* 任务状态段(104字节)，用于切换任务时保存寄存器数据 */
 	int backlink, esp0, ss0, esp1, ss1, esp2, ss2, cr3;
-	int eip, eflags, eax, ecx, edx, ebx, esp, ebp, esi, edi;						// 32位寄存器
-	int es, cs, ss, ds, fs, gs;														// 16位寄存器
+	int eip, eflags, eax, ecx, edx, ebx, esp, ebp, esi, edi;		// 32位寄存器
+	int es, cs, ss, ds, fs, gs;										// 16位寄存器
 	int ldtr, iomap;
 };
 struct TASK {
@@ -427,23 +444,24 @@ struct TASK {
 	struct FIFO32 fifo;										// 任务FIFO缓冲区，如果有需要以后也可以加个list(双链表)
 	struct TSS32 tss;										// 任务状态段
 	int fpu[108 / 4];										// TASK使用FPU寄存器时的存储位置和读取源
-	struct SEGMENT_DESCRIPTOR ldt[2];						
+	struct SEGMENT_DESCRIPTOR ldt[2];						// LDT描述符,0-NULL;1-cs;2-ds,ss
 	struct CONSOLE *cons;									// 任务对应的console
-	int ds_base, cons_stack;
-	struct FILEHANDLE *fhandle;
-	int *fat;
-	char *cmdline;
-	unsigned char langmode, langbyte1;
+	int ds_base, cons_stack;								// 数据段基址
+	struct FILEHANDLE *fhandle;								// 文件处理缓冲区句柄
+	int *fat;												// 文件fat表缓冲区
+	char *cmdline;											// 命令记录
+	unsigned char langmode, langbyte1;						// 语言模式设置
+	/* TODO */
 	char dir[MAX_DIRLENGTH];								// 命令行所在路径
 	struct SIGACTION sigaction[MAX_SIG];					// 信号处理程序操作和标志信息
-	/* TODO */
-	// char *task_name;										// 任务名称
-	// int signal;											// 信号，每一个bit代表一种信号
-	// int blocked;											// 进程信号屏蔽码
-	// int exit_code;										// 执行停止的退出码，交给父进程处理
-	// struct TASK_SEGMENT_ADDR task_segment_addr;			// 记录任务相关段(数据段、代码段等)地址
-	// struct TASK_ID_NUM task_id_num;						// 任务相关标识号
-	// unsigned int start_time;								// 进程开始时间(tik)
+	int signal;												// 信号，每一个bit代表一种信号
+	struct TASK_TIME task_time;								// 任务运行相关时间
+	char *task_name;										// 任务名称
+	int blocked;											// 进程信号屏蔽码
+	int exit_code;											// 执行停止的退出码，交给父进程处理
+	struct TASK_SEGMENT_ADDR task_segment_addr;				// 记录任务相关段(数据段、代码段等)地址
+	struct TASK_ID_NUM task_id_num;							// 任务相关标识号
+	struct USER_ID user_id;									// 用户及组相关id
 };
 struct TASKLEVEL {
 	int running; /* 正在运行的任务数量 */
@@ -575,8 +593,11 @@ void init_taskbar(struct MEMMAN *memman, struct SHEET *sht);					// 初始化任务栏
 int taskbar_addwin(struct WINDOW *window);										// 向任务栏增加一个窗口按钮
 void taskbar_removewin(int index);												// 从任务栏删除一个按钮
 
+/* exit.c(任务结束时的处理) */
+void do_exit(int *esp);
+
 /* console.c(命令行) */
-#define DEBUG_ADDR		0x30000				// DEBUG console位置
+#define DEBUG_ADDR		0x30000							// DEBUG console位置
 #define DEBUG_WAR_STR	"cannot run this command in debug console\n"
 struct CONSOLE {
 	struct SHEET *sht;
@@ -626,8 +647,6 @@ void debug_print(char *format, ...);																// 输出到DEBUG窗口
 
 /* kal_api.c(KalinoteOS 应用程序API接口) */
 int *kal_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int eax);				// 通过edx查找API
-void kal_api_linewin(struct SHEET *sht, int x0, int y0, int x1, int y1, int col);					// 绘制一条直线
-
 
 /* exception.c(异常中断处理) */
 #define WARMSG_CH	"********************%s********************\n   系统在尝试运行应用时遇到了错误。\n   %s如果该错误第一次出现，请尝试重新启动该应用程序，如果该错误反复出现，请联系软件的开发者。\n   下面是此次错误的信息：\n"

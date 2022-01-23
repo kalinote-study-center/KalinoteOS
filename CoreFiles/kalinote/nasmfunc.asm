@@ -30,7 +30,7 @@
 		EXTERN	_inthandler26
 		EXTERN	_inthandler27, _inthandler2c
 		EXTERN	_inthandler_stack_segment, _inthandler_general_protection
-		EXTERN	_kal_api
+		EXTERN	_kal_api, _do_exit
 
 [SECTION .text]					; 目标文件中写了这些之后在写程序
 
@@ -394,8 +394,8 @@ _asm_kal_api:							; 系统调用入口
 		MOV		DS,AX		; 将操作系统用段地址存入DS和SS
 		MOV		ES,AX
 		CALL	_kal_api
-		CMP		EAX,0		; 当EAX(返回值)不为0时程序结束，并将返回值当作task->tss.esp0来处理
-		JNE		_asm_end_app
+		; CMP		EAX,0		; 当EAX(返回值)不为0时程序结束，并将返回值当作task->tss.esp0来处理
+		; JNE		_asm_end_app
 		ADD		ESP,32
 		POPAD
 		POP		ES

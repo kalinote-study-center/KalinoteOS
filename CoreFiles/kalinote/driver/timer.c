@@ -109,10 +109,9 @@ void inthandler_timer(int *esp){
 	/* 时钟中断程序 */
 	struct TIMER *timer;
 	char ts = 0;
-	struct SYSINFO *sysinfo = (struct SYSINFO *) *((int *) SYSINFO_ADDR);
+	// struct SYSINFO *sysinfo = (struct SYSINFO *) *((int *) SYSINFO_ADDR);
 	io_out8(PIC0_OCW2, 0x60);	/* 把IRQ-00信号接收完了的信息通知给中断(PIC)，0+0x60号端口 */
 	timerctl.count++;				// 定时器计数
-	sysinfo->time_counter++;		// 系统ticks
 	if (timerctl.next > timerctl.count) {
 		return; /* 还不到下一个时刻，所以结束 */
 	}

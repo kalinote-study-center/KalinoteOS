@@ -72,7 +72,6 @@ void KaliMain(void){
 	sysinfo.datetime.hour = get_hour_hex();
 	sysinfo.datetime.min = get_min_hex();
 	sysinfo.datetime.sec = get_sec_hex();
-	sysinfo.time_counter = 0;
 	sysinfo.cpuid_info.cpuid = FALSE;
 	sysinfo.cpuid_info.brandString = FALSE;
 	sysinfo.vbe_info.VbeSignature[0] = *((char *) ADR_VBEINFO + 0);

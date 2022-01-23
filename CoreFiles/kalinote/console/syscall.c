@@ -15,7 +15,7 @@ int *kal_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int 
 	struct FILEHANDLE *fh;
 	struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;
 	struct WINDOW *window;
-	struct SYSINFO *sysinfo = (struct SYSINFO *) *((int *) SYSINFO_ADDR);
+	// struct SYSINFO *sysinfo = (struct SYSINFO *) *((int *) SYSINFO_ADDR);
 	int *reg = &eax + 1;	/* eax后面的地址 */
 		/* 强行改写通过PUSHAD保存的值，用于返回数值 */
 		/* reg[0] : EDI,   reg[1] : ESI,   reg[2] : EBP,   reg[3] : ESP */
@@ -32,7 +32,8 @@ int *kal_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int 
 		cons_putstr1(cons, (char *) ebx + ds_base, ecx);
 	} else if (edx == 4) {
 		//结束程序
-		return &(task->tss.esp0);
+		do_exit(&(task->tss.esp0));
+		// return &(task->tss.esp0);
 	} else if (edx == 5) {
 		//生成窗口
 		sht = sheet_alloc(shtctl);
@@ -276,7 +277,7 @@ int *kal_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int 
 		reg[7] = get_sec_hex();
 	} else if (edx == 37) {
 		/* 获取系统运行时间(秒) */
-		reg[7] = sysinfo->time_counter;
+		reg[7] = timerctl.count;
 	} else if (edx == 38) {
 		/* 以绝对位置显示图片 */
 		/* EBX: 窗口句柄	EAX: 文件名	ESI: 图片x	EDI: 图片y */
@@ -299,53 +300,4 @@ int *kal_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int 
         }
 	}
 	return 0;
-}
-
-void kal_api_linewin(struct SHEET *sht, int x0, int y0, int x1, int y1, int col){
-	/* 绘制直线 */
-	int i, x, y, len, dx, dy;
-
-	dx = x1 - x0;
-	dy = y1 - y0;
-	x = x0 << 10;
-	y = y0 << 10;
-	if (dx < 0) {
-		dx = - dx;
-	}
-	if (dy < 0) {
-		dy = - dy;
-	}
-	if (dx >= dy) {
-		len = dx + 1;
-		if (x0 > x1) {
-			dx = -1024;
-		} else {
-			dx =  1024;
-		}
-		if (y0 <= y1) {
-			dy = ((y1 - y0 + 1) << 10) / len;
-		} else {
-			dy = ((y1 - y0 - 1) << 10) / len;
-		}
-	} else {
-		len = dy + 1;
-		if (y0 > y1) {
-			dy = -1024;
-		} else {
-			dy =  1024;
-		}
-		if (x0 <= x1) {
-			dx = ((x1 - x0 + 1) << 10) / len;
-		} else {
-			dx = ((x1 - x0 - 1) << 10) / len;
-		}
-	}
-
-	for (i = 0; i < len; i++) {
-		sht->buf[(y >> 10) * sht->bxsize + (x >> 10)] = col;
-		x += dx;
-		y += dy;
-	}
-
-	return;
 }

@@ -44,7 +44,7 @@ unsigned long api_get_system_runtime(void);                                     
 void api_showjpeg(char *filename, int x, int y, int win);                       // 在指定窗口的指定位置显示一张图片
 int api_send_key_to_cmd(char *str);                                             // 向命令行发送键值
 
-/* 下面的函数均不在用户应用程序中使用，而是在crt0.c中处理 */
+/* TODO：下面的函数均不在用户应用程序中使用，而是在crt0.c中处理 */
 void api_initmalloc(void);                                                      // 初始化内存管理结构
 int api_cmdline(char *buf, int maxsize);                                        // 获取命令行参数
 

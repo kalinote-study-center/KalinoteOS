@@ -219,7 +219,7 @@ void task_sleep(struct TASK *task) {
 	if (task->flags == TASK_RUNNING) {
 		/* 如果处于活动状态 */
 		now_task = task_now();
-		task_remove(task); /* 执行此语句的话flags将变为1 */
+		task_remove(task); /* 执行此语句的话flags将变为TASK_UNINTERRUPTIBLE */
 		if (task == now_task) {
 			/* 如果是让自己休眠则需要进行任务切换 */
 			task_switchsub();
