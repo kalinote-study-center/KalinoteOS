@@ -1,5 +1,5 @@
 /* 退出程序 */
-#include "../bootpack.h"
+#include <bootpack.h>
 
 void cmd_exit(struct CONSOLE *cons, int *fat){
 	/* 退出程序 */

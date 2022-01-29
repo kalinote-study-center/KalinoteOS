@@ -1,5 +1,5 @@
 /* KalinoteOS 系统调用 */
-#include "../bootpack.h"
+#include <bootpack.h>
 
 int *kal_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int eax){
 	/* 开放给外部程序的系统API */

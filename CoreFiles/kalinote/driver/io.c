@@ -1,5 +1,5 @@
 /* I/OÏà¹Ø */
-#include "../bootpack.h"
+#include <bootpack.h>
 
 int *iomem;				/* »º´æ×´Ì¬ */
 int *iorreq, *iowreq;	/* ÇëÇó×´Ì¬ */

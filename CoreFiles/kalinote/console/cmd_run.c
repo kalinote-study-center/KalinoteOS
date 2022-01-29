@@ -1,5 +1,5 @@
 /* 启动一个应用程序并且不打开命令窗口 */
-#include "../bootpack.h"
+#include <bootpack.h>
 
 void cmd_run(struct CONSOLE *cons, char *cmdline, int memtotal){
 	/* 启动一个应用程序并且不打开命令窗口 */

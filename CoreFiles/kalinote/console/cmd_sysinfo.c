@@ -1,5 +1,5 @@
 /* 输出系统相关信息 */
-#include "../bootpack.h"
+#include <bootpack.h>
 #include <stdio.h>
 #include <string.h>
 

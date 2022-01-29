@@ -1,5 +1,5 @@
 /* 切换系统模式 */
-#include "../bootpack.h"
+#include <bootpack.h>
 #include <stdio.h>
 
 void cmd_sysmode(struct CONSOLE *cons, char *cmdline) {

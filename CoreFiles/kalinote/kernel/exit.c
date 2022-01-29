@@ -1,6 +1,6 @@
 /* 该文件负责进程(任务)终止和退出时的处理，以及相关系统调用 */
 /* 多任务处理的主要部分仍在kernel/mtask.c */
-#include "../bootpack.h"
+#include <bootpack.h>
 
 void task_release(struct TASK *task) {
 	/* 释放某个任务(用于任务彻底运行结束) */
@@ -90,5 +90,6 @@ void tell_father(int pid) {
 
 void do_exit(int *esp) {
 	/* 退出处理函数(TODO：用于代替现有的cmd_exit函数) */
+	/* TODO：添加相关处理 */
 	asm_end_app(esp);
 }

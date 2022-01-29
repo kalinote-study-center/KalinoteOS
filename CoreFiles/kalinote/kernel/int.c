@@ -1,5 +1,5 @@
 /* ÷–∂œ¥¶¿Ì */
-#include "../bootpack.h"
+#include <bootpack.h>
 #include <stdio.h>
 
 void init_pic(void){

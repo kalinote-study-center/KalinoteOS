@@ -1,5 +1,5 @@
 /*此文件负责图形绘制*/
-#include "../bootpack.h"
+#include <bootpack.h>
 #include <stdio.h>
 
 // void init_palette(void){

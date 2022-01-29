@@ -1,2 +1,2 @@
 /* ╫ЬЁлкЬ */
-#include "../bootpack.h"
+#include <bootpack.h>

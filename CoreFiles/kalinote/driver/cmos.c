@@ -1,5 +1,5 @@
 /* 从cmos获取数据 */
-#include "../bootpack.h"
+#include <bootpack.h>
 
 unsigned char read_cmos (unsigned char p) {
 	unsigned char data;

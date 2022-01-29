@@ -1,6 +1,6 @@
 /* 多任务(Multitasking)处理 */
 
-#include "../bootpack.h"
+#include <bootpack.h>
 
 struct TASKCTL *taskctl;
 struct TIMER *task_timer;
@@ -142,13 +142,22 @@ struct TASK *task_alloc(void){
 			task->tss.ds = 0;
 			task->tss.fs = 0;
 			task->tss.gs = 0;
-			task->tss.iomap = 0x40000000;		/* 固定值 */
-			task->tss.ss0 = 0;
-            task->tss.ss0 = 0;
-            task->fpu[0] = 0x037f; 				/* CW(control word) */
-            task->fpu[1] = 0x0000; 				/* SW(status word)  */
-            task->fpu[2] = 0xffff; 				/* TW(tag word)     */
-			task->cmdline = "0";
+			task->tss.iomap = 0x40000000;								/* 固定值 */
+			task->tss.ss0 = 0;						
+            task->tss.ss0 = 0;						
+            task->fpu[0] = 0x037f; 										/* CW(control word) */
+            task->fpu[1] = 0x0000; 										/* SW(status word)  */
+            task->fpu[2] = 0xffff; 										/* TW(tag word)     */
+			task->cmdline = "0";						
+			task->task_id_num.pid = i;									/* 进程号(pid)就是该task在TASK结构体列表中的位置下标 */
+			task->task_id_num.father = 0;								/* 父进程号(pid)默认0 */
+			task->signal = 0;											/* 信号位图置0 */
+			task->task_id_num.leader = 0;								/* 不继承task领导权 */
+			task->task_time.utime = 0;									/* 运行时间全部置0 */
+			task->task_time.stime = 0;
+			task->task_time.cutime = 0;
+			task->task_time.cstime = 0;
+			task->task_time.start_time = timerctl.count;				/* 启动时间是系统当前tik */
             for (i = 3; i < 108 / 4; i++) {
                 task->fpu[i] = 0;
             }

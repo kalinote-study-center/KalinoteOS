@@ -1,6 +1,6 @@
 /* 命令窗口相关程序 */
 
-#include "../bootpack.h"
+#include <bootpack.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdarg.h>
@@ -443,17 +443,19 @@ int cmd_app(struct CONSOLE *cons, int *fat, char *cmdline){
 		p = (char *) memman_alloc_4k(memman, finfo->size);											/* 给应用程序分配一段空内存空间(读取应用到内存) */
 		file_loadfile(finfo->clustno, finfo->size, p, fat, (char *) (ADR_DISKIMG + 0x003e00));		/* 加载应用程序文件 */
 		if (finfo->size >= 36 && strncmp(p + 4, "Kali", 4) == 0 && *p == 0x00) {
-			/*  这里的几个判断，第一个是kal头文件为36字节，所以kal应用程序一定会大于36字节，第二个是检查是否有kal应用签名 */
+			/* 这里的几个判断，第一个是kal头文件为36字节，所以kal应用程序一定会大于36字节，第二个是检查是否有kal应用签名 */
 			/* 处理kal文件头(这里以后可能还需要修改一下) */
 			/* 注释里面有写到新标的相关位置，但是新标的编译器还没有做好，所以暂时用不上 */
+			/* TODO：这里使用fork复制一个任务出来，而不是使用console的任务 */
+			/* 但是如果使用和console不同的任务则需要考虑fifo数据发送等的问题 */
 			segsiz = *((int *) (p + 0x0000));					/* stack+.data+heap(数据段，函数外定义的数据，以及字符串等)的大小(4K的倍数) */
 			esp    = *((int *) (p + 0x000c));					/* 堆栈初始值和.data传输目的地 */			/* 新标为14 */
 			datsiz = *((int *) (p + 0x0010));					/* .data的大小 */							/* 新标为1A */
 			datkal = *((int *) (p + 0x0014));					/* .data的初始值列在文件中的位置 */			/* 新标为20 */
 			q = (char *) memman_alloc_4k(memman, segsiz);		/* 分配应用程序段内存空间(数据段) */
 			task->ds_base = (int) q;
-			set_segmdesc(task->ldt + 0, finfo->size - 1, (int) p, AR_CODE32_ER_R3);				/* R3特权级，应用程序使用 */	/* 可读可执行不可写 */
-			set_segmdesc(task->ldt + 1, segsiz - 1,      (int) q, AR_DATA32_RW_R3);			/* 可读写不可执行 */
+			set_segmdesc(task->ldt + 0, finfo->size - 1, (int) p, AR_CODE32_ER_R3);			/* R3特权级，应用程序使用 */	/* 可读可执行不可写 */
+			set_segmdesc(task->ldt + 1, segsiz		- 1, (int) q, AR_DATA32_RW_R3);			/* 可读写不可执行 */
 			for (i = 0; i < datsiz; i++) {
 				/* 将Kal应用中的数据部分复制到数据段 */
 				q[esp + i] = p[datkal + i];
@@ -553,7 +555,7 @@ struct SHEET *open_console(struct SHTCTL *shtctl, unsigned int memtotal, int deb
 	} else {
 		window = make_window8(sht, 525, 479, TIT_ACT_DEFAULT, TIT_DEACT_DEFAULT, "console", 0);
 	}
-	make_textbox8(sht, 3, 24, 519, 452, COL_BLACK);
+	make_textbox_old(sht, 3, 24, 519, 452, COL_BLACK);
 	make_icon(window, 1);
 	sht->task = open_constask(sht, memtotal);
 	sht->flags = SHEET_CONS;	/* 命令行窗口 */

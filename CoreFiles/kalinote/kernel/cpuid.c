@@ -1,5 +1,5 @@
 /* CPUID */
-#include "../bootpack.h"
+#include <bootpack.h>
 #include <stdio.h>
 #include <string.h>
 

@@ -1,5 +1,5 @@
 /* 绘制菜单栏 */
-#include "../bootpack.h"
+#include <bootpack.h>
 
 struct MENU *make_menu(struct MEMMAN *memman, int menux, int menuy) {
 	/* 创建菜单结构体 */

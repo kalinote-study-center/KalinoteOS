@@ -1,5 +1,5 @@
 /* 退出程序 */
-#include "../bootpack.h"
+#include <bootpack.h>
 
 void cmd_start(struct CONSOLE *cons, char *cmdline, int memtotal){
 	/* 在新的命令窗口启动一个应用程序 */

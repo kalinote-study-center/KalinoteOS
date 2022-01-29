@@ -1,5 +1,5 @@
 /* 图层管理 */
-#include "../bootpack.h"
+#include <bootpack.h>
 
 struct SHTCTL *shtctl_init(struct MEMMAN *memman, unsigned int *vram, int xsize, int ysize){
 	/* 初始化图层系统 */

@@ -1,5 +1,5 @@
 /* ÇĞ»»ÃüÁîĞĞÄ¿Â¼ */
-#include "../bootpack.h"
+#include <bootpack.h>
 #include <string.h>
 
 void cmd_cd(struct CONSOLE *cons, char *parameter, int *fat) {

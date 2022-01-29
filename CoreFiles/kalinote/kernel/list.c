@@ -1,5 +1,5 @@
 /* 链表结构 */
-#include "../bootpack.h"
+#include <bootpack.h>
 
 void list_init(struct list* list) {
 	/* 初始化双链表 */

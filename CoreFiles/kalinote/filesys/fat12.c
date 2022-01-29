@@ -1,5 +1,5 @@
 /* 文件处理相关程序 */
-#include "../bootpack.h"
+#include <bootpack.h>
 #include <string.h>
 
 void file_readfat(int *fat, unsigned char *img){

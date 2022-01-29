@@ -1,6 +1,6 @@
 /*启动时的主程序*/
 #include <stdio.h>
-#include "../bootpack.h"
+#include <bootpack.h>
 
 void KaliMain(void){
 	/* 系统入口 */
@@ -173,7 +173,7 @@ void KaliMain(void){
 	// tbutton7 = make_button(memman, 105, 23, 85 + 110*6 , 4, "window7", COL_BGREY, onStartButtonClick);
 	// show_button(sht_task_bar, memman, tbutton7);
 	/* 测试代码 */
-	
+		
 	/* 初始化clock */
 	task_clock = task_alloc();
 	clock_taskinit(task_clock, sht_task_bar);
@@ -213,6 +213,13 @@ void KaliMain(void){
 	// putfonts8_asc_sht(subsht_back, 0, 0, 0xff0000, 0x00ff00, "testtest", 8);
 	// sheet_refresh(subsht_back, 0, 0, subsht_back->bxsize, subsht_back->bysize);		/* 刷新子图层 */
 	// sheet_refresh(sht_back, subsht_back->vx0, subsht_back->vy0, subsht_back->vx0 + subsht_back->bxsize, subsht_back->vy0 + subsht_back->bysize);				/* 刷新父图层 */
+	/* 测试代码 */
+	
+	/* 测试代码 */
+	// struct TEXTBOX *textbox;
+	// unsigned int *textbox_buf = (unsigned int *)memman_alloc_4k(memman, 500);
+	// textbox = make_textbox(shtctl, 50, 50, 15, 100, COL_WHITE, textbox_buf, 400);
+	// show_textbox(textbox);
 	/* 测试代码 */
 	
 	/* 为了避免和键盘当前状态存在冲突，在一开始先进行设置 */
@@ -303,7 +310,7 @@ void KaliMain(void){
 				sheet_slide(sht, new_wx, new_wy);
 				new_wx = 0x7fffffff;
 			} else {
-				/* 没有任何操作，底层任务休眠 */
+				/* 没有任何操作，task_a任务休眠 */
 				task_sleep(task_a);
 				io_sti();
 			}

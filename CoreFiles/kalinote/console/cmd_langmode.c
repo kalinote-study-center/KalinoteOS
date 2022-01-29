@@ -1,5 +1,5 @@
 /* 切换系统语言模式 */
-#include "../bootpack.h"
+#include <bootpack.h>
 
 void cmd_langmode(struct CONSOLE *cons, char *cmdline){
 	/* 切换系统语言模式 */

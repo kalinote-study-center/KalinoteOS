@@ -1,5 +1,5 @@
 /* 系统时钟任务 */
-#include "../bootpack.h"
+#include <bootpack.h>
 #include <stdio.h>
 
 void clock_task(struct SHEET *sht) {

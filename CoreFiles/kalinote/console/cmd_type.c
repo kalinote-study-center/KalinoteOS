@@ -1,5 +1,5 @@
 /* 输出文件内容 */
-#include "../bootpack.h"
+#include <bootpack.h>
 
 void cmd_type(struct CONSOLE *cons, int *fat, char *cmdline){
 	/* 输出文件内容 */

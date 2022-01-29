@@ -285,6 +285,7 @@ struct SHEET *sheet_alloc(struct SHTCTL *ctl);														// »ñµÃÎ´Ê¹ÓÃµÄĞÂÍ¼²
 void sheet_setbuf(struct SHEET *sht, unsigned int *buf, int xsize, int ysize, int col_inv);			// ÉèÖÃ»º³åÇø´óĞ¡
 void sheet_updown(struct SHEET *sht, int height);													// µ÷Õûsheet¸ß¶È
 void sheet_refresh(struct SHEET *sht, int bx0, int by0, int bx1, int by1);							// Ë¢ĞÂÍ¼²ã(ÇøÓò)
+void sheet_refreshall(struct SHEET *sht, int bx0, int by0, int bx1, int by1);						// (Î´Íê³É)´Ó×ÓÍ¼²ãµ½¸¸Í¼²ãÈ«²¿Ë¢ĞÂ
 void sheet_slide(struct SHEET *sht, int vx0, int vy0);												// ÒÆ¶¯Í¼²ã
 void sheet_free(struct SHEET *sht);																	// ÊÍ·ÅÒÑÊ¹ÓÃµÄÍ¼²ãÄÚ´æ
 
@@ -382,7 +383,7 @@ int signal(int signum, int handler, int restorer);													// ÎªÖ¸¶¨ĞÅºÅÉèÖÃ
 int sigaction(int signum, struct SIGACTION *action, struct SIGACTION *oldaction);					// ¸Ä±ä½ø³ÌÊÕµ½ĞÅºÅÊ±µÄ²Ù×÷
 void do_signal(int sig_num, int eax, int ebx,
 	int ecx, int edx, int fs, int es, int ds,
-	int eip, int cs, int eflags, unsigned int *esp, int ss);										// ĞÅºÅ´¦Àí³ÌĞò(TODO)
+	int eip, int cs, int eflags, unsigned int *esp, int ss);										// (Î´Íê³É)ĞÅºÅ´¦Àí³ÌĞò(TODO)
 
 /* mtask.c(¶àÈÎÎñ) */
 #define MAX_TASKS		250							// ×î´óÈÎÎñÊıÁ¿
@@ -444,7 +445,7 @@ struct TASK {
 	struct FIFO32 fifo;										// ÈÎÎñFIFO»º³åÇø£¬Èç¹ûÓĞĞèÒªÒÔºóÒ²¿ÉÒÔ¼Ó¸ölist(Ë«Á´±í)
 	struct TSS32 tss;										// ÈÎÎñ×´Ì¬¶Î
 	int fpu[108 / 4];										// TASKÊ¹ÓÃFPU¼Ä´æÆ÷Ê±µÄ´æ´¢Î»ÖÃºÍ¶ÁÈ¡Ô´
-	struct SEGMENT_DESCRIPTOR ldt[2];						// LDTÃèÊö·û,0-NULL;1-cs;2-ds,ss
+	struct SEGMENT_DESCRIPTOR ldt[2];						// LDTÃèÊö·û
 	struct CONSOLE *cons;									// ÈÎÎñ¶ÔÓ¦µÄconsole
 	int ds_base, cons_stack;								// Êı¾İ¶Î»ùÖ·
 	struct FILEHANDLE *fhandle;								// ÎÄ¼ş´¦Àí»º³åÇø¾ä±ú
@@ -508,7 +509,6 @@ struct WINDOW {
 struct WINDOW *make_window8(struct SHEET *sht, int xsize, int ysize,
 	int act_color, int deact_color, char *title, char act);											// Éú³ÉÒ»¸ö´°¿Ú
 void putfonts8_asc_sht(struct SHEET *sht, int x, int y, int c, int b, char *s, int l);				// ÏÈÍ¿±³¾°É«£¬ÔÚĞ´×Ö·û´®
-void make_textbox8(struct SHEET *sht, int x0, int y0, int sx, int sy, int c);						// Éú³É±à¼­¿ò
 // void make_wtitle8(unsigned int *buf, int xsize, char *title, char act);							// Éú³ÉÒ»¸ö±êÌâÀ¸(¾É°æ)
 void make_wtitle8(struct WINDOW *window, char act);													// Éú³ÉÒ»¸ö±êÌâÀ¸
 void change_wtitle8(struct WINDOW *window, char act);												// ¸Ä±ä´°¿Ú±êÌâÀ¸ÑÕÉ«
@@ -567,7 +567,20 @@ void option_change(struct MENU *menu, int mouse_y);													// Êó±êÒÆ¶¯Ê±Ñ¡Ï
 void menu_click(struct MENU *menu, int mouse_y);													// ²Ëµ¥À¸±»µ¥»÷
 
 /* textbox.c(ÊäÈë¿ò) */
-void make_textbox8(struct SHEET *sht, int x0, int y0, int sx, int sy, int c);						// Éú³ÉÊäÈë¿ò
+struct TEXTBOX {
+	int x,y;					/* Í¼²ãÏà¶Ô×ø±ê */
+	int height,width;			/* ¸ß¿í */
+	struct SHEET *sht;			/* ÊäÈë¿òµÄÍ¼²ã */
+	char flags;					/* ÊäÈë¿ò×´Ì¬±êÊ¶(bitmap,µÍ1Î»±êÊ¶ÊÇ·ñ¼¤»î£¬µÍ2Î»±íÊ¾ÊÇ·ñ¿ÉÊÓ£¬µÍ3Î»±êÊ¶ÊÇ·ñ¶àĞĞ) */
+	int cur_x, cur_y, cur_c;	/* ¹â±êÎ»ÖÃ(Ïà¶Ô)¼°×´Ì¬(cur_c) */
+	// char *buf;				/* (ºÍsheetÖĞµÄÒ»Ñù£¬ËùÒÔ²»ÓÃµ¥¶ÀÉèÖÃ)±£´æÊäÈëÄÚÈİµÄ»º³åÇø */
+	int char_num;				/* ×î´ó×Ö·ûÊıÁ¿ */
+	int back_color;				/* ±³¾°ÑÕÉ« */
+};
+void make_textbox_old(struct SHEET *sht, int x0, int y0, int sx, int sy, int c);						// (¾É°æ)Éú³ÉÊäÈë¿ò
+struct TEXTBOX *make_textbox(struct SHTCTL *shtctl, int x0, int y0, int height,
+	int width, int back_color, unsigned int *buf, int char_num);										// Éú³ÉÊäÈë¿ò
+void show_textbox(struct TEXTBOX *textbox);																// ÏÔÊ¾textbox
 
 /* taskbar.c(µ×¶ËÈÎÎñÀ¸) */
 #define TASKBAR_ADDR	0x30100			/* ÈÎÎñÀ¸Í¼²ãµØÖ· */
@@ -594,7 +607,14 @@ int taskbar_addwin(struct WINDOW *window);										// ÏòÈÎÎñÀ¸Ôö¼ÓÒ»¸ö´°¿Ú°´Å¥
 void taskbar_removewin(int index);												// ´ÓÈÎÎñÀ¸É¾³ıÒ»¸ö°´Å¥
 
 /* exit.c(ÈÎÎñ½áÊøÊ±µÄ´¦Àí) */
-void do_exit(int *esp);
+void do_exit(int *esp);										// (Î´Íê³É)ÍË³öÊ±Ïà¹Ø´¦Àí
+void tell_father(int pid);									// (Î´Íê³É)Ïò¸¸½ø³Ì·¢ËÍSIGCHLDĞÅºÅ
+int task_kill(int pid, int sig);							// (Î´Íê³É)Ïò½ø³Ì(ÈÎÎñ)»ò×é·¢ËÍĞÅºÅ
+void task_kill_session(void);								// ÖÕÖ¹»á»°
+
+/* fork.c(¸´ÖÆ½ø³Ì) */
+int copy_mem(int task_num, struct TASK *task);									// (Î´Íê³É)½ø³Ì¸´ÖÆÊ±µÄÏà¹ØÄÚ´æ¸´ÖÆ
+int copy_process(unsigned int fsize, unsigned int segsiz);						// (Î´Íê³É)¸´ÖÆ½ø³Ì
 
 /* console.c(ÃüÁîĞĞ) */
 #define DEBUG_ADDR		0x30000							// DEBUG consoleÎ»ÖÃ
@@ -758,13 +778,13 @@ struct list {
 	struct list_elem tail;
 };
 void list_init(struct list* list);												// ³õÊ¼»¯Á´±í
-void list_insert_before(struct list_elem* before, struct list_elem* elem);		// ½«Á´±íÔªËØelem²åÈëµ½beforeÖ®Ç°
-void list_push(struct list* plist, struct list_elem* elem);						// Ìí¼ÓÔªËØµ½ÁĞ±í¶ÓÊ×,ÀàËÆÕ»push²Ù×÷
-void list_append(struct list* plist, struct list_elem* elem);					// ×·¼ÓÔªËØµ½Á´±í¶ÓÎ²,ÀàËÆ¶ÓÁĞµÄÏÈ½øÏÈ³ö²Ù×÷
-void list_remove(struct list_elem* pelem);										// Ê¹ÔªËØpelemÍÑÀëÁ´±í
-struct list_elem* list_pop(struct list* plist);									// ½«Á´±íµÚÒ»¸öÔªËØµ¯³ö²¢·µ»Ø,ÀàËÆÕ»µÄpop²Ù×÷
-int elem_find(struct list* plist, struct list_elem* obj_elem);					// ´ÓÁ´±íÖĞ²éÕÒÔªËØobj_elem,³É¹¦Ê±·µ»ØËùÔÚÎ»ÖÃ,Ê§°ÜÊ±·µ»Ø-1
-int list_empty(struct list* plist);												// ÅĞ¶ÏÁ´±íÊÇ·ñÎª¿Õ,¿ÕÊ±·µ»Ø1,·ñÔò·µ»Ø0
+void list_insert_before(struct list_elem* before, struct list_elem* elem);		// (Î´Íê³É)½«Á´±íÔªËØelem²åÈëµ½beforeÖ®Ç°
+void list_push(struct list* plist, struct list_elem* elem);						// (Î´Íê³É)Ìí¼ÓÔªËØµ½ÁĞ±í¶ÓÊ×,ÀàËÆÕ»push²Ù×÷
+void list_append(struct list* plist, struct list_elem* elem);					// (Î´Íê³É)×·¼ÓÔªËØµ½Á´±í¶ÓÎ²,ÀàËÆ¶ÓÁĞµÄÏÈ½øÏÈ³ö²Ù×÷
+void list_remove(struct list_elem* pelem);										// (Î´Íê³É)Ê¹ÔªËØpelemÍÑÀëÁ´±í
+struct list_elem* list_pop(struct list* plist);									// (Î´Íê³É)½«Á´±íµÚÒ»¸öÔªËØµ¯³ö²¢·µ»Ø,ÀàËÆÕ»µÄpop²Ù×÷
+int elem_find(struct list* plist, struct list_elem* obj_elem);					// (Î´Íê³É)´ÓÁ´±íÖĞ²éÕÒÔªËØobj_elem,³É¹¦Ê±·µ»ØËùÔÚÎ»ÖÃ,Ê§°ÜÊ±·µ»Ø-1
+int list_empty(struct list* plist);												// (Î´Íê³É)ÅĞ¶ÏÁ´±íÊÇ·ñÎª¿Õ,¿ÕÊ±·µ»Ø1,·ñÔò·µ»Ø0
 
 /* util.c(Í¨ÓÃ¹¤¾ß°ü) */
 int read_rtc(unsigned char tt[5]);
@@ -937,13 +957,13 @@ int acpi_reset(void);													/* Í¨¹ıACPIµÄI/O×ÜÏßÊµÏÖÖØÆô */
 // #define CPUID_VENDOR_RISE        		"RiseRiseRise"
 // #define CPUID_VENDOR_VORTEX      		"Vortex86 SoC"
 // #define CPUID_VENDOR_VIA         		"VIA VIA VIA "
-/* ĞéÄâ»úµÄ¹©Ó¦ÉÌÉèÖÃ */		
-// #define CPUID_VENDOR_VMWARE      		"VMwareVMware"
-// #define CPUID_VENDOR_XENHVM      		"XenVMMXenVMM"
-// #define CPUID_VENDOR_MICROSOFT_HV		"Microsoft Hv"
-// #define CPUID_VENDOR_PARALLELS   		" lrpepyh vr"
+/* ĞéÄâ»úµÄ¹©Ó¦ÉÌÉèÖÃ */
+#define CPUID_VENDOR_VMWARE      		"VMwareVMware"
+#define CPUID_VENDOR_XENHVM      		"XenVMMXenVMM"
+#define CPUID_VENDOR_MICROSOFT_HV		"Microsoft Hv"
+#define CPUID_VENDOR_PARALLELS   		" lrpepyh vr"
 void cpu_init(void);													/* ³õÊ¼»¯CPUÏà¹ØĞÅÏ¢ */
-int cpu_64_check(void);													/* ¼ì²âCPUÊÇ·ñÖ§³Ö64Î» */
+int cpu_64_check(void);													/* (Î´Íê³É)¼ì²âCPUÊÇ·ñÖ§³Ö64Î» */
 
 /* io.c(ÊäÈëÊä³ö¿ØÖÆ) */
 #define IO_READ		1	/* ÔØÈë */

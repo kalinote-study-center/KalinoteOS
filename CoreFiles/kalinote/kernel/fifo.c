@@ -1,6 +1,6 @@
 /* FIFO»º³åÇø */
 
-#include "../bootpack.h"
+#include <bootpack.h>
 
 #define FLAGS_OVERRUN		0x0001
 

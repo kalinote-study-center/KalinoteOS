@@ -1,5 +1,5 @@
 /* ≤‚ ‘ π”√ */
-#include "../bootpack.h"
+#include <bootpack.h>
 
 void cmd_testfunc(struct CONSOLE *cons, int *fat) {
 	// struct SYSINFO *sysinfo = (struct SYSINFO *) *((int *) SYSINFO_ADDR);

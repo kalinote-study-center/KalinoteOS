@@ -1,5 +1,5 @@
 /* 输出文件及目录 */
-#include "../bootpack.h"
+#include <bootpack.h>
 #include <stdio.h>
 #include <string.h>
 

@@ -3,7 +3,7 @@ OBJS_BOOTPACK = kernel/bootpack.obj fonts.obj nasmfunc.obj gui/graphic.obj kerne
 		kernel/mtask.obj gui/window.obj console/console.obj filesys/fat12.obj filesys/kca.obj gui/jpeg.obj driver/cmos.obj \
 		kernel/list.obj kernel/lock.obj gui/taskbar.obj gui/menu.obj gui/button.obj driver/acpi.obj console/exception.obj \
 		kernel/util.obj gui/textbox.obj console/syscall.obj kernel/cpuid.obj driver/fdc.obj driver/io.obj filesys/buf.obj \
-		kernel/clock.obj kernel/signal.obj kernel/do_exit.obj $(OBJS_CMD)
+		kernel/clock.obj kernel/signal.obj kernel/exit.obj kernel/fork.obj $(OBJS_CMD)
 
 OBJS_CMD = console/cmd_mem.obj console/cmd_cls.obj console/cmd_dir.obj console/cmd_type.obj console/cmd_exit.obj \
 		console/cmd_start.obj console/cmd_run.obj console/cmd_langmode.obj console/cmd_shutdown.obj console/cmd_sysmode.obj \
@@ -17,12 +17,13 @@ OBJS_GL = gui/TinyGL/api.obj gui/TinyGL/list.obj gui/TinyGL/vertex.obj gui/TinyG
       gui/TinyGL/arrays.obj gui/TinyGL/specbuf.obj gui/TinyGL/memory.obj gui/TinyGL/glx.obj
 	  
 TOOLPATH = ../../z_tools/
-INCPATH  = ./libc/include/
+LIBCINCPATH  = ./libc/include/
+INCPATH  = ./include/
 
 MAKE     = $(TOOLPATH)make.exe -r
 NASK     = $(TOOLPATH)nask.exe
 NASM	 = nasm
-CC1      = $(TOOLPATH)cc1.exe -I$(INCPATH) -Os -Wall -quiet
+CC1      = $(TOOLPATH)cc1.exe -I$(LIBCINCPATH) -I$(INCPATH) -Os -Wall -quiet
 GAS2NASK = $(TOOLPATH)gas2nask.exe -a
 OBJ2BIM  = $(TOOLPATH)obj2bim.exe
 MAKEFONT = $(TOOLPATH)makefont.exe
@@ -72,7 +73,7 @@ kalinote.sys : asmhead.bin bootpack.kal Makefile
 
 # “ª∞„πÊ‘Ú
 
-%.gas : %.c bootpack.h Makefile
+%.gas : %.c ./include/bootpack.h Makefile
 	$(CC1) -o $*.gas $*.c
 
 %.nas : %.gas Makefile

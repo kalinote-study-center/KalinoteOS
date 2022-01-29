@@ -1,5 +1,5 @@
 /* ²éÑ¯ÄÚ´æÖ¸Áî */
-#include "../bootpack.h"
+#include <bootpack.h>
 #include <stdio.h>
 
 void cmd_mem(struct CONSOLE *cons, unsigned int memtotal){

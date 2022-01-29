@@ -1,5 +1,5 @@
 /* «Â∆¡ */
-#include "../bootpack.h"
+#include <bootpack.h>
 
 void cmd_cls(struct CONSOLE *cons){
 	/* «Â∆¡ */

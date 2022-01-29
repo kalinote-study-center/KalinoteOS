@@ -3,7 +3,7 @@
 * 这个文件里面记录了(大部分)底层硬件异常时的(部分)处理方式
 * 这些函数一般通过nasmfunc.asm中的汇编代码来进行调用
 */
-#include "../bootpack.h"
+#include <bootpack.h>
 #include <stdio.h>
 
 int *inthandler_divzero(int *esp){

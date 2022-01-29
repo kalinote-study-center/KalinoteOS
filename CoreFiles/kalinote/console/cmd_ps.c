@@ -1,5 +1,5 @@
 /* ps命令(查看所有task) */
-#include "../bootpack.h"
+#include <bootpack.h>
 
 void cmd_ps(struct CONSOLE *cons) {
 	int tasks_num = 0;		// 任务总数

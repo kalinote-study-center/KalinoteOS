@@ -1,5 +1,5 @@
 /* 系统输出(等待完善) */
-#include "../bootpack.h"
+#include <bootpack.h>
 #include <stdio.h>
 
 void cmd_echo(struct CONSOLE *cons, char *cmdline) {

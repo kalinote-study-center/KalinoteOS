@@ -1,6 +1,6 @@
 /* ACPI电源控制，实现关机 */
 /* https://wiki.osdev.org/ACPI */
-#include "../bootpack.h"
+#include <bootpack.h>
 #include <stdio.h>
 #include <string.h>
 

@@ -1,5 +1,5 @@
 /* 多功能工具包 */
-#include "../bootpack.h"
+#include <bootpack.h>
 
 static int bcd2(unsigned char x) {
 	return (x >> 4) * 10 + (x & 0x0f);

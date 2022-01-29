@@ -1,5 +1,5 @@
 /* ∂¡»°jpeg∏Ò ΩÕº∆¨ */
-#include "../bootpack.h"
+#include <bootpack.h>
 
 typedef unsigned char UCHAR;
 

@@ -1,5 +1,5 @@
 /* 按钮 */
-#include "../bootpack.h"
+#include <bootpack.h>
 
 struct BUTTON *make_button(struct MEMMAN *memman, int width, int height, int buttonx, int buttony, char *title, int back_color, void(*onButtonClick)()) {
 	/* 设置一个按钮 */

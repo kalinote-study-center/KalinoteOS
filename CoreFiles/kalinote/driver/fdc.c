@@ -1,5 +1,5 @@
 /* 软盘驱动 */
-#include "../bootpack.h"
+#include <bootpack.h>
 
 struct FDC fdc;
 struct FIFO32 *fifo_fdc;		/* FDC任务的FIFO */

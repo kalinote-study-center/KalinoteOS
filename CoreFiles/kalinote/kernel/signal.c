@@ -1,5 +1,5 @@
 /* 进程(任务)信号处理 */
-#include "../bootpack.h"
+#include <bootpack.h>
 #include <string.h>
 
 static inline void save_old(char *from, char *to) {
