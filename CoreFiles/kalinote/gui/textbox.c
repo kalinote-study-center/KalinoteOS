@@ -30,15 +30,15 @@ struct TEXTBOX *make_textbox(struct SHTCTL *shtctl, int x0, int y0, int height, 
 	* 返回值：
 	* 	struct TEXTBOX *textbox			// 生成的textbox数据结构
 	*/
-	struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;
-	struct SHEET *sht = sheet_alloc(shtctl);
-	struct TEXTBOX *textbox = (struct TEXTBOX *)memman_alloc_4k(memman,sizeof(struct TEXTBOX));
+	// struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;
+	// struct SHEET *sht = sheet_alloc(shtctl);
+	// struct TEXTBOX *textbox = (struct TEXTBOX *)memman_alloc_4k(memman,sizeof(struct TEXTBOX));
 	
-	// /* 初始化结构体信息 */
-	textbox->x = x0;
-	textbox->y = y0;
-	textbox->height = height;
-	textbox->width = width;
+	// /* 初始化结构体信息(TODO)这里会出问题 */
+	// textbox->x = x0;
+	// textbox->y = y0;
+	// textbox->height = height;
+	// textbox->width = width;
 	// textbox->sht = sht;
 	// textbox->flags = 0x1;		/* 激活状态，不可视，单行(bitmap,低1位标识是否激活，低2位表示是否可视，低3位标识是否多行) */
 	// textbox->cur_x = 0;
@@ -54,7 +54,7 @@ struct TEXTBOX *make_textbox(struct SHTCTL *shtctl, int x0, int y0, int height, 
 	// sheet_slide(textbox->sht, textbox->x, textbox->y);
 	// sheet_updown(textbox->sht, -1);
 	
-	return textbox;
+	// return textbox;
 }
 
 void release_textbox(struct TEXTBOX *textbox) {
@@ -62,8 +62,8 @@ void release_textbox(struct TEXTBOX *textbox) {
 }
 
 void show_textbox(struct TEXTBOX *textbox) {
-	textbox->flags |= (1 << 1);		/* 第二位置1，表示可视 */
-	/* (TODO)把图层提上来 */
-	sheet_updown(textbox->sht, textbox->sht->ctl->top);
+	// textbox->flags |= (1 << 1);		/* 第二位置1，表示可视 */
+	// /* (TODO)把图层提上来 */
+	// sheet_updown(textbox->sht, textbox->sht->ctl->top + 1);
 	return;
 }

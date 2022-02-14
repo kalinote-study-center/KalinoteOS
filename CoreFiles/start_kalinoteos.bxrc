@@ -2,7 +2,7 @@
 plugin_ctrl: unmapped=true, biosdev=true, speaker=true, extfpuirq=true, parallel=true, serial=true, gameport=true
 config_interface: win32config
 display_library: win32
-memory: host=4096, guest=4096
+memory: host=2048, guest=4096
 romimage: file="D:\OneDrive - mayx\Projects\OSProject\KalinoteOS\KalinoteOS1.0\z_tools\qemu\bios.bin", address=0x00000000, options=none
 vgaromimage: file="D:\OneDrive - mayx\Projects\OSProject\KalinoteOS\KalinoteOS1.0\z_tools\qemu\vgabios.bin"
 boot: floppy

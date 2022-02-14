@@ -58,7 +58,6 @@ void KaliMain(void){
 		0,   0,   0,   '|', 0,   0,   0,   0,   0,   0,   0,   0,   0,   '|', 0,   0
 	};
 
-	// for(;;)
 
 	/* 初始化sysinfo */
 	*((int *) SYSINFO_ADDR) = (int) &sysinfo;
@@ -226,6 +225,7 @@ void KaliMain(void){
 	fifo32_put(&keycmd, KEYCMD_LED);
 	fifo32_put(&keycmd, key_leds);
 	
+	
 	/* 载入HZK字库 */
 	//chinese = (unsigned char *) memman_alloc_4k(memman, 0x5d5d * 32);
 	fat_ch = (int *) memman_alloc_4k(memman, 4 * 2880);
@@ -288,6 +288,8 @@ void KaliMain(void){
 	// timer_init(timer, &fifo, 1);
 	// timer_settime(timer, 1);	/* 激活时间 */
 	
+	
+	
 	for(;;){
 		/***************************************************************
 		*         从这里开始，操作系统初始化完毕，开始正常工作         *
@@ -301,9 +303,10 @@ void KaliMain(void){
 		io_cli();
 		if (fifo32_status(&fifo) == 0) {
 			/* FIFO为空，当存在搁置的绘图操作时立即执行 */
+			
 			if (new_mx >= 0) {
 				io_sti();
-				sheet_slide(sht_mouse, new_mx, new_my);
+				sheet_slide(sht_mouse, new_mx, new_my);		// (TODO)这里出现的问题
 				new_mx = -1;
 			} else if (new_wx != 0x7fffffff) {
 				io_sti();
@@ -314,6 +317,7 @@ void KaliMain(void){
 				task_sleep(task_a);
 				io_sti();
 			}
+			
 		} else {
 			i = fifo32_get(&fifo); /* 从fifo中取出数据，不同的i值范围表示的数据作用不同，详见《系统支持文档》4.2，队列(FIFO)数据缓冲区一节 */
 			io_sti();
